@@ -31,7 +31,7 @@ Before we dive in, we must remember the **RL Divide**:
 1. **Monte Carlo (MC):** Learns directly from raw experience (no environment model required).
 2. **Dynamic Programming (DP):** Updates estimates based on other learned estimates—a process known as **bootstrapping**—without waiting for the final outcome.
 
-![TD Venn Diagram](images/Venn-Diagram(DP,MC,TD).png.png) 
+![TD Venn Diagram](images/Venn-Diagram(DP,MC,TD).png) 
 *(Caption: TD Learning sits at the exact intersection of Monte Carlo and Dynamic Programming.)*
 
 > 🧠 **Test Your Understanding:**
@@ -46,7 +46,7 @@ All incremental learning methods share a similar update rule structure:
 
 Let's look at the side-by-side comparison of how Monte Carlo and the simplest form of TD learning—known as **TD(0)**—handle this update.
 
-![MC vs TD Equations](images/Math-Comparisons.png.png) 
+![MC vs TD Equations](images/Math-Comparisons.png) 
 *(Caption: Notice how the only structural difference is what each algorithm uses as its "Target".)*
 
 #### The Monte Carlo vs. TD Target
@@ -80,7 +80,7 @@ For the sake of simplicity, this section focuses entirely on the 1-step TD(0) al
 
 ### 3. Intuitive Walkthrough: The "Driving Home" Problem
 
-Let's ground this math in a real-world example (Sutton & Barto, 2018)[RLBook]. 
+Let's ground this math in a real-world example [Sutton & Barto, 2018](https://web.stanford.edu/class/psych209/Readings/SuttonBartoIPRLBook2ndEd.pdf). 
 
 You leave your office on a Friday. You estimate it will take 30 minutes to drive home. As you navigate traffic, rain, and slow trucks, your estimate changes.
 
@@ -89,7 +89,7 @@ You leave your office on a Friday. You estimate it will take 30 minutes to drive
 * **Rewards (R):** Elapsed time between states.
 * **Goal:** Predict total time to get home.
 
-![Driving Home States Setup](images/DriveHome-Example.png.png)
+![Driving Home States Setup](images/DriveHome-Example.png)
 *(Caption: The sequence of states, elapsed times, and our initial predictions for how much time is remaining.)*
 
 #### The Monte Carlo Way (Waiting for the End)
@@ -137,10 +137,10 @@ Here is how TD updates our estimates *step-by-step* as we drive:
   * V(S₄) ← 3 + [3 + 0 - 3] = **3**
 
 ### Comparing the Updates Graphically
-The following graphs from Sutton & Barto (2018) beautifully illustrate the difference between the two methods:
+The following graphs from [Sutton & Barto, 2018](https://web.stanford.edu/class/psych209/Readings/SuttonBartoIPRLBook2ndEd.pdf) beautifully illustrate the difference between the two methods:
 
-![MC vs TD Graphs](images/MC-TD-Gragh.png.png)
-*(Caption: Left: MC updates. Right: TD updates. Figures reproduced from Sutton & Barto, 2018.)*
+![MC vs TD Graphs](images/MC-TD-Gragh.png)
+*(Caption: Left: MC updates. Right: TD updates. Figures reproduced from [Sutton & Barto, 2018](https://web.stanford.edu/class/psych209/Readings/SuttonBartoIPRLBook2ndEd.pdf).)*
 
 * **In the MC Graph (Left):** The arrows point from our initial predictions all the way to the horizontal "actual outcome" line. Every error is calculated against the final reality of the trip.
 * **In the TD Graph (Right):** The arrows point from one state's prediction to the *next state's prediction*. Every error is calculated sequentially based on the temporal difference between current and future guesses.
@@ -185,13 +185,13 @@ Empirically, TD methods converge to the correct values using much less data than
 * Terminating on the far right gives a reward of +1. Terminating on the far left gives 0.
 * The true value of each state is simply the probability of terminating on the right (e.g., State C = 0.5).
 
-![Random Walk Setup](images/RandomWalk-Setup.png.png)
+![Random Walk Setup](images/RandomWalk-Setup.png)
 *(Caption: The 5-state Random Walk environment. All episodes begin in state C.)*
 
-To prove TD's efficiency, we look at the Root Mean-Squared (RMS) error of both algorithms over 100 episodes. The graph below (reproduced from Sutton & Barto, 2018, p. 150) highlights the performance difference:
+To prove TD's efficiency, we look at the Root Mean-Squared (RMS) error of both algorithms over 100 episodes. The graph below (reproduced from [Sutton & Barto, 2018](https://web.stanford.edu/class/psych209/Readings/SuttonBartoIPRLBook2ndEd.pdf)) highlights the performance difference:
 
-![Random Walk RMS Error](images/RandomWalk-Gragh.png.png)
-*(Caption: Learning curves comparing TD(0) and constant-α MC on the Random Walk task. Figure from Sutton & Barto, 2018.)*
+![Random Walk RMS Error](images/RandomWalk-Gragh.png)
+*(Caption: Learning curves comparing TD(0) and constant-α MC on the Random Walk task. Figure from [Sutton & Barto, 2018](https://web.stanford.edu/class/psych209/Readings/SuttonBartoIPRLBook2ndEd.pdf).)*
 
 **Interpreting the Graph:**
 * The **dashed lines** (Monte Carlo) decrease slowly.
@@ -211,7 +211,7 @@ We established that both TD and MC eventually converge to the correct prediction
 
 To understand this, researchers use **Batch Updating**. This means we take our limited data (say, 8 episodes) and feed it to the algorithm over and over again until the value estimates stop changing. 
 
-Batch MC and Batch TD both converge deterministically, but *they converge to two completely different answers*. Let's look at a famous thought experiment from Sutton & Barto (2018, p. 152) to understand why.
+Batch MC and Batch TD both converge deterministically, but *they converge to two completely different answers*. Let's look at a famous thought experiment from [Sutton & Barto, 2018](https://web.stanford.edu/class/psych209/Readings/SuttonBartoIPRLBook2ndEd.pdf) to understand why.
 
 #### Example: You are the Predictor
 Place yourself in the role of the RL agent. You are observing an unknown Markov reward process, and you receive the following batch of 8 episodes:
@@ -222,7 +222,7 @@ Place yourself in the role of the RL agent. You are observing an unknown Markov 
 
 **The Question:** Given this data, what are the optimal values for State B and State A?
 
-![Predictor Setup](images/Optimality.png.png)
+![Predictor Setup](images/Optimality.png)
 *(Caption: A visualization of the transition data. We must determine the values of A and B based only on this limited experience.)*
 
 ##### The Obvious Answer: Value of B
@@ -301,6 +301,5 @@ But what if we want the agent to learn the *best possible policy* while simultan
 ### 8. References
 
 **References:**
-* Sutton, R. S., & Barto, A. G. (2018). *Reinforcement Learning: An Introduction* (2nd ed.). MIT Press. (Specifically Chapter 6: Temporal-Difference Learning, pp. 143-154).
-[RLBook]: https://web.stanford.edu/class/psych209/Readings/SuttonBartoIPRLBook2ndEd.pdf
+* [Sutton, R. S., & Barto, A. G. (2018). *Reinforcement Learning: An Introduction* (2nd ed.). MIT Press. (Specifically Chapter 6: Temporal-Difference Learning, pp. 143-154)](https://web.stanford.edu/class/psych209/Readings/SuttonBartoIPRLBook2ndEd.pdf).
 
