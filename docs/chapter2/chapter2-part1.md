@@ -1,5 +1,7 @@
 # Chapter 6: Temporal-Difference Learning (TD)
 
+In previous chapters, we have explored two fundamental approaches to Reinforcement Learning. Dynamic Programming (DP) gave us a powerful way to solve problems, but it required a perfect map of the environment's rules. Conversely, Monte Carlo (MC) methods allowed an agent to learn from direct experience, but forced it to wait until the end of an entire episode before any learning could occur. This leaves us at a crucial crossroads: Is there a way to combine the strengths of both? This chapter introduces Temporal-Difference (TD) learning, a novel and central idea in RL that elegantly merges these two worlds.
+
 ## Table of Contents
 1. [Section 1: Prediction](#section-1-prediction)
    - [Introduction: The Best of Both Worlds](#1-introduction-the-best-of-both-worlds)
@@ -84,7 +86,7 @@ Let's ground this math in a real-world example [Sutton & Barto, 2018](https://we
 
 You leave your office on a Friday. You estimate it will take 30 minutes to drive home. As you navigate traffic, rain, and slow trucks, your estimate changes.
 
-**The MDP Setup:**
+**The Markov Decision Process (MDP) Setup:**
 * **States:** Locations in your commute (Office, Car, Highway, Truck Road, Home Street, Home).
 * **Rewards (R):** Elapsed time between states.
 * **Goal:** Predict total time to get home.
