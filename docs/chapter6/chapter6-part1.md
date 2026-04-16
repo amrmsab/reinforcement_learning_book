@@ -34,11 +34,8 @@ Before we dive in, we must remember the **RL Divide**:
 2. **Dynamic Programming (DP):** Updates estimates based on other learned estimates—a process known as **bootstrapping**—without waiting for the final outcome.
 
 ![TD Venn Diagram](images/Venn-Diagram(DP,MC,TD).png) 
-*(Caption: TD Learning sits at the exact intersection of Monte Carlo and Dynamic Programming.)*
+*(TD Learning sits at the exact intersection of Monte Carlo and Dynamic Programming.)*
 
-> 🧠 **Test Your Understanding:**
-> Why do we call TD learning a "bootstrapping" method?
-> *Answer: Because it learns a guess from a guess! It updates the value of Sₜ using the estimated value of Sₜ₊₁, rather than waiting for the true final outcome.*
 ---
 
 ### 2. The Mathematics of TD(0)
@@ -49,7 +46,7 @@ All incremental learning methods share a similar update rule structure:
 Let's look at the side-by-side comparison of how Monte Carlo and the simplest form of TD learning—known as **TD(0)**—handle this update.
 
 ![MC vs TD Equations](images/Math-Comparisons.png) 
-*(Caption: Notice how the only structural difference is what each algorithm uses as its "Target".)*
+*(Notice how the only structural difference is what each algorithm uses as its "Target".)*
 
 #### The Monte Carlo vs. TD Target
 * **MC Target:** Gₜ (The actual total return). MC must wait until the episode ends to calculate this.
@@ -63,11 +60,6 @@ Before looking at an example, we must understand the parameters that control how
 * **Discount Factor (γ):** This dictates how much the agent cares about *future* rewards. 
   * If γ = 0, the agent is completely short-sighted (only cares about the immediate reward). 
   * If γ = 1, future rewards are weighted equally to immediate ones (often used in finite episodes, like driving home).
-
-> 🧠 **Test Your Understanding:**
-> The term in the brackets [Target − Old Estimate] is called the **TD Error**. 
-> If the TD Error is positive, what does that mean? 
-> *Answer: It means our experience was better than we expected, so we should increase the value of our previous state!*
 
 #### A Quick Note on n-step TD
 You might be wondering why we explicitly call this algorithm **TD(0)**. 
@@ -92,7 +84,7 @@ You leave your office on a Friday. You estimate it will take 30 minutes to drive
 * **Goal:** Predict total time to get home.
 
 ![Driving Home States Setup](images/DriveHome-Example.png)
-*(Caption: The sequence of states, elapsed times, and our initial predictions for how much time is remaining.)*
+*(The sequence of states, elapsed times, and our initial predictions for how much time is remaining.)*
 
 #### The Monte Carlo Way (Waiting for the End)
 With α = 1, the MC update formula simplifies to: V(Sₜ) ← Gₜ. 
@@ -142,7 +134,7 @@ Here is how TD updates our estimates *step-by-step* as we drive:
 The following graphs from [Sutton & Barto, 2018](https://web.stanford.edu/class/psych209/Readings/SuttonBartoIPRLBook2ndEd.pdf) beautifully illustrate the difference between the two methods:
 
 ![MC vs TD Graphs](images/MC-TD-Gragh.png)
-*(Caption: Left: MC updates. Right: TD updates. Figures reproduced from [Sutton & Barto, 2018](https://web.stanford.edu/class/psych209/Readings/SuttonBartoIPRLBook2ndEd.pdf).)*
+*(Left: MC updates. Right: TD updates. Figures reproduced from [Sutton & Barto, 2018](https://web.stanford.edu/class/psych209/Readings/SuttonBartoIPRLBook2ndEd.pdf).)*
 
 * **In the MC Graph (Left):** The arrows point from our initial predictions all the way to the horizontal "actual outcome" line. Every error is calculated against the final reality of the trip.
 * **In the TD Graph (Right):** The arrows point from one state's prediction to the *next state's prediction*. Every error is calculated sequentially based on the temporal difference between current and future guesses.
@@ -188,12 +180,12 @@ Empirically, TD methods converge to the correct values using much less data than
 * The true value of each state is simply the probability of terminating on the right (e.g., State C = 0.5).
 
 ![Random Walk Setup](images/RandomWalk-Setup.png)
-*(Caption: The 5-state Random Walk environment. All episodes begin in state C.)*
+*(The 5-state Random Walk environment. All episodes begin in state C.)*
 
 To prove TD's efficiency, we look at the Root Mean-Squared (RMS) error of both algorithms over 100 episodes. The graph below (reproduced from [Sutton & Barto, 2018](https://web.stanford.edu/class/psych209/Readings/SuttonBartoIPRLBook2ndEd.pdf)) highlights the performance difference:
 
 ![Random Walk RMS Error](images/RandomWalk-Gragh.png)
-*(Caption: Learning curves comparing TD(0) and constant-α MC on the Random Walk task. Figure from [Sutton & Barto, 2018](https://web.stanford.edu/class/psych209/Readings/SuttonBartoIPRLBook2ndEd.pdf).)*
+*(Learning curves comparing TD(0) and constant-α MC on the Random Walk task. Figure from [Sutton & Barto, 2018](https://web.stanford.edu/class/psych209/Readings/SuttonBartoIPRLBook2ndEd.pdf).)*
 
 **Interpreting the Graph:**
 * The **dashed lines** (Monte Carlo) decrease slowly.
@@ -225,7 +217,7 @@ Place yourself in the role of the RL agent. You are observing an unknown Markov 
 **The Question:** Given this data, what are the optimal values for State B and State A?
 
 ![Predictor Setup](images/Optimality.png)
-*(Caption: A visualization of the transition data. We must determine the values of A and B based only on this limited experience.)*
+*(A visualization of the transition data. We must determine the values of A and B based only on this limited experience.)*
 
 ##### The Obvious Answer: Value of B
 Everyone, regardless of the algorithm used, agrees on the value of State B. We started in State B a total of 8 times. Six times it gave a reward of 1, and two times it gave a reward of 0. 
