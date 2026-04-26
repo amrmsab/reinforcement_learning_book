@@ -1,38 +1,51 @@
 # Chapter 6: Function Approximation in Reinforcement Learning
 
-## 1. Introduction: Why Function Approximation?
+---
 
-In earlier chapters, we assumed that value functions could be stored in **tables**, with one entry per **state–action pair**. While intuitive, this approach quickly becomes infeasible in real-world problems.
+## 1. Introduction — Why Function Approximation?
 
-Consider:
+Early reinforcement learning (RL) methods assumed a **tabular setting**, where the value of every state or state–action pair is stored explicitly in a table. While intuitive and mathematically convenient, this approach becomes impractical in real-world environments.
 
-- Continuous state spaces (e.g., position and velocity)
-- High-dimensional observations (e.g., images)
-- Large combinatorial environments
+Modern RL problems often involve:
 
-In such cases:
+- Continuous state spaces (e.g., position, velocity, angles)  
+- High-dimensional observations (e.g., images or sensor readings)  
+- Massive or combinatorial state spaces  
 
-- The number of state–action pairs is effectively **infinite**, or
-- The table becomes too large to **store, learn, or generalize from**
+In such environments, an agent may **never encounter the exact same state twice**. As a result, learning separate values for each state or state–action pair becomes impossible due to memory, computation, and data limitations.
 
-The fundamental challenge is **generalization**:
+The fundamental challenge is therefore **generalization**:
 
-> How can an agent learn action values from limited experience and apply that knowledge to unseen state–action pairs?
+> How can an agent learn from limited experience and apply that knowledge to unseen states and actions?
 
-Function approximation provides the answer. Instead of storing values explicitly, we learn a **parameterized action-value function**:
+Function approximation provides the solution. Instead of storing values in a table, we learn a **parameterized value function** that can generalize across similar states.
+
+For value prediction, we approximate the state-value function:
+
+$$
+\hat{v}(s, \mathbf{w}) \approx v_\pi(s)
+$$
+
+For control, we approximate the action-value function:
 
 $$
 \hat{q}(s, a, \mathbf{w}) \approx q_\pi(s, a)
 $$
 
-For linear function approximation, this is often written as
-$$\hat{q}(s, a, \mathbf{w}) = \mathbf{w}^T \mathbf{x}(s, a)$$
+In linear function approximation, the action-value function is commonly written as:
 
-Here, $\mathbf{w}^T$ is the transpose of the weight vector $\mathbf{w}$, and $\mathbf{x}(s, a)$ is the feature vector for the state–action pair $(s, a)$.
+$$
+\hat{q}(s, a, \mathbf{w}) = \mathbf{w}^T \mathbf{x}(s, a)
+$$
 
-In general, we build $\mathbf{x}(s, a)$ by giving each action its own partition of the vector. The features for the current state are placed only in the block for the chosen action, and the other action blocks are set to zero.
+where:
 
-For example, if there are two actions, $a_1$ and $a_2$, and three state features $[f_1, f_2, f_3]$, then:
+- $\mathbf{w}$ is a weight vector of learnable parameters  
+- $\mathbf{x}(s, a)$ is a feature vector describing the state–action pair  
+
+A common construction is to allocate a separate **feature block for each action**. The features of the current state are placed in the block corresponding to the chosen action, while the other blocks are set to zero.
+
+For example, with two actions $a_1, a_2$ and three state features $[f_1, f_2, f_3]$:
 
 $$
 \mathbf{x}(s, a_1) = [f_1, f_2, f_3, 0, 0, 0]
@@ -42,11 +55,209 @@ $$
 \mathbf{x}(s, a_2) = [0, 0, 0, f_1, f_2, f_3]
 $$
 
-This shifts the problem from **memorization** to **learning a function**, enabling the agent to generalize across similar states and actions.
+This transformation shifts the problem from **memorization** to **learning a function**, enabling reinforcement learning to scale to realistic problems.
 
 ---
 
-## 2. From Tables to Functions
+## 2. Why Function Approximation?
+
+### The Curse of Dimensionality
+
+Consider a robot with:
+- 10 sensors  
+- each sensor has 100 possible readings  
+
+Number of states:
+
+$$
+|S| = 100^{10} = 10^{20}
+$$
+
+Storing a table with $10^{20}$ entries is impossible.
+
+Instead, we approximate the value function using a **parameterized function**:
+
+$$
+\hat{v}(s, \mathbf{w}) \approx v_\pi(s)
+$$
+
+Where:
+
+- $ \mathbf{w} \in \mathbb{R}^n $ is a weight vector  
+- $ n \ll |S| $
+
+This creates **generalization**: updating one parameter changes the value of many states simultaneously.
+
+---
+
+## 3. RL as Supervised Learning (But Harder)
+
+Function approximation in RL resembles supervised learning, but with key differences.
+
+| Property | Supervised Learning | Reinforcement Learning |
+|---|---|---|
+| Dataset | Fixed | Generated online |
+| Targets | Stationary | Non-stationary |
+| Independence | IID samples | Sequential & correlated |
+
+### Unique RL Challenges
+
+**1. Online Learning**  
+The agent must learn while interacting with the environment.
+
+**2. Non-stationary Targets**  
+Targets change because:
+- The policy improves
+- Bootstrapping uses evolving estimates
+
+This makes RL **more unstable** than supervised learning.
+
+---
+
+## 4. Performance Measure — Root Mean Squared Error (RMSE)
+
+With limited parameters, we cannot perfectly fit every state.
+
+Instead, we minimize the **on-policy mean squared error**:
+
+$$
+\text{RMSE}(\mathbf{w}) =
+\sum_{s \in S} d_\pi(s)\left[ v_\pi(s) - \hat{v}(s,\mathbf{w}) \right]^2
+$$
+
+Where $d_\pi(s)$ is the probability of visiting state $s$ under policy $\pi$.
+
+### Key Insight
+The approximator focuses on **states the agent actually visits**.
+
+---
+
+## 5. Gradient-Descent Value Prediction
+
+We update weights using stochastic gradient descent:
+
+$$
+\mathbf{w}_{t+1} =
+\mathbf{w}_t +
+\alpha\left[ V_t - \hat{v}(S_t,\mathbf{w}_t) \right]
+\nabla \hat{v}(S_t,\mathbf{w}_t)
+$$
+
+Where:
+- $\alpha$ = step size  
+- $V_t$ = learning target  
+
+---
+
+## 6. Monte-Carlo vs TD Targets
+
+### Monte-Carlo Target
+$$
+V_t = G_t
+$$
+
+- Unbiased  
+- High variance  
+- Converges reliably  
+
+### TD(0) Target
+$$
+V_t = R_{t+1} + \gamma \hat{v}(S_{t+1}, \mathbf{w})
+$$
+
+- Biased  
+- Lower variance  
+- Faster learning  
+
+---
+
+## 7. Linear Function Approximation
+
+$$
+\hat{v}(s,\mathbf{w}) = \mathbf{w}^\top \mathbf{x}(s)
+$$
+
+Gradient:
+
+$$
+\nabla \hat{v}(s,\mathbf{w}) = \mathbf{x}(s)
+$$
+
+Linear methods provide:
+- Convex optimization  
+- Single global optimum  
+- Stability with TD learning  
+
+---
+
+## 8. Python Demonstration — Linear TD(0)
+
+### Install Libraries
+
+```bash
+pip install numpy matplotlib
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+n_states = 5
+gamma = 1.0
+
+def step(state):
+    move = np.random.choice([-1, 1])
+    next_state = state + move
+    reward = 1 if next_state == n_states else 0
+    next_state = max(0, min(n_states, next_state))
+    return next_state, reward
+
+class LinearValueFunction:
+    def __init__(self, n_features, alpha=0.1):
+        self.w = np.zeros(n_features)
+        self.alpha = alpha
+
+    def features(self, s):
+        x = np.zeros(n_states + 1)
+        x[s] = 1
+        return x
+
+    def predict(self, s):
+        return np.dot(self.w, self.features(s))
+
+    def update_td(self, s, r, s_next):
+        x = self.features(s)
+        target = r + gamma * self.predict(s_next)
+        prediction = self.predict(s)
+        self.w += self.alpha * (target - prediction) * x
+
+model = LinearValueFunction(n_states + 1)
+
+episodes = 200
+values_history = []
+
+for ep in range(episodes):
+    state = np.random.randint(1, n_states)
+    while state not in [0, n_states]:
+        next_state, reward = step(state)
+        model.update_td(state, reward, next_state)
+        state = next_state
+    
+    values_history.append(model.w.copy())
+
+values_history = np.array(values_history)
+
+for i in range(n_states + 1):
+    plt.plot(values_history[:, i], label=f"V(s={i})")
+
+plt.legend()
+plt.title("Learning State Values with Linear TD(0)")
+plt.xlabel("Episode")
+plt.ylabel("Value Estimate")
+plt.show()
+
+---
+```
+# Control with function approximation
+## 9. From Tables to Functions
 
 In tabular methods:
 
@@ -68,13 +279,13 @@ A single update now affects many states, allowing knowledge to generalize across
 
 This means that learning in one part of the state space influences many others, making the representation critical for controlling how knowledge is shared.
 
-## 3. Feature Construction: Representing the State Space
+## 10. Feature Construction: Representing the State Space
 
 The effectiveness of function approximation depends heavily on feature design. Features define how states are represented numerically.
 
 We focus on four key methods to construct $\mathbf{x}(s, a)$:
 
-### 3.1 Coarse Coding
+### 10.1 Coarse Coding
 
 Coarse coding represents states using overlapping regions.
 
@@ -105,7 +316,7 @@ A useful way to think about coarse coding is that it defines _which states shoul
 
 In practice, coarse coding defines a set of regions (receptive fields) that cover the state space, often with significant overlap. When a state is observed, multiple features may become active simultaneously. The approximate value (or action-value) is then computed as a weighted sum of all active features. Updating one state also updates nearby states that share features.
 
-### 3.2 Tile Coding
+### 10.2 Tile Coding
 
 Tile coding improves coarse coding by using structured grids:
 
@@ -134,7 +345,7 @@ Tile coding is especially powerful because it provides a **direct and interpreta
 
 ---
 
-### 3.3 Radial Basis Functions (RBFs)
+### 10.3 Radial Basis Functions (RBFs)
 
 RBFs use smooth, continuous features:
 
@@ -178,7 +389,7 @@ RBFs provide fine-grained control over _how quickly similarity decays with dista
 
 ---
 
-### 3.4 Kanerva Coding
+### 10.4 Kanerva Coding
 
 - Randomly chosen prototype states
 - Features activated by similarity
@@ -208,9 +419,9 @@ The methods above differ mainly in how they control generalization:
 
 Choosing a feature representation is often more important than the learning algorithm itself, as it determines how experience generalizes across the state space.
 
-## 4. Control with Function Approximation
+## 11. Control with Function Approximation
 
-### 4.1 The Control Loop
+### 11.1 The Control Loop
 
 We now combine function approximation with reinforcement learning to enable control in large or continuous environments.
 
@@ -228,7 +439,7 @@ $$
 3. Observe the reward and next state
 4. Update the weights using SARSA
 
-### 4.2 SARSA with Function Approximation
+### 11.2 SARSA with Function Approximation
 
 Update rule:
 
@@ -382,7 +593,7 @@ This distinction becomes crucial in environments where rewards are delayed and c
 
 ---
 
-## 5. Bootstrapping: A Critical Design Choice
+## 12. Bootstrapping: A Critical Design Choice
 
 The use of SARSA and SARSA(λ) introduces an important concept in reinforcement learning: **bootstrapping**.
 
@@ -400,7 +611,7 @@ This allows learning to occur incrementally, step by step, during interaction wi
 
 ---
 
-### 5.1 Bootstrapping vs Non-Bootstrapping
+### 12.1 Bootstrapping vs Non-Bootstrapping
 
 | Method            | Target                | Example     |
 | ----------------- | --------------------- | ----------- |
@@ -416,7 +627,7 @@ This difference has important consequences for learning speed and stability.
 
 ---
 
-### 5.2 Why Use Bootstrapping?
+### 12.2 Why Use Bootstrapping?
 
 Despite weaker theoretical guarantees, bootstrapping methods are widely used in practice because they:
 
@@ -428,7 +639,7 @@ However, bootstrapping introduces bias because it relies on imperfect estimates 
 
 ---
 
-### 5.3 Intuition
+### 12.3 Intuition
 
 Bootstrapping can be thought of as _learning from guesses_. The agent updates its value estimates using other estimates that may still be inaccurate. This introduces bias, but it significantly reduces variance and speeds up learning.
 
@@ -436,7 +647,7 @@ In contrast, non-bootstrapping methods (such as Monte Carlo) wait for the full o
 
 ---
 
-### 5.4 When to Use Each
+### 12.4 When to Use Each
 
 **Use bootstrapping when:**
 
@@ -457,11 +668,11 @@ In contrast, non-bootstrapping methods (such as Monte Carlo) wait for the full o
 
 In practice, most modern reinforcement learning methods rely on bootstrapping because its efficiency and ability to learn online outweigh its theoretical limitations.
 
-## 6. Case Study: The Mountain Car Problem
+## 13. Case Study: The Mountain Car Problem
 
 This problem highlights the importance of function approximation, as the continuous state space makes tabular methods infeasible. Using methods such as tile coding with SARSA allows the agent to generalize across states and learn an effective policy.
 
-### 6.1 Problem Description
+### 13.1 Problem Description
 
 - State: position + velocity (continuous)
 - Actions: accelerate left, right, or none
@@ -472,13 +683,13 @@ Challenge:
 - Engine is too weak to climb directly
 - Agent must first move away from the goal
 
-### 6.2 Why This Is Difficult
+### 13.2 Why This Is Difficult
 
 - Requires long-term planning
 - Immediate rewards are misleading
 - State space is continuous
 
-### 6.3 Learned Behavior
+### 13.3 Learned Behavior
 
 The agent learns to:
 
@@ -492,7 +703,7 @@ The agent learns to:
 function (−maxa ˆq(s,a,w)) learned during one run.</figcaption>
 </figure>
 
-## 7. Trade-offs in Function Approximation
+## 14. Trade-offs in Function Approximation
 
 While powerful, function approximation introduces new challenges:
 
