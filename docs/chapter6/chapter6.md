@@ -8,9 +8,9 @@ Early reinforcement learning (RL) methods assumed a **tabular setting**, where t
 
 Modern RL problems often involve:
 
-- Continuous state spaces (e.g., position, velocity, angles)  
-- High-dimensional observations (e.g., images or sensor readings)  
-- Massive or combinatorial state spaces  
+- Continuous state spaces (e.g., position, velocity, angles)
+- High-dimensional observations (e.g., images or sensor readings)
+- Massive or combinatorial state spaces
 
 In such environments, an agent may **never encounter the exact same state twice**. As a result, learning separate values for each state or state–action pair becomes impossible due to memory, computation, and data limitations.
 
@@ -40,8 +40,8 @@ $$
 
 where:
 
-- $\mathbf{w}$ is a weight vector of learnable parameters  
-- $\mathbf{x}(s, a)$ is a feature vector describing the state–action pair  
+- $\mathbf{w}$ is a weight vector of learnable parameters
+- $\mathbf{x}(s, a)$ is a feature vector describing the state–action pair
 
 A common construction is to allocate a separate **feature block for each action**. The features of the current state are placed in the block corresponding to the chosen action, while the other blocks are set to zero.
 
@@ -64,8 +64,9 @@ This transformation shifts the problem from **memorization** to **learning a fun
 ### The Curse of Dimensionality
 
 Consider a robot with:
-- 10 sensors  
-- each sensor has 100 possible readings  
+
+- 10 sensors
+- each sensor has 100 possible readings
 
 Number of states:
 
@@ -83,7 +84,7 @@ $$
 
 Where:
 
-- $ \mathbf{w} \in \mathbb{R}^n $ is a weight vector  
+- $ \mathbf{w} \in \mathbb{R}^n $ is a weight vector
 - $ n \ll |S| $
 
 This creates **generalization**: updating one parameter changes the value of many states simultaneously.
@@ -94,11 +95,11 @@ This creates **generalization**: updating one parameter changes the value of man
 
 Function approximation in RL resembles supervised learning, but with key differences.
 
-| Property | Supervised Learning | Reinforcement Learning |
-|---|---|---|
-| Dataset | Fixed | Generated online |
-| Targets | Stationary | Non-stationary |
-| Independence | IID samples | Sequential & correlated |
+| Property     | Supervised Learning | Reinforcement Learning  |
+| ------------ | ------------------- | ----------------------- |
+| Dataset      | Fixed               | Generated online        |
+| Targets      | Stationary          | Non-stationary          |
+| Independence | IID samples         | Sequential & correlated |
 
 ### Unique RL Challenges
 
@@ -107,6 +108,7 @@ The agent must learn while interacting with the environment.
 
 **2. Non-stationary Targets**  
 Targets change because:
+
 - The policy improves
 - Bootstrapping uses evolving estimates
 
@@ -128,6 +130,7 @@ $$
 Where $d_\pi(s)$ is the probability of visiting state $s$ under policy $\pi$.
 
 ### Key Insight
+
 The approximator focuses on **states the agent actually visits**.
 
 ---
@@ -144,30 +147,33 @@ $$
 $$
 
 Where:
-- $\alpha$ = step size  
-- $V_t$ = learning target  
+
+- $\alpha$ = step size
+- $V_t$ = learning target
 
 ---
 
 ## 6. Monte-Carlo vs TD Targets
 
 ### Monte-Carlo Target
+
 $$
 V_t = G_t
 $$
 
-- Unbiased  
-- High variance  
-- Converges reliably  
+- Unbiased
+- High variance
+- Converges reliably
 
 ### TD(0) Target
+
 $$
 V_t = R_{t+1} + \gamma \hat{v}(S_{t+1}, \mathbf{w})
 $$
 
-- Biased  
-- Lower variance  
-- Faster learning  
+- Biased
+- Lower variance
+- Faster learning
 
 ---
 
@@ -184,9 +190,10 @@ $$
 $$
 
 Linear methods provide:
-- Convex optimization  
-- Single global optimum  
-- Stability with TD learning  
+
+- Convex optimization
+- Single global optimum
+- Stability with TD learning
 
 ---
 
@@ -240,7 +247,7 @@ for ep in range(episodes):
         next_state, reward = step(state)
         model.update_td(state, reward, next_state)
         state = next_state
-    
+
     values_history.append(model.w.copy())
 
 values_history = np.array(values_history)
@@ -256,8 +263,28 @@ plt.show()
 
 ---
 ```
-# Control with function approximation
-## 9. From Tables to Functions
+
+## From Prediction to Control
+
+So far, we have focused on **value prediction**, where the goal is to estimate the value function $v_\pi(s)$ for a fixed policy $\pi$.
+
+However, in reinforcement learning, the ultimate objective is not just to evaluate a policy, but to **improve it**. To do this, the agent must compare actions and choose those that lead to higher rewards.
+
+This requires estimating the **action-value function**:
+
+$$
+\hat{q}(s, a, \mathbf{w}) \approx q\_\pi(s, a)
+$$
+
+Unlike the state-value function, which evaluates states, the action-value function directly evaluates **state–action pairs**, allowing the agent to select better actions.
+
+In tabular settings, moving from $v(s)$ to $q(s,a)$ is straightforward. With function approximation, however, we must carefully design representations and learning algorithms that generalize across both states and actions.
+
+In the following sections, we extend the ideas of function approximation from value prediction to **control**, using methods such as SARSA.
+
+## 9. Control with Function Approximation
+
+In the previous section, we introduced the need to estimate action-value functions for control. We now show how function approximation enables this in large or continuous environments.
 
 In tabular methods:
 
@@ -280,6 +307,8 @@ A single update now affects many states, allowing knowledge to generalize across
 This means that learning in one part of the state space influences many others, making the representation critical for controlling how knowledge is shared.
 
 ## 10. Feature Construction: Representing the State Space
+
+To apply function approximation effectively, we must define how states and actions are represented. This is done through feature construction, which determines how the agent generalizes across the state space.
 
 The effectiveness of function approximation depends heavily on feature design. Features define how states are represented numerically.
 
@@ -419,7 +448,7 @@ The methods above differ mainly in how they control generalization:
 
 Choosing a feature representation is often more important than the learning algorithm itself, as it determines how experience generalizes across the state space.
 
-## 11. Control with Function Approximation
+## 11. Learning Control with SARSA
 
 ### 11.1 The Control Loop
 
@@ -595,7 +624,7 @@ This distinction becomes crucial in environments where rewards are delayed and c
 
 ## 12. Bootstrapping: A Critical Design Choice
 
-The use of SARSA and SARSA(λ) introduces an important concept in reinforcement learning: **bootstrapping**.
+The update rules used in SARSA and SARSA(λ) rely on an important idea: **bootstrapping**..
 
 Bootstrapping means:
 
@@ -660,7 +689,7 @@ In contrast, non-bootstrapping methods (such as Monte Carlo) wait for the full o
 
 - Accurate, unbiased estimates are more important than speed
 - Episodes are short and complete returns are easy to obtain
-- Training can bedone offline with full trajectories
+- Training can be done offline with full trajectories
 
 ---
 
@@ -669,6 +698,8 @@ In contrast, non-bootstrapping methods (such as Monte Carlo) wait for the full o
 In practice, most modern reinforcement learning methods rely on bootstrapping because its efficiency and ability to learn online outweigh its theoretical limitations.
 
 ## 13. Case Study: The Mountain Car Problem
+
+The Mountain Car problem illustrates why function approximation and bootstrapping are essential in practice.
 
 This problem highlights the importance of function approximation, as the continuous state space makes tabular methods infeasible. Using methods such as tile coding with SARSA allows the agent to generalize across states and learn an effective policy.
 
