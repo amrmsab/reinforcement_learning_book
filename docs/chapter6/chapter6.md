@@ -1,6 +1,6 @@
 # Chapter 6: Function Approximation in Reinforcement Learning
 
-## 1. Introduction — Why Function Approximation?
+## 1. Introduction.
 
 Early reinforcement learning (RL) methods assumed a **tabular setting**, where the value of every state or state–action pair is stored explicitly in a table. While intuitive and mathematically convenient, this approach becomes impractical in real-world environments.
 
@@ -49,20 +49,33 @@ This transformation shifts the problem from **memorization** to **learning a fun
 
 ### The Curse of Dimensionality
 
-Consider a robot with:
+A key motivation for function approximation is the **explosion of the state space** in realistic problems.
 
-- 10 sensors
-- each sensor has 100 possible readings
+Consider a simple robot equipped with:
 
-Number of states:
+- 10 sensors  
+- each sensor can take 100 distinct readings  
+
+The number of possible states becomes:
 
 $$
 |S| = 100^{10} = 10^{20}
 $$
 
-Storing a table with $10^{20}$ entries is impossible.
+This means the agent would need to store **100 quintillion values** in a table.  
+Even if each value required only 8 bytes, the storage requirement would exceed any practical computing system.  
+More importantly, the agent would **never visit more than a tiny fraction** of these states during training.
 
-Instead, we approximate the value function using a **parameterized function**:
+This highlights a deeper issue:
+
+> Tabular methods cannot generalize.  
+> They only learn about states that have been visited.
+
+---
+
+### From Tables to Functions
+
+To overcome this limitation, we replace the lookup table with a **parameterized function** that can generalize across states:
 
 $$
 \hat{v}(s, \mathbf{w}) \approx v_\pi(s)
@@ -70,50 +83,188 @@ $$
 
 Where:
 
-- $ \mathbf{w} \in \mathbb{R}^n $ is a weight vector
-- $ n \ll |S| $
+- $\hat{v}(s, \mathbf{w})$ is the **approximate value function**
+- $v_\pi(s)$ is the true value under policy $\pi$
+- $\mathbf{w} \in \mathbb{R}^n$ is a vector of learnable parameters
+- Typically, $n \ll |S|$
 
-This creates **generalization**: updating one parameter changes the value of many states simultaneously.
+Instead of learning one value per state, we now learn **a small set of parameters** that define a function mapping states to values.
 
 ---
 
+### Why This Enables Generalization
+
+In tabular learning:
+
+- Updating one state affects **only that state**
+
+In function approximation:
+
+- Updating one parameter affects **many states simultaneously**
+
+A single experience can therefore improve value estimates for **unseen but similar states**.
+
+This is the core idea that allows reinforcement learning to scale to:
+
+- Robotics  
+- Autonomous driving  
+- Game playing  
+- Real-world decision-making systems---
+
 ## 3. RL as Supervised Learning (But Harder)
 
-Function approximation in RL resembles supervised learning, but with key differences.
+At first glance, value-function learning with function approximation looks very similar to **supervised learning**.  
+In both settings, we learn a function that maps inputs to target outputs and improve it using gradient descent.
 
-| Property     | Supervised Learning | Reinforcement Learning  |
-| ------------ | ------------------- | ----------------------- |
-| Dataset      | Fixed               | Generated online        |
-| Targets      | Stationary          | Non-stationary          |
-| Independence | IID samples         | Sequential & correlated |
+However, reinforcement learning introduces several additional difficulties that make the problem significantly harder.
 
-### Unique RL Challenges
+| Property     | Supervised Learning | Reinforcement Learning |
+|--------------|--------------------|------------------------|
+| Dataset      | Fixed and pre-collected | Generated online during interaction |
+| Targets      | Stationary (fixed labels) | Non-stationary (constantly changing) |
+| Independence | IID samples | Sequential and correlated data |
 
-**1. Online Learning**  
-The agent must learn while interacting with the environment.
+---
 
-**2. Non-stationary Targets**  
-Targets change because:
+### 3.1 The Supervised Learning View
 
-- The policy improves
-- Bootstrapping uses evolving estimates
+In supervised learning, we are given a dataset of input–output pairs:
 
-This makes RL **more unstable** than supervised learning.
+$$
+(x_i, y_i)
+$$
+
+We train a model to minimize prediction error:
+
+$$
+\text{Loss} = (y_i - \hat{y}(x_i))^2
+$$
+
+In value prediction, the analogy becomes:
+
+| Supervised Learning | Reinforcement Learning |
+|---|---|
+| Input $x$ | State $s$ |
+| Label $y$ | Target value $V_t$ |
+| Model $\hat{y}(x)$ | Approximate value $\hat{v}(s,\mathbf{w})$ |
+
+So we can write a similar loss:
+
+$$
+\left(V_t - \hat{v}(S_t,\mathbf{w})\right)^2
+$$
+
+Although the mathematics looks familiar, the **data-generation process** is completely different.
+
+---
+
+### 3.2 Online Learning
+
+In supervised learning:
+- The dataset is fixed before training begins.
+- The algorithm can iterate over the same data many times.
+
+In reinforcement learning:
+- The agent must **generate its own data** by interacting with the environment.
+- Every new action changes the future data the agent will observe.
+
+This creates a feedback loop:
+
+$$
+\text{Policy} \rightarrow \text{Data} \rightarrow \text{Learning} \rightarrow \text{Improved Policy}
+$$
+
+Because of this loop:
+- The data distribution is constantly changing.
+- The algorithm must learn **incrementally and continuously**.
+
+---
+
+### 3.3 Correlated and Sequential Data
+
+Supervised learning typically assumes **IID samples** (Independent and Identically Distributed).
+
+In RL, consecutive samples come from trajectories:
+
+$$
+S_t \rightarrow S_{t+1} \rightarrow S_{t+2} \rightarrow \dots
+$$
+
+This means:
+- Samples are highly correlated.
+- Standard optimization assumptions break down.
+- Learning becomes less stable.
+
+This is one reason experience replay is used in deep RL.
+
+---
+
+### 3.4 Non-Stationary Targets
+
+This is the most important difference.
+
+In supervised learning:
+- The label $y$ never changes.
+
+In reinforcement learning:
+- The target value **depends on the model itself**.
+
+For example, the TD target is:
+
+$$
+V_t = R_{t+1} + \gamma \hat{v}(S_{t+1}, \mathbf{w})
+$$
+
+Notice that the target contains the **current model prediction**.  
+As the weights change, the target changes too.
+
+This creates a moving target problem:
+
+> The model is trying to predict a quantity that shifts as learning progresses.
+
+This makes RL inherently more unstable than supervised learning.
+
+---
+
+### 3.5 Why This Matters
+
+Because of these challenges, RL with function approximation requires:
+
+- Small learning rates  
+- Careful feature design  
+- Stable algorithms (e.g., linear TD methods)  
+
+Understanding this connection to supervised learning helps us reuse optimization tools, while also highlighting the unique difficulties of reinforcement learning.
 
 ---
 
 ## 4. Performance Measure — Root Mean Squared Error (RMSE)
 
-With limited parameters, we cannot perfectly fit every state.
+With function approximation, the number of parameters is much smaller than the number of states.  
+As a result, it is generally **impossible to make the value estimate perfect for every state**.
 
-Instead, we minimize the **on-policy mean squared error**:
+Instead, we aim to find parameters that perform well **on average** over the states the agent actually visits.
+
+We therefore minimize the **on-policy mean squared error**:
 
 $$
 \text{RMSE}(\mathbf{w}) =
 \sum_{s \in S} d_\pi(s)\left[ v_\pi(s) - \hat{v}(s,\mathbf{w}) \right]^2
 $$
 
-Where $d_\pi(s)$ is the probability of visiting state $s$ under policy $\pi$.
+where $d_\pi(s)$ is the probability of visiting state $s$ while following policy $\pi$.
+
+### Why the State Distribution Matters
+
+Not all states are equally important.  
+Some states may rarely occur, while others appear frequently during interaction.
+
+The distribution $d_\pi(s)$ ensures that:
+
+- Frequently visited states receive **higher priority**
+- Rare or irrelevant states receive **less emphasis**
+
+This means the function approximator focuses its limited capacity on the **most relevant parts of the state space**.
 
 ### Key Insight
 
@@ -123,7 +274,7 @@ The approximator focuses on **states the agent actually visits**.
 
 ## 5. Gradient-Descent Value Prediction
 
-We update weights using stochastic gradient descent:
+To minimize the prediction error, we update the weight vector using **stochastic gradient descent (SGD)** after every interaction step:
 
 $$
 \mathbf{w}_{t+1} =
@@ -134,12 +285,33 @@ $$
 
 Where:
 
-- $\alpha$ = step size
-- $V_t$ = learning target
+- $\alpha$ is the **step-size (learning rate)**  
+- $V_t$ is the **target value**  
+- $\nabla \hat{v}(S_t,\mathbf{w}_t)$ is the gradient of the value estimate with respect to the weights  
+
+### Intuition
+
+The update is driven by the **prediction error**:
+
+$$
+\text{Error} = V_t - \hat{v}(S_t,\mathbf{w}_t)
+$$
+
+- If the prediction is too low → weights increase  
+- If the prediction is too high → weights decrease  
+
+The gradient term determines **how each parameter influences the prediction**, guiding the direction of the update.
+
+Using small incremental updates helps the algorithm gradually find a set of parameters that balances errors across many states.
 
 ---
 
 ## 6. Monte-Carlo vs TD Targets
+
+The learning target $V_t$ determines how the value function is updated.  
+Two fundamental choices are **Monte-Carlo (MC)** and **Temporal-Difference (TD)** targets.
+
+---
 
 ### Monte-Carlo Target
 
@@ -147,9 +319,17 @@ $$
 V_t = G_t
 $$
 
-- Unbiased
-- High variance
-- Converges reliably
+Here, $G_t$ is the **total return** observed after time step $t$ until the end of the episode.
+
+**Properties**
+
+- **Unbiased:** it uses the true observed return, so its expected value equals the true value.
+- **High variance:** returns depend on long sequences of random rewards.
+- **Episode-based:** updates can only occur **after the episode ends**.
+
+Monte-Carlo methods learn from **complete experience**, making them stable but often slow.
+
+---
 
 ### TD(0) Target
 
@@ -157,10 +337,25 @@ $$
 V_t = R_{t+1} + \gamma \hat{v}(S_{t+1}, \mathbf{w})
 $$
 
-- Biased
-- Lower variance
-- Faster learning
+This target uses **bootstrapping**: it combines the immediate reward with the model’s current estimate of the next state.
 
+**Properties**
+
+- **Biased:** the target depends on the current approximation.
+- **Lower variance:** relies on one-step predictions instead of full returns.
+- **Online learning:** updates occur **after every step**, without waiting for episode termination.
+- **Faster learning:** information propagates quickly through the state space.
+
+---
+
+### Bias–Variance Tradeoff
+
+Monte-Carlo and TD methods illustrate a classic tradeoff:
+
+- MC → **accurate but noisy**
+- TD → **slightly biased but efficient**
+
+In practice, TD methods are widely preferred for large or continuing tasks because they learn **faster and more incrementally**.
 ---
 
 ## 7. Linear Function Approximation
