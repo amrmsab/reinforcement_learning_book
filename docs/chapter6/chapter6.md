@@ -1,7 +1,5 @@
 # Chapter 6: Function Approximation in Reinforcement Learning
 
----
-
 ## 1. Introduction — Why Function Approximation?
 
 Early reinforcement learning (RL) methods assumed a **tabular setting**, where the value of every state or state–action pair is stored explicitly in a table. While intuitive and mathematically convenient, this approach becomes impractical in real-world environments.
@@ -42,18 +40,6 @@ where:
 
 - $\mathbf{w}$ is a weight vector of learnable parameters
 - $\mathbf{x}(s, a)$ is a feature vector describing the state–action pair
-
-A common construction is to allocate a separate **feature block for each action**. The features of the current state are placed in the block corresponding to the chosen action, while the other blocks are set to zero.
-
-For example, with two actions $a_1, a_2$ and three state features $[f_1, f_2, f_3]$:
-
-$$
-\mathbf{x}(s, a_1) = [f_1, f_2, f_3, 0, 0, 0]
-$$
-
-$$
-\mathbf{x}(s, a_2) = [0, 0, 0, f_1, f_2, f_3]
-$$
 
 This transformation shifts the problem from **memorization** to **learning a function**, enabling reinforcement learning to scale to realistic problems.
 
@@ -308,11 +294,25 @@ This means that learning in one part of the state space influences many others, 
 
 ## 10. Feature Construction: Representing the State Space
 
-To apply function approximation effectively, we must define how states and actions are represented. This is done through feature construction, which determines how the agent generalizes across the state space.
-
 The effectiveness of function approximation depends heavily on feature design. Features define how states are represented numerically.
 
-We focus on four key methods to construct $\mathbf{x}(s, a)$:
+Before discussing specific feature construction methods, it is useful to explain how state features can be extended to state–action features.
+
+A common construction is to allocate a separate **feature block for each action**. The features of the current state are placed in the block corresponding to the chosen action, while the other blocks are set to zero.
+
+For example, with two actions $a_1, a_2$ and three state features $[f_1, f_2, f_3]$:
+
+$$
+\mathbf{x}(s, a_1) = [f_1, f_2, f_3, 0, 0, 0]
+$$
+
+$$
+\mathbf{x}(s, a_2) = [0, 0, 0, f_1, f_2, f_3]
+$$
+
+This construction allows the same state features to be reused for different actions while still learning separate action values.
+
+In this section, we focus on four key methods for constructing $\mathbf{x}(s, a)$:
 
 ### 10.1 Coarse Coding
 
