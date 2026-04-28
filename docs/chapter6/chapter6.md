@@ -72,6 +72,10 @@ This highlights a deeper issue:
 > They only learn about states that have been visited.
 
 ---
+<figure>
+	<img src="figures/Curse of dimensionality.png" >
+	<figcaption>Figure: As the dimensionality of the feature space increases, the number of configurations can grow exponentially.</figcaption>
+</figure>
 
 ### From Tables to Functions
 
