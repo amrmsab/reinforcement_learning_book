@@ -4,7 +4,7 @@ In this chapter we present the problem that we aim to address throughout the rem
 
 Our goal in this chapter is to describe the reinforcement learning problem in a broad sense. We aim to convey the wide variety of possible applications that can be formulated as reinforcement learning tasks. We also describe mathematically idealized forms of the reinforcement learning problem for which precise theoretical statements can be made. We introduce key elements of the problem's mathematical structure, such as value functions and Bellman equations. As in all of artificial intelligence, there is a tension between breadth of applicability and mathematical tractability. In this chapter we introduce this tension and discuss some of the trade-offs and challenges that it entails.
 
-This chapter is based primarily on [Sutton & Barto (2018)](https://web.stanford.edu/class/psych209/Readings/SuttonBartoIPRLBook2ndEd.pdf). Portions of the exposition follow the original text closely, with some material omitted for brevity. Additional explanations and derivations have been included where clarity was needed.
+This chapter is based primarily on [Sutton & Barto (2018)](https://web.stanford.edu/class/psych209/Readings/SuttonBartoIPRLBook2ndEd.pdf) Chapter 3 "Finite Markov Decision Processes". Portions of the exposition follow the original text closely, with some material omitted for brevity. Additional explanations and derivations have been included where clarity was needed.
 
 ## Prerequisites
 
@@ -50,9 +50,9 @@ The Markov property is a simple but fundamental idea in reinforcement learning. 
 Formally, the Markov property is defined as:
 
 $$
-    P(S_{t+1}, R_{t+1} \mid S_t, A_t, S_{t-1}, A_{t-1}, \dots, S_0, A_0)
-=
-P(S_{t+1}, R_{t+1} \mid S_t, A_t) \tag{1}
+\begin{aligned}
+P(S_{t+1}, R_{t+1} \mid S_t, A_t, S_{t-1}, A_{t-1}, \dots, S_0, A_0)=P(S_{t+1}, R_{t+1} \mid S_t, A_t) 
+\end{aligned}\tag{1}
 $$
 
 Here, $S_t$ is the current state, $S_{t+1}$ is the next (future) state, and $S_0, \dots, S_{t-1}$ represent the history. The Markov property states that once $S_t$ is known, the full history is no longer needed for predicting the future.
@@ -72,7 +72,9 @@ A reinforcement learning task that satisfies the Markov property is called a Mar
 A particular finite MDP is defined by its state and action sets and by the one-step dynamics of the environment. Given any state $s$ and action $a$, the probability of each possible pair of next state $s'$ and reward $r$, is denoted
 
 $$
-p(s', r \mid s, a) = \Pr\{S_{t+1}=s', R_{t+1}=r \mid S_t=s, A_t=a\} \tag{2}
+\begin{aligned}
+p(s', r \mid s, a) = \Pr\{S_{t+1}=s', R_{t+1}=r \mid S_t=s, A_t=a\}
+\end{aligned}\tag{2}
 $$
 
 It is important to emphasize that the dynamics are, in general, stochastic. For a given state--action pair $(s,a)$, the next state $S_{t+1}$ and reward $R_{t+1}$ are not fixed, but are jointly distributed according to $p(s', r \mid s, a)$. That is, multiple next states and reward values may occur with different probabilities. Consequently, the reward is not a single deterministic value associated with $(s,a)$ or $(s,a,s')$, but a random variable.
@@ -93,14 +95,18 @@ $$
 From 2nd to the 3rd line, we obtain the expression by marginalizing over $s'$, using
 
 $$
-p(r \mid s,a) = \sum_{s'} p(s', r \mid s,a).    \tag{4}
+\begin{aligned}
+p(r \mid s,a) = \sum_{s'} p(s', r \mid s,a).    
+\end{aligned} \tag{4}
 $$
 
 ### State-transition probabilities
 
 $$
+\begin{aligned}
 p(s' \mid s, a) = \Pr\{S_{t+1} = s' \mid S_t = s, A_t = a\}
-= \sum_{r \in \mathcal{R}} p(s', r \mid s, a) \tag{5}
+= \sum_{r \in \mathcal{R}} p(s', r \mid s, a)
+\end{aligned}\tag{5}
 $$
 
 This follows by marginalizing the joint distribution $p(s', r \mid s,a)$ over rewards $r$.
@@ -120,7 +126,9 @@ $$
 From 2nd to the 3rd line, we use conditional probability (Bayes rule):
 
 $$
-p(r \mid s,a,s') = \frac{p(s', r \mid s,a)}{p(s' \mid s,a)}.    \tag{7}
+\begin{aligned}
+p(r \mid s,a,s') = \frac{p(s', r \mid s,a)}{p(s' \mid s,a)}. 
+\end{aligned}\tag{7}
 $$
 
 **Example 2: Recycling Robot MDP** The recycling robot (Example 1) can be modeled as a simple MDP as follows. At each decision point, the robot chooses to (1) actively search for cans, (2) wait for cans to be brought to it, or (3) return to base to recharge. Searching is most effective but drains the battery; waiting does not. If the battery depletes during search, the robot shuts down and must be rescued, incurring a reward of $-3$.
@@ -151,8 +159,9 @@ _Value functions_ provide a formal mechanism for this purpose. They quantify the
 Recall that a policy $\pi$ is a mapping from each state $s \in \mathcal{S}$ and action $a \in \mathcal{A}(s)$ to the probability $\pi(a|s)$ of taking action $a$ when in state $s$. Informally, the _value_ of a state $s$ under a policy $\pi$, denoted $v_\pi(s)$, is the expected return when starting in $s$ and following $\pi$ thereafter. For MDPs, this is formally defined as
 
 $$
-v_\pi(s) = \mathbb{E}_\pi [G_t \mid S_t = s]
-= \mathbb{E}_\pi \left[\sum_{k=0}^{\infty} \gamma^k R_{t+k+1} \,\middle|\, S_t = s \right] \tag{8}
+\begin{aligned}
+v_\pi(s) = \mathbb{E}_\pi [G_t \mid S_t = s] = \mathbb{E}_\pi \left[\sum_{k=0}^{\infty} \gamma^k R_{t+k+1} \,\middle|\, S_t = s \right]
+\end{aligned} \tag{8}
 $$
 
 where $\mathbb{E}_\pi[\cdot]$ denotes the expected value given that the agent follows policy $\pi$, and $t$ is any time step. Note that the value of a terminal state, if any, is always zero. We call $v_\pi$ the state-value function for policy $\pi$.
@@ -160,8 +169,10 @@ where $\mathbb{E}_\pi[\cdot]$ denotes the expected value given that the agent fo
 Similarly, we define the value of taking action $a$ in state $s$ under a policy $\pi$, denoted $q_\pi(s, a)$, as the expected return starting from $s$, taking action $a$, and thereafter following policy $\pi$:
 
 $$
+\begin{aligned}
 q_\pi(s, a) = \mathbb{E}_\pi [G_t \mid S_t = s, A_t = a]
-= \mathbb{E}_\pi \left[\sum_{k=0}^{\infty} \gamma^k R_{t+k+1} \,\middle|\, S_t = s, A_t = a \right] \tag{9}
+= \mathbb{E}_\pi \left[\sum_{k=0}^{\infty} \gamma^k R_{t+k+1} \,\middle|\, S_t = s, A_t = a \right]
+\end{aligned} \tag{9}
 $$
 
 We call $q_\pi$ the action-value function for policy $\pi$.
@@ -169,10 +180,12 @@ We call $q_\pi$ the action-value function for policy $\pi$.
 A fundamental property of value functions used throughout reinforcement learning and dynamic programming is that they satisfy particular recursive relationships. For any policy $\pi$ and any state $s$, the following consistency condition holds between the value of $s$ and the value of its possible successor states (full derivation in section [[#Bellman Equation Derivation]]: ^eq-bellman
 
 $$
+\begin{aligned}
 v_{\pi}(s)
 = \mathbb{E}_{\pi}[G_t \mid S_t = s]
 = \sum_{a} \pi(a \mid s) \sum_{s', r} p(s', r \mid s, a)
-\left[r + \gamma v_{\pi}(s')\right] \tag{10}
+\left[r + \gamma v_{\pi}(s')\right]
+\end{aligned}\tag{10}
 $$
 
 where it is implicit that the actions, $a$, are taken from the set $A(s)$, the next states, $s'$, are taken from the set $\mathcal{S}$ (or from $\mathcal{S}^+$ in the case of an episodic problem), and the rewards, $r$, are taken from the set $\mathcal{R}$. Note also how in the last equation we have merged the two sums, one over all the values of $s'$ and the other over all values of $r$, into one sum over all possible values of both. We will use this kind of merged sum often to simplify formulas. Note how the final expression can be read very easily as an expected value. It is really a sum over all values of the three variables, $a$, $s'$, and $r$. For each triple, we compute its probability, $\pi(a \mid s)p(s', r \mid s, a)$, weight the quantity in brackets by that probability, then sum over all possibilities to get an expected value.
@@ -198,7 +211,9 @@ _Figure 3b_ shows $v_\pi$ for the equiprobable random policy with $\gamma = 0.9$
 This is a longer derivation than those presented earlier in the chapter. It is included for completeness and may be skipped on first reading if the goal is only to understand the final form of the value function. The derivation is adapted from \cite{BellmanSE}.
 
 $$
-G_t = \sum_{k=t+1}^{T} \gamma^{k-t-1} R_k    \tag{11}
+\begin{aligned}
+G_t = \sum_{k=t+1}^{T} \gamma^{k-t-1} R_k
+\end{aligned}\tag{11}
 $$
 
 is defined earlier in the chapter, with a constant discount factor $0 \le \gamma \le 1$, and we can have $T=\infty$ or $\gamma=1$, but not both. Since the rewards $R_k$ are random variables, so is $G_t$, as it is merely a linear combination of random variables.
@@ -209,8 +224,7 @@ v_\pi(s)
 &= \mathbb{E}_\pi[G_t \mid S_t = s] \notag \\
 &= \mathbb{E}_\pi[R_{t+1} + \gamma R_{t+2} + \gamma^2 R_{t+3} + \cdots \mid S_t = s] \notag \\
 &= \mathbb{E}_\pi[R_{t+1} + \gamma G_{t+1} \mid S_t = s] \notag \\
-&= \mathbb{E}_\pi[R_{t+1} \mid S_t = s]
-+ \gamma \mathbb{E}_\pi[G_{t+1} \mid S_t = s]
+&= \mathbb{E}_\pi[R_{t+1} \mid S_t = s] + \gamma \mathbb{E}_\pi[G_{t+1} \mid S_t = s]
 \end{align} \tag{12}
 $$
 
@@ -219,31 +233,41 @@ That last line follows from the linearity of expectation values. $R_{t+1}$ is th
 Work on the first term. We compute the expectation of $R_{t+1}$ given that we know the current state is $s$:
 
 $$
-\mathbb{E}_\pi[R_{t+1} \mid S_t = s] = \sum_{r \in \mathcal{R}} r \, p(r \mid s) \tag{13}
+\begin{aligned}
+\mathbb{E}_\pi[R_{t+1} \mid S_t = s] = \sum_{r \in \mathcal{R}} r \, p(r \mid s)
+\end{aligned} \tag{13}
 $$
 
 This $p(r \mid s)$ is a marginal of a distribution that also contains variables $a$ and $s'$, the action at time $t$ and next state at time $t+1$:
 
 $$
-p(r \mid s) = \sum_{s' \in \mathcal{S}} \sum_{a \in \mathcal{A}} p(s', a, r \mid s) \tag{14}
+\begin{aligned}
+p(r \mid s) = \sum_{s' \in \mathcal{S}} \sum_{a \in \mathcal{A}} p(s', a, r \mid s) 
+\end{aligned}\tag{14}
 $$
 
 Using the chain rule of probability:
 
 $$
-p(s', r, a \mid s) = p(s', r \mid a, s)\, p(a \mid s) = p(s', r \mid a, s)\, \pi(a \mid s) \tag{15}
+\begin{aligned}
+p(s', r, a \mid s) = p(s', r \mid a, s)\, p(a \mid s) = p(s', r \mid a, s)\, \pi(a \mid s) 
+\end{aligned}\tag{15}
 $$
 
 We can rewrite $(1)$ using $(2)$ and $(3)$ to:
 
 $$
-\mathbb{E}_\pi[R_{t+1} \mid S_t = s] = \sum_{r \in \mathcal{R}} \sum_{s' \in \mathcal{S}} \sum_{a \in \mathcal{A}} r \, \pi(a \mid s) \, p(s', r \mid a, s) \tag{16}
+\begin{aligned}
+\mathbb{E}_\pi[R_{t+1} \mid S_t = s] = \sum_{r \in \mathcal{R}} \sum_{s' \in \mathcal{S}} \sum_{a \in \mathcal{A}} r \, \pi(a \mid s) \, p(s', r \mid a, s) 
+\end{aligned}\tag{16}
 $$
 
 On to the **second term**, where $G_{t+1}$ is assumed to take values $g \in \Gamma$:
 
 $$
-\mathbb{E}_\pi[G_{t+1} \mid S_t = s] = \sum_{g \in \Gamma} g \, p(g \mid s) \tag{17}
+\begin{aligned}
+\mathbb{E}_\pi[G_{t+1} \mid S_t = s] = \sum_{g \in \Gamma} g \, p(g \mid s)
+\end{aligned}\tag{17}
 $$
 
 Once again, we un-marginalize:
@@ -252,31 +276,31 @@ $$
 \begin{align}
 p(g \mid s)
 &= \sum_{r \in \mathcal{R}} \sum_{s' \in \mathcal{S}} \sum_{a \in \mathcal{A}}
-p(s', r, a, g \mid s)  \notag \\
+p(s', r, a, g \mid s) \\
+&= \sum_{r \in \mathcal{R}} \sum_{s' \in \mathcal{S}} \sum_{a \in \mathcal{A}} p(g \mid s', r, a, s)\, p(s', r, a \mid s)  \\
 &= \sum_{r \in \mathcal{R}} \sum_{s' \in \mathcal{S}} \sum_{a \in \mathcal{A}}
-p(g \mid s', r, a, s)\, p(s', r, a \mid s) \tag{Chain Rule on $s', r, a$} \\
-&= \sum_{r \in \mathcal{R}} \sum_{s' \in \mathcal{S}} \sum_{a \in \mathcal{A}}
-p(g \mid s', r, a, s)\, p(s', r \mid a, s)\, \pi(a \mid s) \tag{Chain Rule on $a$} \\
+p(g \mid s', r, a, s)\, p(s', r \mid a, s)\, \pi(a \mid s)  \\
 &= \sum_{r \in \mathcal{R}} \sum_{s' \in \mathcal{S}} \sum_{a \in \mathcal{A}}
 p(g \mid s')\, p(s', r \mid a, s)\, \pi(a \mid s)
 \end{align} \tag{18}
 $$
 
-The last line follows from the Markov property: future evolution depends only on $s'$.
+2nd line we use the chain rule on ($s', r, a$). 3rd line we use the chain rule on $a$. The last line follows from the Markov property: future evolution depends only on $s'$, when available.
 
 Thus the second term becomes:
 
 $$
-\gamma \mathbb{E}_\pi[G_{t+1} \mid S_t = s] = \gamma \sum_{r \in \mathcal{R}} \sum_{s' \in \mathcal{S}} \sum_{a \in \mathcal{A}} v_\pi(s') \, p(s', r \mid a, s) \, \pi(a \mid s) \tag{19}
+\begin{aligned}
+\gamma \mathbb{E}_\pi[G_{t+1} \mid S_t = s] = \gamma \sum_{r \in \mathcal{R}} \sum_{s' \in \mathcal{S}} \sum_{a \in \mathcal{A}} v_\pi(s') \, p(s', r \mid a, s) \, \pi(a \mid s)
+\end{aligned}\tag{19}
 $$
 
 Combining both terms:
 
 $$
 \begin{aligned}
-v_\pi(s) &= \mathbb{E}_\pi[R_{t+1} \mid S_t = s] + \gamma \mathbb{E}_\pi[G_{t+1} \mid S_t = s] \\
-&= \sum_{r \in \mathcal{R}} \sum_{s' \in \mathcal{S}} \sum_{a \in \mathcal{A}} r \, \pi(a \mid s) \, p(s', r \mid a, s)
-+ \gamma \sum_{r \in \mathcal{R}} \sum_{s' \in \mathcal{S}} \sum_{a \in \mathcal{A}} v_\pi(s') \, \pi(a \mid s) \, p(s', r \mid a, s) \\
+v_{\pi(s)} &= \mathbb{E}_\pi[R_{t+1} \mid S_t = s] + \gamma \mathbb{E}_\pi[G_{t+1} \mid S_t = s] \\
+&= \sum_{r \in \mathcal{R}} \sum_{s' \in \mathcal{S}} \sum_{a \in \mathcal{A}} r \, \pi(a \mid s) \, p(s', r \mid a, s) + \gamma \sum_{r \in \mathcal{R}} \sum_{s' \in \mathcal{S}} \sum_{a \in \mathcal{A}} v_\pi(s') \, \pi(a \mid s) \, p(s', r \mid a, s) \\
 &= \sum_{r \in \mathcal{R}} \sum_{s' \in \mathcal{S}} \sum_{a \in \mathcal{A}} \pi(a \mid s) \, p(s', r \mid a, s) \big[r + \gamma v_\pi(s')\big] \\
 &= \sum_{a \in \mathcal{A}} \pi(a \mid s) \sum_{r \in \mathcal{R}} \sum_{s' \in \mathcal{S}} p(s', r \mid a, s) \, [r + \gamma v_\pi(s')] \\
 &= \sum_{a} \pi(a \mid s) \sum_{s', r} p(s', r \mid s, a) \left[r + \gamma v_{\pi}(s')\right]
@@ -288,55 +312,61 @@ $$
 Solving a reinforcement learning task means, roughly, finding a policy that achieves a lot of reward over the long run. For finite MDPs, we can precisely define an optimal policy in the following way. Value functions define a partial ordering over policies. A policy $\pi$ is defined to be better than or equal to a policy $\pi'$ if its expected return is greater than or equal to that of $\pi'$ for all states. In other words, $\pi \geq \pi'$ if and only if $v_\pi(s) \geq v_{\pi'}(s)$ for all $s \in \mathcal{S}$. There is always at least one policy that is better than or equal to all other policies. This is an optimal policy. Although there may be more than one, we denote all the optimal policies by $\pi^*$. They share the same state-value function, called the optimal state-value function, denoted $v^*$, and defined as
 
 $$
-v^*(s) = \max_{\pi} v_\pi(s) \tag{21}
+\begin{aligned}
+v^*(s) = \max_{\pi} v_\pi(s)
+\end{aligned}\tag{21}
 $$
 
 for all $s \in \mathcal{S}$.
 
-Optimal policies also share the same optimal action-value function, denoted $q^*$, and defined as:
+Optimal policies also share the same optimal action-value function, denoted $q^{\*}$, and defined as:
 
 $$
-q^*(s, a) = \max_{\pi} q_\pi(s, a) \tag{22}
+\begin{aligned}
+q^{\*}(s, a) = \max_{\pi} q_\pi(s, a) 
+\end{aligned}\tag{22}
 $$
 
-for all $s \in \mathcal{S}$ and $a \in \mathcal{A}(s)$. For the state–action pair $(s, a)$, this function gives the expected return for taking action $a$ in state $s$ and thereafter following an optimal policy. Thus, we can write $q^*$ in terms of $v^*$ as follows:
+for all $s \in \mathcal{S}$ and $a \in \mathcal{A}(s)$. For the state–action pair $(s, a)$, this function gives the expected return for taking action $a$ in state $s$ and thereafter following an optimal policy. Thus, we can write $q^{\*}$ in terms of $v^{\*}$ as follows:
 
 $$
-q^*(s, a) = \mathbb{E}[R_{t+1} + \gamma v^*(S_{t+1}) \mid S_t = s, A_t = a] \tag{23}
+\begin{aligned}
+q^{\*}(s, a) = \mathbb{E}[R_{t+1} + \gamma v^*(S_{t+1}) \mid S_t = s, A_t = a]
+\end{aligned}\tag{23}
 $$
 
-Because $v^*$ is the value function for a policy, it must satisfy the self-consistency condition given by the Bellman equation for state values _Equation (10)_. Because it is the optimal value function, however, $v^*$’s consistency condition can be written in a special form without reference to any specific policy. This is the Bellman equation for $v^*$, or the Bellman optimality equation. Intuitively, the Bellman optimality equation expresses the fact that the value of a state under an optimal policy must equal the expected return for the best action from that state:
+Because $v^{\*}$ is the value function for a policy, it must satisfy the self-consistency condition given by the Bellman equation for state values _Equation (10)_. Because it is the optimal value function, however, $v^{\*}$’s consistency condition can be written in a special form without reference to any specific policy. This is the Bellman equation for $v^{\*}$, or the Bellman optimality equation. Intuitively, the Bellman optimality equation expresses the fact that the value of a state under an optimal policy must equal the expected return for the best action from that state:
 
 $$
 \begin{align}
-v^*(s)
-&= \max_{a \in \mathcal{A}(s)} q_{\pi^*}(s, a) \notag \\
-&= \max_{a} \mathbb{E}\left[R_{t+1} + \gamma v^*(S_{t+1}) \mid S_t = s, A_t = a \right] \notag \\
-&= \max_{a \in \mathcal{A}(s)} \sum_{s' , r} p(s', r \mid s, a)\, \left[ r + \gamma v^*(s') \right]
+v^{\*}(s)
+&= \max_{a \in \mathcal{A}(s)} q_{\pi^{\*}}(s, a) \notag \\
+&= \max_{a} \mathbb{E}\left[R_{t+1} + \gamma v^{\*}(S_{t+1}) \mid S_t = s, A_t = a \right] \notag \\
+&= \max_{a \in \mathcal{A}(s)} \sum_{s' , r} p(s', r \mid s, a)\, \left[ r + \gamma v^{\*}(s') \right]
 \end{align}\tag{24}
 $$
 
 This follows from the Bellman equation for the value function _Equation (12)_, together with the definition of the optimal value function. In particular, the expectation over actions under a policy is replaced by a maximization over actions, yielding the Bellman optimality equation.
 
-The Bellman optimality equation for $q^*$ is
+The Bellman optimality equation for $q^{\*}$ is
 
 $$
 \begin{align}
-q^*(s, a)
-&= \mathbb{E}\left[ R_{t+1} + \gamma \max_{a'} q^*(S_{t+1}, a') \mid S_t = s, A_t = a \right] \notag \\
-&= \sum_{s', r} p(s', r \mid s, a)\, \left[ r + \gamma \max_{a'} q^*(s', a') \right] \tag{25}
-\end{align}
+q^{\*}(s, a)
+&= \mathbb{E}\left[ R_{t+1} + \gamma \max_{a'} q^{\*}(S_{t+1}, a') \mid S_t = s, A_t = a \right] \notag \\
+&= \sum_{s', r} p(s', r \mid s, a)\, \left[ r + \gamma \max_{a'} q^{\*}(s', a') \right] 
+\end{align}\tag{25}
 $$
 
-The backup diagrams in _Figure 4_ are identical to those for $v_\pi$ and $q_\pi$, except that arcs at the agent's choice points indicate a maximum is taken rather than an expectation. For finite MDPs, the Bellman optimality equation _Equation (24)_ has a unique solution independent of the policy. It constitutes a system of $N$ equations in $N$ unknowns (one per state), which can in principle be solved for $v^*$ or $q^*$ given the environment dynamics $p(s', r \mid s, a)$.
+The backup diagrams in _Figure 4_ are identical to those for $v_\pi$ and $q_\pi$, except that arcs at the agent's choice points indicate a maximum is taken rather than an expectation. For finite MDPs, the Bellman optimality equation _Equation (24)_ has a unique solution independent of the policy. It constitutes a system of $N$ equations in $N$ unknowns (one per state), which can in principle be solved for $v^{\*}$ or $q^{\*}$ given the environment dynamics $p(s', r \mid s, a)$.
 
-Given $v^*$, an optimal policy is obtained by assigning nonzero probability only to the actions that achieve the maximum in _Equation (22)_ at each state, i.e., any greedy policy with respect to $v^*$ is optimal. Although greediness normally implies shortsightedness, a greedy policy with respect to $v^*$ is globally optimal because $v^*$ already incorporates the long-term consequences of all future behavior, converting optimal long-term returns into locally available quantities. Thus a one-step search suffices to identify optimal actions.
+Given $v^{\*}$, an optimal policy is obtained by assigning nonzero probability only to the actions that achieve the maximum in _Equation (22)_ at each state, i.e., any greedy policy with respect to $v^{\*}$ is optimal. Although greediness normally implies shortsightedness, a greedy policy with respect to $v^{\*}$ is globally optimal because $v^{\*}$ already incorporates the long-term consequences of all future behavior, converting optimal long-term returns into locally available quantities. Thus a one-step search suffices to identify optimal actions.
 
 ![](./pictures/backup_optim.png)
 
 > **Figure 4:** Backup diagrams for (a) $v_*$ and (b) $q_*$
 
-Having $q^*$ simplifies action selection further: the agent need only find any action maximizing $q^*(s, a)$, with no one-step-ahead search required. The action-value function effectively caches all one-step search results, providing optimal long-term returns as immediately available quantities for each state--action pair. This allows optimal actions to be selected without any knowledge of successor states or environment dynamics, at the cost of representing a function over state--action pairs rather than states alone.
+Having $q^{\*}$ simplifies action selection further: the agent need only find any action maximizing $q^{\*}(s, a)$, with no one-step-ahead search required. The action-value function effectively caches all one-step search results, providing optimal long-term returns as immediately available quantities for each state--action pair. This allows optimal actions to be selected without any knowledge of successor states or environment dynamics, at the cost of representing a function over state--action pairs rather than states alone.
 
 # Summary
 
