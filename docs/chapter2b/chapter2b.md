@@ -1,5 +1,7 @@
 # Finite Markov Decision Processes (Part 2)
+Authored by [Adam Adham](https://www.linkedin.com/in/adam-adham/)
 
+## Inroduction
 In this chapter we present the problem that we aim to address throughout the remainder of the book. For us, this problem defines the field of reinforcement learning: any method suitable for solving this problem is considered by us to be a reinforcement learning method.
 
 Our goal in this chapter is to describe the reinforcement learning problem in a broad sense. We aim to convey the wide variety of possible applications that can be formulated as reinforcement learning tasks. We also describe mathematically idealized forms of the reinforcement learning problem for which precise theoretical statements can be made. We introduce key elements of the problem's mathematical structure, such as value functions and Bellman equations. As in all of artificial intelligence, there is a tension between breadth of applicability and mathematical tractability. In this chapter we introduce this tension and discuss some of the trade-offs and challenges that it entails.
@@ -387,13 +389,54 @@ could possibly be entries in a table, and approximations must be made.
 A well-defined notion of optimality organizes the approach to learning we describe in this book and provides a way to understand the theoretical properties of various learning algorithms, but it is an ideal that reinforcement learning agents can only approximate to varying degrees. In reinforcement learning we are very much concerned with cases in which optimal solutions cannot be found but must be approximated in some way.
 
 # References
+```bibtex
+@book{SuttonBarto2018,
+  author       = {Richard S. Sutton and Andrew G. Barto},
+  title        = {Reinforcement Learning: An Introduction},
+  edition      = {2},
+  year         = {2018},
+  publisher    = {MIT Press},
+  howpublished = {\url{https://web.stanford.edu/class/psych209/Readings/SuttonBartoIPRLBook2ndEd.pdf}}
+}
 
-- [Sutton & Barto (2018)](https://web.stanford.edu/class/psych209/Readings/SuttonBartoIPRLBook2ndEd.pdf)
+@misc{Thomas2020MBRL,
+  author       = {Garrett Thomas},
+  title        = {A Survey of Model-Based Reinforcement Learning},
+  year         = {2020},
+  howpublished = {\url{https://arxiv.org/abs/2006.16712}}
+}
 
-- [Thomas, G. (2020) – Model-based Reinforcement Learning Survey](https://arxiv.org/abs/2006.16712)
+@misc{BellmanSE2016,
+  title        = {Deriving Bellman's Equation in Reinforcement Learning},
+  year         = {2016},
+  howpublished = {\url{https://stats.stackexchange.com/questions/243384/deriving-bellmans-equation-in-reinforcement-learning}}
+}
 
-- [Bellman Derivation](https://stats.stackexchange.com/questions/243384/deriving-bellmans-equation-in-reinforcement-learning)
-- [Bellman Derivation Medium](https://medium.com/@Bwhiz/deriving-the-bellman-equation-for-the-value-function-594be80bfeb4)
-- [3Blue1Brown](https://www.youtube.com/@3blue1brown)
-- [Josh Starmer](https://www.youtube.com/@statquest)
-- [CMU Lecture Notes (Gormley) – Reinforcement Learning / MDPs](https://www.cs.cmu.edu/~mgormley/courses/10601-s17/slides/lecture26-ri.pdf)
+@misc{BellmanMedium,
+  author       = {Bwhiz},
+  title        = {Deriving the Bellman Equation for the Value Function},
+  year         = {2017},
+  howpublished = {\url{https://medium.com/@Bwhiz/deriving-the-bellman-equation-for-the-value-function-594be80bfeb4}}
+}
+
+@misc{3Blue1Brown,
+  author       = {{3Blue1Brown}},
+  title        = {3Blue1Brown YouTube Channel},
+  year         = {2026},
+  howpublished = {\url{https://www.youtube.com/@3blue1brown}}
+}
+
+@misc{StatQuest,
+  author       = {{StatQuest with Josh Starmer}},
+  title        = {StatQuest YouTube Channel},
+  year         = {2026},
+  howpublished = {\url{https://www.youtube.com/@statquest}}
+}
+
+@misc{GormleyCMU2017,
+  author       = {Matthew Gormley},
+  title        = {Reinforcement Learning / Markov Decision Processes Lecture Notes},
+  year         = {2017},
+  howpublished = {\url{https://www.cs.cmu.edu/~mgormley/courses/10601-s17/slides/lecture26-ri.pdf}}
+}
+```
