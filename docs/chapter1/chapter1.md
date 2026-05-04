@@ -82,6 +82,8 @@ With these four subelements in place, we can now begin to formalize the RL frame
 
 # Introduction to Reinforcement Learning
 
+Omar Abu Shanab
+
 ---
 
 ## What is Reinforcement Learning?
@@ -290,6 +292,18 @@ The central insight of this chapter is worth stating plainly:
 The exploration–exploitation trade-off, the distinction between reward and value, and the role of policy as the behavioral core of an agent are themes that will recur throughout this seminar.
 
 ---
+
+To cite this, please use the following bibtex:
+
+```bibtex
+@misc{Abushanab_2026_ReinforcementLearning,
+  author       = {Omar Abu Shanab},
+  title        = {Reinforcement Learning: A Gentle Introduction, Chapter #},
+  year         = {2026},
+  publisher    = {GitHub},
+  howpublished = {\url{https://github.com/amrmsab/reinforcement_learning_book}},
+  note         = {Accessed: April 30, 2026}
+}
 
 ## Citations
 * Sutton, R. S., & Barto, A. G. (2018). Reinforcement learning: An introduction (2nd ed.). MIT Press.
