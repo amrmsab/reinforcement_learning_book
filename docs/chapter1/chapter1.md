@@ -293,6 +293,14 @@ The exploration–exploitation trade-off, the distinction between reward and val
 
 ---
 
+
+
+## Citations
+* Sutton, R. S., & Barto, A. G. (2018). Reinforcement learning: An introduction (2nd ed.). MIT Press.
+* Hess, Shervin. "Speke's Gazelle Juliet Runs in the Africa Savanna Habitat." The Oregonian/OregonLive, Oregon Zoo, <https://www.oregonlive.com/living/2016/04/baby_gazelle_that_nearly_died.html>
+* GeeksforGeeks. "Supervised Machine Learning" GeeksforGeeks, 14 Apr. 2026, <https://www.geeksforgeeks.org/machine-learning/supervised-machine-learning/>.
+* WisdomPlexus. "Supervised Learning vs Unsupervised Learning: Key Differences To Know." WisdomPlexus, 31 May 2024, <https://www.wisdomplexus.com>.
+---
 To cite this, please use the following bibtex:
 
 ```bibtex
@@ -304,9 +312,3 @@ To cite this, please use the following bibtex:
   howpublished = {\url{https://github.com/amrmsab/reinforcement_learning_book}},
   note         = {Accessed: April 30, 2026}
 }
-
-## Citations
-* Sutton, R. S., & Barto, A. G. (2018). Reinforcement learning: An introduction (2nd ed.). MIT Press.
-* Hess, Shervin. "Speke's Gazelle Juliet Runs in the Africa Savanna Habitat." The Oregonian/OregonLive, Oregon Zoo, <https://www.oregonlive.com/living/2016/04/baby_gazelle_that_nearly_died.html>
-* GeeksforGeeks. "Supervised Machine Learning" GeeksforGeeks, 14 Apr. 2026, <https://www.geeksforgeeks.org/machine-learning/supervised-machine-learning/>.
-* WisdomPlexus. "Supervised Learning vs Unsupervised Learning: Key Differences To Know." WisdomPlexus, 31 May 2024, <https://www.wisdomplexus.com>.
