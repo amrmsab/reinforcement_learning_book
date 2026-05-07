@@ -1,5 +1,7 @@
 # Chapter 3: Finite Markov Decision Processes — Teaching a Machine to Think Ahead
 
+Author: [Ahmed Hawater](https://www.linkedin.com/in/ahmed-hawater/)
+
 > _"The world is not a slot machine."_
 
 ---
