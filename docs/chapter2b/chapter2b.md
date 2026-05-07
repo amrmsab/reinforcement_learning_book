@@ -1,5 +1,7 @@
 # Finite Markov Decision Processes (Part 2)
+Authored by [Adam Adham](https://www.linkedin.com/in/adam-adham/)
 
+# Inroduction
 In this chapter we present the problem that we aim to address throughout the remainder of the book. For us, this problem defines the field of reinforcement learning: any method suitable for solving this problem is considered by us to be a reinforcement learning method.
 
 Our goal in this chapter is to describe the reinforcement learning problem in a broad sense. We aim to convey the wide variety of possible applications that can be formulated as reinforcement learning tasks. We also describe mathematically idealized forms of the reinforcement learning problem for which precise theoretical statements can be made. We introduce key elements of the problem's mathematical structure, such as value functions and Bellman equations. As in all of artificial intelligence, there is a tension between breadth of applicability and mathematical tractability. In this chapter we introduce this tension and discuss some of the trade-offs and challenges that it entails.
@@ -30,6 +32,28 @@ For intuitive and well-structured explanations of these topics, the following re
 - [Josh Starmer](https://www.youtube.com/@statquest)
 
 Their video series provide clear visual and conceptual foundations that are sufficient for the material covered here.
+
+# Chapter Roadmap
+
+This chapter develops the reinforcement learning problem progressively, introducing each concept only after motivating why the previous one is insufficient.
+
+1. **The Markov Property**
+   Reinforcement learning agents interact with environments over time, which naturally raises the question of how much past information the agent must remember. Storing the full interaction history is generally infeasible, so we seek a compact state representation that preserves all information relevant for predicting the future. This motivates the Markov property, which formalizes when the current state is sufficient and the past can be ignored.
+
+2. **Markov Decision Processes**
+   Once the Markov property is established, we can model the environment mathematically as a Markov decision process (MDP). This provides a precise probabilistic description of how states, actions, and rewards evolve over time. Defining the environment formally is necessary before we can analyze or derive algorithms for decision making.
+
+3. **Value Functions**
+   Having defined the environment dynamics, the next question is how an agent should evaluate states and actions. Since reinforcement learning aims to maximize long-term reward rather than immediate reward, we introduce value functions to quantify the expected return associated with states and state–action pairs.
+
+4. **Bellman Equation Derivation**
+   The Bellman equation provides the recursive structure underlying value functions and most reinforcement learning algorithms. Although the equation itself can be stated directly, deriving it step by step gives intuition for why future returns can be decomposed recursively and why the Markov property is essential to this decomposition.
+
+5. **Optimal Value Functions**
+   Value functions allow us to evaluate policies, but reinforcement learning ultimately seeks the best possible behavior. This motivates optimal value functions and the Bellman optimality equations, which characterize the maximum achievable return and form the foundation of optimal decision making.
+
+6. **Summary**
+   The chapter concludes by consolidating the relationship between states, MDPs, value functions, Bellman equations, and optimality into a unified reinforcement learning framework.
 
 # The Markov Property
 
@@ -387,13 +411,54 @@ could possibly be entries in a table, and approximations must be made.
 A well-defined notion of optimality organizes the approach to learning we describe in this book and provides a way to understand the theoretical properties of various learning algorithms, but it is an ideal that reinforcement learning agents can only approximate to varying degrees. In reinforcement learning we are very much concerned with cases in which optimal solutions cannot be found but must be approximated in some way.
 
 # References
+```bibtex
+@book{SuttonBarto2018,
+  author       = {Richard S. Sutton and Andrew G. Barto},
+  title        = {Reinforcement Learning: An Introduction},
+  edition      = {2},
+  year         = {2018},
+  publisher    = {MIT Press},
+  howpublished = {\url{https://web.stanford.edu/class/psych209/Readings/SuttonBartoIPRLBook2ndEd.pdf}}
+}
 
-- [Sutton & Barto (2018)](https://web.stanford.edu/class/psych209/Readings/SuttonBartoIPRLBook2ndEd.pdf)
+@misc{Thomas2020MBRL,
+  author       = {Garrett Thomas},
+  title        = {A Survey of Model-Based Reinforcement Learning},
+  year         = {2020},
+  howpublished = {\url{https://arxiv.org/abs/2006.16712}}
+}
 
-- [Thomas, G. (2020) – Model-based Reinforcement Learning Survey](https://arxiv.org/abs/2006.16712)
+@misc{BellmanSE2016,
+  title        = {Deriving Bellman's Equation in Reinforcement Learning},
+  year         = {2016},
+  howpublished = {\url{https://stats.stackexchange.com/questions/243384/deriving-bellmans-equation-in-reinforcement-learning}}
+}
 
-- [Bellman Derivation](https://stats.stackexchange.com/questions/243384/deriving-bellmans-equation-in-reinforcement-learning)
-- [Bellman Derivation Medium](https://medium.com/@Bwhiz/deriving-the-bellman-equation-for-the-value-function-594be80bfeb4)
-- [3Blue1Brown](https://www.youtube.com/@3blue1brown)
-- [Josh Starmer](https://www.youtube.com/@statquest)
-- [CMU Lecture Notes (Gormley) – Reinforcement Learning / MDPs](https://www.cs.cmu.edu/~mgormley/courses/10601-s17/slides/lecture26-ri.pdf)
+@misc{BellmanMedium,
+  author       = {Bwhiz},
+  title        = {Deriving the Bellman Equation for the Value Function},
+  year         = {2017},
+  howpublished = {\url{https://medium.com/@Bwhiz/deriving-the-bellman-equation-for-the-value-function-594be80bfeb4}}
+}
+
+@misc{3Blue1Brown,
+  author       = {{3Blue1Brown}},
+  title        = {3Blue1Brown YouTube Channel},
+  year         = {2026},
+  howpublished = {\url{https://www.youtube.com/@3blue1brown}}
+}
+
+@misc{StatQuest,
+  author       = {{StatQuest with Josh Starmer}},
+  title        = {StatQuest YouTube Channel},
+  year         = {2026},
+  howpublished = {\url{https://www.youtube.com/@statquest}}
+}
+
+@misc{GormleyCMU2017,
+  author       = {Matthew Gormley},
+  title        = {Reinforcement Learning / Markov Decision Processes Lecture Notes},
+  year         = {2017},
+  howpublished = {\url{https://www.cs.cmu.edu/~mgormley/courses/10601-s17/slides/lecture26-ri.pdf}}
+}
+```
