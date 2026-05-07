@@ -38,21 +38,32 @@ Their video series provide clear visual and conceptual foundations that are suff
 This chapter develops the reinforcement learning problem progressively, introducing each concept only after motivating why the previous one is insufficient.
 
 1. **The Markov Property**
+   
    Reinforcement learning agents interact with environments over time, which naturally raises the question of how much past information the agent must remember. Storing the full interaction history is generally infeasible, so we seek a compact state representation that preserves all information relevant for predicting the future. This motivates the Markov property, which formalizes when the current state is sufficient and the past can be ignored.
 
 2. **Markov Decision Processes**
+   
    Once the Markov property is established, we can model the environment mathematically as a Markov decision process (MDP). This provides a precise probabilistic description of how states, actions, and rewards evolve over time. Defining the environment formally is necessary before we can analyze or derive algorithms for decision making.
 
 3. **Value Functions**
+   
    Having defined the environment dynamics, the next question is how an agent should evaluate states and actions. Since reinforcement learning aims to maximize long-term reward rather than immediate reward, we introduce value functions to quantify the expected return associated with states and state–action pairs.
 
 4. **Bellman Equation Derivation**
+   
    The Bellman equation provides the recursive structure underlying value functions and most reinforcement learning algorithms. Although the equation itself can be stated directly, deriving it step by step gives intuition for why future returns can be decomposed recursively and why the Markov property is essential to this decomposition.
 
 5. **Optimal Value Functions**
+
    Value functions allow us to evaluate policies, but reinforcement learning ultimately seeks the best possible behavior. This motivates optimal value functions and the Bellman optimality equations, which characterize the maximum achievable return and form the foundation of optimal decision making.
 
-6. **Summary**
+6. **Policy Iteration**
+
+   The optimal value functions characterize the best possible behavior, but do not specify how an agent reaches it. In practice, the agent does not start with $v^\*$ or $q^\*$, and even if they were known, a mechanism is still needed to iteratively improve the policy. This leads to the question: given an estimate of a policy’s value, how should the policy be updated to improve it? Policy iteration answers this by alternating between policy evaluation and policy improvement, where the policy is updated to be greedy with respect to its current value function.
+
+
+7. **Summary**
+
    The chapter concludes by consolidating the relationship between states, MDPs, value functions, Bellman equations, and optimality into a unified reinforcement learning framework.
 
 # The Markov Property
@@ -218,7 +229,7 @@ where it is implicit that the actions, $a$, are taken from the set $A(s)$, the n
 
 > **Figure 2:** Backup diagrams for (a) $v_\pi$ and (b) $q_\pi$.
 
-_Equation (10)_ is the Bellman equation for $v_\pi$, expressing the relationship between a state's value and those of its successor states. As illustrated in _Figure 2a_, starting from state $s$, the agent may take any of several actions, after which the environment responds with a next state $s'$ and reward $r$. The Bellman equation averages over all such possibilities weighted by their probabilities, stating that the value of the start state equals the expected discounted value of the next state plus the expected intermediate reward. The value function $v_\pi$ is the unique solution to this equation, and subsequent chapters show how it forms the basis for computing, approximating, and learning $v_\pi$.
+_Equation (10)_ is the **Bellman equation** for $v_\pi$, expressing the relationship between a state's value and those of its successor states. As illustrated in _Figure 2a_, starting from state $s$, the agent may take any of several actions, after which the environment responds with a next state $s'$ and reward $r$. The Bellman equation averages over all such possibilities weighted by their probabilities, stating that the value of the start state equals the expected discounted value of the next state plus the expected intermediate reward. The value function $v_\pi$ is the unique solution to this equation, and subsequent chapters show how it forms the basis for computing, approximating, and learning $v_\pi$.
 
 Diagrams like _Figure 2_ are called backup diagrams because they illustrate the update operations central to reinforcement learning, in which value information is transferred back from successor states (or state--action pairs) to the current one. Such diagrams are used throughout the book as graphical summaries of algorithms. Unlike transition graphs, state nodes in backup diagrams need not represent distinct states, and explicit arrowheads are omitted since time always flows downward.
 
@@ -391,6 +402,147 @@ Given $v^{\*}$, an optimal policy is obtained by assigning nonzero probability o
 > **Figure 4:** Backup diagrams for (a) $v_*$ and (b) $q_*$
 
 Having $q^{\*}$ simplifies action selection further: the agent need only find any action maximizing $q^{\*}(s, a)$, with no one-step-ahead search required. The action-value function effectively caches all one-step search results, providing optimal long-term returns as immediately available quantities for each state--action pair. This allows optimal actions to be selected without any knowledge of successor states or environment dynamics, at the cost of representing a function over state--action pairs rather than states alone.
+
+
+# Policy Iteration
+We have defined the optimalility equations, but yet we have still not seen how the agent will find the optimal action. This is where policy iteration comes into play. This is one of many different algorithms to find the set best action that we will mention?explain in later chapters. We choose this algorithm because it is very simple and intuitive to understand.
+
+As the name suggests, policy iteration is an iterative procedure that repeatedly applies two simpler operations: **policy evaluation** and **policy improvement**.
+
+_**Policy evaluation**_: computes the value function of the current policy. In other words, assuming the agent continues following the current policy, we estimate the expected return from each state. This step answers the question:
+
+> “How good is the current policy?”
+
+Once these values are known, **_policy improvement_** updates the policy by selecting actions that lead to states with higher expected returns. The policy therefore becomes greedy with respect to the evaluated value function. This step answers the question:
+
+> “Given what we now know about the environment, can we choose better actions?”
+
+These two procedures are alternated repeatedly:
+
+1. Evaluate the current policy.
+2. Improve the policy using the computed values.
+3. Repeat until the policy no longer changes.
+
+When the policy stabilizes, the algorithm has converged to an optimal policy under the assumptions of the Markov Decision Process.
+
+
+## Simplified Example Problem
+To illustrate policy evaluation and policy iteration, we introduce a simplified Markov Decision Process designed purely for clarity rather than realism. The goal is to isolate the mechanics of the Bellman updates without additional complexity.
+
+The environment consists of three states:
+
+$$
+S_1, S_2, S_3
+$$
+
+where $S_3$ is the **terminal (goal) state**. Once the agent reaches $S_3$, the process ends; the state is absorbing and no further actions are available.
+
+<p align="center">
+  <img src="pictures/pi_example/init.png" width="600">
+</p>
+
+### Transition structure
+* $S_1 \rightarrow {S_1, S_2}$
+* $S_2 \rightarrow {S_2, S_3}$
+* $S_3$: terminal (no outgoing actions)
+
+All transitions are **deterministic**, meaning each action leads to a single known next state.
+
+### Reward structure
+* The agent receives a non-zero reward only when entering the goal state (S_3).
+
+### Simplified Bellman Equation
+We assume policy and actions are determenistic, while assuming $\gamma=1$.
+
+$$
+\begin{aligned}
+v_{\pi}(s)
+= \mathbb{E}_{\pi}[G_t \mid S_t = s]
+&= \sum_{a} \pi(a \mid s) \sum_{s', r} p(s', r \mid s, a)
+\left[r + \gamma v_{\pi}(s')\right] \\
+&= r + \gamma v_{\pi}(s')
+\end{aligned}
+$$
+
+## Example Sequence
+At first just like most other ML algorithms we start with a random policy.
+<p align="center">
+  <img src="pictures/pi_example/init 2.png" width="600">
+</p>
+
+<table>
+  <tr>
+    <td align="center" width="33%">
+      <img src="pictures/pi_example/1.png" width="100%"><br>
+      <sub>1. <b>Compute eq for S₁:</b> r = 0, Vπ(S₂) = 0 (0 if not initialized) -> Vπ(S₁) = 0 </sub>
+    </td>
+    <td align="center" width="33%">
+      <img src="pictures/pi_example/2.png" width="100%"><br>
+      <sub>2. <b>Compute eq for S₂:</b> r = 0, Vπ(S₂) = 0 (0 if not initialized) -> Vπ(S₁) = 0 </sub>
+    </td>
+    <td align="center" width="33%">
+      <img src="pictures/pi_example/3.png" width="100%"><br>
+      <sub>3. <b>Compute eq for S₃:</b> Vπ(S₃) = 0 (no actions) </sub>
+    </td>
+  </tr>
+
+  <tr>
+    <td align="center">
+      <img src="pictures/pi_example/4.png" width="100%"><br>
+      <sub>4. <b>S₁:</b> Check all possible actions.  </sub>
+    </td>
+    <td align="center">
+      <img src="pictures/pi_example/5.png" width="100%"><br>
+      <sub>5. <b>S₁:</b> No action has a value >0. </sub>
+    </td>
+    <td align="center">
+      <img src="pictures/pi_example/6.png" width="100%"><br>
+      <sub>6. <b>S₁:</b> So do not change policy (choice of action). </sub>
+    </td>
+  </tr>
+
+  <tr>
+    <td align="center">
+      <img src="pictures/pi_example/7.png" width="100%"><br>
+      <sub>7. <b>S₂:</b> Check all possible actions.  </sub>
+    </td>
+    <td align="center">
+      <img src="pictures/pi_example/8.png" width="100%"><br>
+      <sub>8. <b>S₂:</b> Going to the right results in 1 + 0 = 0 due to reward entering S₃, while all other result in 0. </sub>
+    </td>
+    <td align="center">
+      <img src="pictures/pi_example/9.png" width="100%"><br>
+      <sub>9. <b>S₂:</b> So change policy to go to the right (S₃). </sub>
+    </td>
+  </tr>
+
+  <tr>
+    <td align="center">
+      <img src="pictures/pi_example/10.png" width="100%"><br>
+      <sub>10. We update the value function of each state.</sub>
+    </td>
+    <td align="center">
+      <img src="pictures/pi_example/11.png" width="100%"><br>
+      <sub>11. <b>S₁:</b> Check all possible actions.  </sub>
+    </td>
+    <td align="center">
+      <img src="pictures/pi_example/12.png" width="100%"><br>
+      <sub>12. <b>S₁:</b> Going to the right (S₂) result in 0+1=1, while the other actions result in 0. </sub>
+    </td>
+  </tr>
+
+  <tr>
+    <td align="center">
+      <img src="pictures/pi_example/13.png" width="100%"><br>
+      <sub>13. <b>S₁:</b> So we update the policy to choose going to the right (S₂).</sub>
+    </td>
+    <td align="center">
+      <img src="pictures/pi_example/15.png" width="100%"><br>
+      <sub>14. We compute the value function with the updated policy. This results in the optimal policy at every state.</sub>
+    </td>
+  </tr>
+</table>
+
 
 # Summary
 
