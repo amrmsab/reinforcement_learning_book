@@ -1,5 +1,5 @@
 # Finite Markov Decision Processes (Part 2)
-Authored by [Adam Adham](https://www.linkedin.com/in/adam-adham/)
+Author: [Adam Adham](https://www.linkedin.com/in/adam-adham/)
 
 # Inroduction
 In this chapter we present the problem that we aim to address throughout the remainder of the book. For us, this problem defines the field of reinforcement learning: any method suitable for solving this problem is considered by us to be a reinforcement learning method.
