@@ -1,7 +1,7 @@
 # Finite Markov Decision Processes (Part 2)
 Authored by [Adam Adham](https://www.linkedin.com/in/adam-adham/)
 
-## Inroduction
+# Inroduction
 In this chapter we present the problem that we aim to address throughout the remainder of the book. For us, this problem defines the field of reinforcement learning: any method suitable for solving this problem is considered by us to be a reinforcement learning method.
 
 Our goal in this chapter is to describe the reinforcement learning problem in a broad sense. We aim to convey the wide variety of possible applications that can be formulated as reinforcement learning tasks. We also describe mathematically idealized forms of the reinforcement learning problem for which precise theoretical statements can be made. We introduce key elements of the problem's mathematical structure, such as value functions and Bellman equations. As in all of artificial intelligence, there is a tension between breadth of applicability and mathematical tractability. In this chapter we introduce this tension and discuss some of the trade-offs and challenges that it entails.
@@ -32,6 +32,28 @@ For intuitive and well-structured explanations of these topics, the following re
 - [Josh Starmer](https://www.youtube.com/@statquest)
 
 Their video series provide clear visual and conceptual foundations that are sufficient for the material covered here.
+
+# Chapter Roadmap
+
+This chapter develops the reinforcement learning problem progressively, introducing each concept only after motivating why the previous one is insufficient.
+
+1. **The Markov Property**
+   Reinforcement learning agents interact with environments over time, which naturally raises the question of how much past information the agent must remember. Storing the full interaction history is generally infeasible, so we seek a compact state representation that preserves all information relevant for predicting the future. This motivates the Markov property, which formalizes when the current state is sufficient and the past can be ignored.
+
+2. **Markov Decision Processes**
+   Once the Markov property is established, we can model the environment mathematically as a Markov decision process (MDP). This provides a precise probabilistic description of how states, actions, and rewards evolve over time. Defining the environment formally is necessary before we can analyze or derive algorithms for decision making.
+
+3. **Value Functions**
+   Having defined the environment dynamics, the next question is how an agent should evaluate states and actions. Since reinforcement learning aims to maximize long-term reward rather than immediate reward, we introduce value functions to quantify the expected return associated with states and state–action pairs.
+
+4. **Bellman Equation Derivation**
+   The Bellman equation provides the recursive structure underlying value functions and most reinforcement learning algorithms. Although the equation itself can be stated directly, deriving it step by step gives intuition for why future returns can be decomposed recursively and why the Markov property is essential to this decomposition.
+
+5. **Optimal Value Functions**
+   Value functions allow us to evaluate policies, but reinforcement learning ultimately seeks the best possible behavior. This motivates optimal value functions and the Bellman optimality equations, which characterize the maximum achievable return and form the foundation of optimal decision making.
+
+6. **Summary**
+   The chapter concludes by consolidating the relationship between states, MDPs, value functions, Bellman equations, and optimality into a unified reinforcement learning framework.
 
 # The Markov Property
 
