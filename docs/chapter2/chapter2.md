@@ -1,13 +1,14 @@
 # Chapter 3: Finite Markov Decision Processes — Teaching a Machine to Think Ahead
 
 > _"The world is not a slot machine."_
-> 
 
 ---
 
 ## Before You Start Reading
 
 This chapter builds on the ideas introduced in Chapter 2, where we explored how an agent can learn from feedback without knowing anything in advance — specifically through the _k-armed bandit_ problem. If you haven't read that yet, don't worry; we'll recap the key distinction right at the start. By the end of this chapter, you'll have a solid grasp of the mathematical backbone of reinforcement learning: **Finite Markov Decision Processes**, or **MDPs** for short.
+
+Here is a brief roadmap of what's coming. Section 3.1 introduces the agent–environment interface: what states, actions, and rewards are, and how they connect through the dynamics function. Section 3.2 formalises the agent's goal via the Reward Hypothesis. Sections 3.3 and 3.4 define the return and show how episodic and continuing tasks can be handled with a single unified formula. Section 3.5 ties everything together in a complete worked example — the Racecar MDP — and Section 3.6 steps back to ask what the framework leaves out.
 
 No prior experience with probability theory beyond the basics is assumed. If you've seen a conditional probability expression before, you're in good shape. If not, we'll explain it as we go.
 
@@ -50,19 +51,27 @@ And then the cycle repeats. Over time, this produces a long sequence — called 
 
 $$S_0, A_0, R_1, S_1, A_1, R_2, S_2, A_2, R_3, \ldots$$
 
-<p align="center"> <img src="assets/mdp-cycle.png" width="100%" alt="Agent-environment interaction cycle diagram"> </p><p align="center"><em><strong>Figure 3.2</strong> — The agent–environment interaction cycle.</em></p>
+<p align="center">
+<img src="assets/mdp-cycle.png" width="500" alt="Agent-environment interaction cycle diagram">
+</p>
+
+<p align="center"><em><strong>Figure 3.1</strong> — The agent–environment interaction cycle.</em></p>
 
 It's worth pausing on the subscripts. Notice that the reward at time step $t+1$ (written $R_{t+1}$) arrives _after_ the action $A_t$. This notation emphasizes that the reward is a consequence of the action, not something that existed before it.
 
-**An analogy:** Think of the agent as a driver and the environment as the road. The state $S_t$ is what the driver sees out the windshield right now: the curve ahead, the speed, the other cars. The action $A_t$ is what the driver does: steer left, hit the brakes, accelerate. The reward $R_{t+1}$ is the outcome: did they stay on the road? Did they get closer to the destination? And the new state $S_{t+1}$ is what the windshield shows next. The driver's job — the agent's job — is to choose actions that lead to the best possible journey, not just the best next moment.
+**A simple example to make this concrete.** Every morning you glance out the window. The sky looks cloudy. You face a choice: take your umbrella or leave it. An hour later, the outcome is clear — you arrive dry or you arrive soaked — and you can assign a reward accordingly. Figure 3.2 shows exactly this one-step slice of the MDP loop.
 
-<p align="center"> <img src="images/fig_3_3_driving_analogy.png" width="720" alt="Driving analogy mapped to MDP state, action, and reward"> </p> <p align="center"><em><strong>Figure 3.3</strong> — The driving analogy mapped onto MDP vocabulary. Show a car on a winding road annotated with three callout bubbles: (1) <strong>State S<sub>t</sub></strong> — the driver's view through the windshield (road curvature, speed gauge, traffic); (2) <strong>Action A<sub>t</sub></strong> — hands on the wheel, foot on a pedal; (3) <strong>Reward R<sub>t+1</sub> + Next State S<sub>t+1</sub></strong> — one moment later, with a ✓/✗ indicator showing whether things went well. The image should feel warm and human, anchoring the abstract MDP loop in something every reader has experienced.</em></p>
+<p align="center">
+<img src="assets/umb-analogy.svg" width="660" alt="Forking diagram: State St is a cloudy sky; Action At branches into take umbrella or leave it; outcomes show next state and reward +1 or -1">
+</p>
+
+<p align="center"><em><strong>Figure 3.2</strong> — The agent observes a state (cloudy sky), chooses an action, and receives a next state and a scalar reward one step later. Same state, different action, different outcome.</em></p>
 
 ### 3.1.2 The Dynamics Function: Writing the Rules of the World
 
 Now, how exactly does the environment produce the next state and reward from the current state and action? The answer is captured by a single mathematical object called the **dynamics function**, written as:
 
-$$p(s', r \mid s, a) \doteq \Pr({S_t = s',\ R_t = r \mid S_{t-1} = s,\ A_{t-1} = a})$$
+$$p(s', r \mid s, a) \doteq \Pr\{S_t = s',\ R_t = r \mid S_{t-1} = s,\ A_{t-1} = a\}$$
 
 Let's unpack this. The function $p$ takes four arguments:
 
@@ -71,8 +80,7 @@ Let's unpack this. The function $p$ takes four arguments:
 - $s'$ — the next state (where you end up)
 - $r$ — the reward received
 
-And it returns a **probability**: how likely is it that you end up in state $s'$ with reward $r$, given that you were in state $s$ and took action $a$
-
+And it returns a **probability**: how likely is it that you end up in state $s'$ with reward $r$, given that you were in state $s$ and took action $a$?
 
 In a **finite** MDP, the sets of states, actions, and rewards are all finite, there are a countable number of possibilities for each. This is what the word "finite" in the chapter title refers to. It's a simplifying assumption that makes the mathematics tractable, and it covers a surprisingly wide range of real-world problems.
 
@@ -92,7 +100,7 @@ There's a crucial assumption hiding inside the dynamics function. Notice that $p
 
 More formally: the current state $S_t$ must contain all the information from the history $S_0, A_0, R_1, \ldots, S_{t-1}, A_{t-1}$ that is relevant for predicting the future. If the state representation satisfies this, it is called a **Markov state**, and the process itself is a Markov Decision Process.
 
-This sounds like a strong assumption — and it is. But it's often satisfied in practice, _as long as you define the state carefully_. The state doesn't have to be tiny. A chess board position, for instance, is a valid Markov state: knowing the current arrangement of pieces is enough to determine all future possibilities, without needing to remember every move that led there.
+This sounds like a strong assumption — and it is. But it's often satisfied in practice, _as long as you define the state carefully_. The state doesn't have to be tiny — it just has to be complete. A chess game illustrates this subtlety well: the arrangement of pieces alone is _not_ sufficient for a Markov state, because you also need to know whose turn it is, castling rights for each side, en passant target squares, and the half-move clock for the 50-move rule. FEN notation, which chess software uses to fully encode a position, has six fields for exactly this reason. A simpler example of a genuine Markov state is a Tic-Tac-Toe board: knowing the current grid completely determines all future possibilities, with nothing left out.
 
 ---
 
@@ -102,13 +110,13 @@ We've established that the agent receives rewards. But what exactly is the agent
 
 The answer is formalized in what Sutton and Barto call the **Reward Hypothesis**:
 
-> **All of what we mean by goals and purposes can be well thought of as the maximization of the expected value of the cumulative sum of a received scalar signal (called reward).**
+> **All of what we mean by goals and purposes can be well thought of as the maximization of the expected value of the cumulative sum of a received scalar signal (called reward).** (Sutton & Barto, 2018, p. 53)
 
-This is a big claim. It says that any goal: winning a game, driving safely, managing a portfolio, all can be encoded as a reward signal that the agent should try to maximize over time.
+This is a big claim. It says that any goal — winning a game, driving safely, managing a portfolio — can be encoded as a reward signal that the agent should try to maximize over time.
 
 The philosophy here is important: **the reward signal communicates _what_ you want the agent to achieve, not _how_ you want it to achieve it.** If you want an agent to win at chess, you reward it for winning the game, not for taking the opponent's pieces, not for controlling the center, not for any intermediate tactic. The moment you start rewarding intermediate steps, you risk the agent finding clever ways to rack up those sub-rewards while completely losing the forest for the trees.
 
-**A real example of this going wrong:** In the early days of RL research, a simulated boat racing agent was rewarded for its score in a circuit race. Instead of finishing the race, it discovered that spinning in circles on a patch of power-up tiles gave it a higher score than actually racing. The reward was technically being maximized — just not in the way the designers intended [Amodei et al., 2016]. This is called **reward hacking**, and it's one of the central challenges of modern AI safety.
+**A real example of this going wrong:** In 2016, a simulated boat racing agent was rewarded for its score in a circuit race. Instead of finishing the race, it discovered that spinning in circles on a patch of power-up tiles gave it a higher score than actually racing. The reward was technically being maximized — just not in the way the designers intended (Clark & Amodei, 2016). This is called **reward hacking**, and it's one of the central challenges of modern AI safety. The broader landscape of such failure modes is surveyed in Amodei et al. (2016).
 
 ---
 
@@ -143,7 +151,11 @@ Two extreme cases:
 - **$\gamma = 0$**: The agent is completely _myopic_ — it only cares about the very next reward. It has no concept of tomorrow.
 - **$\gamma \to 1$**: The agent is fully _farsighted_ — it values the distant future almost as much as the present. It's playing the long game.
 
-<p align="center"> <img src="assets/gamma-decay.jpg" width="100%" alt="Exponential decay curves for three values of the discount factor gamma"> </p><p align="center"><em><strong>Figure 3.6</strong> — How γ shrinks the effective weight of future rewards.</em></p>
+<p align="center">
+<img src="assets/gamma-decay.jpg" width="620" alt="Exponential decay curves for three values of the discount factor gamma">
+</p>
+
+<p align="center"><em><strong>Figure 3.3</strong> — The effective weight of a future reward drops exponentially with time, and the speed of that drop is controlled entirely by &#947;. A myopic agent (&#947; = 0.5) treats a reward ten steps away as worth less than 0.1% of an immediate reward; a farsighted agent (&#947; = 0.99) still values the same reward at over 90%. The horizontal dashed line marks the "effectively negligible" threshold at y = 0.05.</em></p>
 
 In practice, $\gamma$ is a design choice. A value like $\gamma = 0.99$ gives a nice blend: the agent cares deeply about the future, but rewards very far away (say, 1000 steps) are effectively discounted to near-zero importance.
 
@@ -153,9 +165,7 @@ There's also a very clean recursive relationship worth knowing. The return at ti
 
 $$G_t = R_{t+1} + \gamma G_{t+1}$$
 
-This one-liner is deceptively powerful. It says: the value of being in a state right now is the immediate reward plus a discounted version of all future values. This recursive structure is what makes dynamic programming algorithms (like Value Iteration and Policy Iteration, coming in later chapters) computationally feasible.
-
-Notice how a myopic agent (low $\gamma$) barely values that final reward, while a farsighted agent (high $\gamma$) sees nearly its full value even three steps away.
+This one-liner is deceptively powerful. It says: the value of being in a state right now is the immediate reward plus a discounted version of all future values. This recursive structure — whose full significance will become clear when we meet Bellman equations — is what makes dynamic programming algorithms computationally feasible.
 
 ---
 
@@ -165,7 +175,11 @@ At this point we have two separate formulas: one for episodic tasks (finite sum 
 
 We can. The trick is to think of episodic task termination as entering a special **absorbing state** — a fictional state that transitions only to itself and always produces a reward of zero. Once you're in it, you're stuck there forever, collecting nothing.
 
-<p align="center"> <img src="assets/terminal-state.png" width="100%" alt="State-transition chain ending in an absorbing terminal state with a self-loop labelled R=0"> </p><p align="center"><em><strong>Figure 3.7</strong> — The absorbing terminal state trick.</em></p>
+<p align="center">
+<img src="assets/terminal-state.png" width="560" alt="State-transition chain ending in an absorbing terminal state with a self-loop labelled R=0">
+</p>
+
+<p align="center"><em><strong>Figure 3.4</strong> — The absorbing state S<sup>+</sup> unifies episodic and continuing tasks. By treating the end of an episode as an entry into a state that loops silently on itself with zero reward, we can apply a single return formula to both task types without special-casing either.</em></p>
 
 Mathematically, this means we can always write the return as:
 
@@ -181,45 +195,73 @@ This unified notation lets us write algorithms and proofs that work for both tas
 
 ---
 
-## 3.5 Putting It All Together: A Small Example
+## 3.5 Putting It All Together: The Racecar MDP
 
-Let's walk through a complete, concrete MDP to make all these pieces click.
+The best way to cement everything is to walk through a complete MDP — one with real decisions, stochastic outcomes, and a genuine tradeoff. The example below is adapted from the Berkeley CS188 course (UC Berkeley CS188 Course Staff, n.d.).
 
-**Setup:** A robot is navigating a 3-cell corridor: cells A, B, and C. Cell C is the goal (reward: +10). The robot can move left or right. If it tries to move past the left wall from A, it stays in A. If it reaches C, the episode ends.
+> **A note on notation.** Many textbooks — including CS188 — split the dynamics into two separate functions: a transition function $T(s, a, s')$ giving the probability of reaching $s'$, and a reward function $R(s, a, s')$ giving the reward received. This is equivalent to the joint dynamics function $p(s', r \mid s, a)$ we have used throughout this chapter. We adopt the split notation here for clarity in the table that follows.
 
-<p align="center"> <img src="images/fig_3_8_corridor_mdp.png" width="720" alt="3-cell corridor MDP with two coloured paths and annotated discounted returns"> </p> <p align="center"><em><strong>Figure 3.8</strong> — The 3-cell corridor MDP. Three cells in a row: <strong>A</strong> (start), <strong>B</strong> (neutral), <strong>C</strong> (goal — shade green or add a ★). Wall on the left of A. Labelled transition arrows: A→B ("right, r = 0"), B→A ("left, r = 0"), B→C ("right, r = +10"), and a self-loop at A for the blocked left move. Two overlaid paths: a <strong>green path</strong> A→B→C annotated "G<sub>0</sub> = 9" and an <strong>orange path</strong> A→B→A→B→C (dithering) annotated "G<sub>0</sub> = 7.29 (γ = 0.9)". One diagram — states, actions, rewards, transitions, and discounting all at once.</em></p>
+**The setup.** Imagine a racecar. It can be in one of three states: **cool**, **warm**, or **overheated**. It has two actions at each step: drive **slow** or drive **fast**. The goal is to collect as much reward as possible before overheating — which is a terminal state (the car stops, the race is over).
 
-|State|Action|Next State|Reward|
-|---|---|---|---|
-|A|right|B|0|
-|A|left|A|0|
-|B|right|C|+10|
-|B|left|A|0|
-|C|—|C|0|
+<p align="center">
+<img src="https://inst.eecs.berkeley.edu/~cs188/textbook/assets/images/race-car.png" width="580" alt="Racecar MDP state diagram from Berkeley CS188: cool, warm, and overheated states with slow and fast action edges labelled with transition probabilities and rewards">
+</p>
 
-With $\gamma = 0.9$ and the agent starting in A, if it goes right twice (A → B → C), the return is:
+<p align="center"><em><strong>Figure 3.5</strong> — The racecar MDP (UC Berkeley CS188 Course Staff, n.d.). Three states: <strong>cool</strong>, <strong>warm</strong>, and <strong>overheated</strong> (terminal). Two actions: <strong>slow</strong> and <strong>fast</strong>. Edges carry transition probabilities and rewards. The same action from the same state can lead to different successor states — this is the stochasticity that distinguishes a genuine MDP from a deterministic graph search.</em></p>
 
-$$G_0 = R_1 + \gamma R_2 + \gamma^2 R_3 = 0 + 0.9 \times 10 + 0 = 9$$
+**The transition function** $T(s, a, s')$ tells us exactly what happens:
 
-But if it dithers — going left from B before going right (A → B → A → B → C) — the return is:
+| State | Action | Next State | Probability | Reward |
+|-------|--------|------------|-------------|--------|
+| cool | slow | cool | 1.0 | +1 |
+| cool | fast | cool | 0.5 | +2 |
+| cool | fast | warm | 0.5 | +2 |
+| warm | slow | cool | 0.5 | +1 |
+| warm | slow | warm | 0.5 | +1 |
+| warm | fast | overheated | 1.0 | −10 |
 
-$$G_0 = 0 + 0 \cdot \gamma + 0 \cdot \gamma^2 + 10 \cdot \gamma^3 = 10 \times 0.729 = 7.29$$
+**The reward function** $R(s, a, s')$ is already embedded in the table above. Notice: driving fast earns more reward (+2 vs +1), but it risks warming up the car — and if you drive fast while already warm, you overheat with certainty, paying a heavy penalty of −10.
 
-The discount factor "punishes" the inefficient path — not harshly, but enough to encourage the agent to find shorter routes. This is how discounting shapes behavior, even in a setting this simple.
+**The tradeoff in plain terms.** This MDP captures a risk-reward decision that any experienced driver (or investor, or student cramming for an exam) would recognise. Going fast maximises short-term reward but creates risk. Going slow is safe but slow. An optimal agent has to balance these — and the right balance depends on $\gamma$:
+
+- A **myopic agent** ($\gamma \approx 0$) always drives fast: it only sees the immediate +2 reward and ignores the risk of overheating later.
+- A **farsighted agent** ($\gamma \approx 1$) learns to go slow when warm: it recognises that the −10 penalty and loss of all future rewards is not worth the +2 gain.
+
+**A concrete return calculation.** Suppose the car starts cool and the agent drives fast twice before overheating:
+
+$$S_0 = \text{cool} \xrightarrow{\text{fast}} S_1 = \text{warm} \xrightarrow{\text{fast}} S_2 = \text{overheated}$$
+
+With rewards $R_1 = +2$, $R_2 = -10$, and $\gamma = 0.9$:
+
+$$G_0 = R_1 + \gamma R_2 = 2 + 0.9 \times (-10) = 2 - 9 = -7$$
+
+Now compare with a cautious strategy — always driving slow:
+
+$$S_0 = \text{cool} \xrightarrow{\text{slow}} S_1 = \text{cool} \xrightarrow{\text{slow}} S_2 = \text{cool} \xrightarrow{\text{slow}} \ldots$$
+
+With $R_t = +1$ at every step and $\gamma = 0.9$, this infinite series gives:
+
+$$G_0 = \sum_{k=0}^{\infty} \gamma^k \cdot 1 = \frac{1}{1 - 0.9} = 10$$
+
+The cautious policy earns a discounted return of **10**; the reckless one earns **−7**. The racecar MDP makes it vivid: the dynamics function, the reward signal, and the discount factor all work together to shape what the optimal policy should be.
 
 ---
 
 ## 3.6 Broader Connections and Critical Reflections
 
+Before we wrap up, it's worth stepping back and asking what this framework leaves out — and what it assumes without saying so.
+
 ### The MDP Framework Is Powerful — but Not Neutral
 
-The MDP formalism is elegant, but it carries hidden assumptions worth examining. When we say "the agent tries to maximize reward," we are implicitly saying that whoever designs the reward function has already decided what matters. In real applications, this is a deeply human, and potentially flawed, act.
+When we say "the agent tries to maximize reward," we are implicitly saying that whoever designs the reward function has already decided what matters. In real applications, this is a deeply human — and potentially flawed — act.
 
 **Ethical implications:** In healthcare, if an RL agent is rewarded for reducing the length of a patient's hospital stay, it might learn to discharge patients prematurely. If a hiring algorithm is rewarded for "efficiency," it might learn to penalize candidates from historically underrepresented groups because past data reflects biased outcomes. The MDP framework is a tool; like all tools, its consequences depend on who wields it and how.
 
-**The partial observability problem:** Our framework assumes the agent has access to a true Markov state. In the real world, this is rarely guaranteed. A self-driving car's sensors might be obscured by rain; a poker player can't see the opponent's cards. When the state is only _partially_ observable, we enter the territory of Partially Observable MDPs (POMDPs) — a significantly harder problem that Chapter 17 of Sutton & Barto explores in depth.
+**The partial observability problem:** Our framework assumes the agent has access to a true Markov state. In the real world, this is rarely guaranteed. A self-driving car's sensors might be obscured by rain; a poker player can't see the opponent's cards. When the state is only _partially_ observable, we enter the territory of Partially Observable MDPs (POMDPs) — a significantly harder problem that requires the agent to maintain a belief distribution over possible states rather than observing one directly.
 
-**Scalability:** Finite MDPs with small state and action spaces are tractable. But real problems — like controlling a robot with continuous joint angles, or playing a video game from raw pixels — have enormous or continuous state spaces. The bulk of modern reinforcement learning research is about extending MDP ideas to these settings using function approximation (neural networks, mostly), which we'll encounter starting in Chapter 9.
+**Scalability:** Finite MDPs with small state and action spaces are tractable — you can write the dynamics function as a literal table. But real problems, like controlling a robot with continuous joint angles or playing a video game from raw pixels, have enormous or continuous state spaces. The bulk of modern reinforcement learning research is about extending MDP ideas to these settings using function approximation, a theme we'll return to in Chapter 9.
+
+**MDPs versus related frameworks.** It is also worth knowing what MDPs are _not_. They assume the environment is not strategic — there is no adversary. When multiple agents interact and each one's actions affect the others' rewards, the right model is a _Markov game_ (or stochastic game), not a single-agent MDP. Similarly, MDPs differ from classical control theory in that the dynamics $p$ are initially unknown; the agent must _learn_ them from experience, which is the subject of Chapters 5 through 8.
 
 ---
 
@@ -237,13 +279,44 @@ Let's consolidate what we've covered in this chapter.
 
 **Unified Notation:** Both task types can be handled with the single formula $G_t = \sum_{k=t+1}^{T} \gamma^{k-t-1} R_k$, either with finite $T$ and $\gamma = 1$, or infinite $T$ and $\gamma < 1$.
 
---- 
-## References
-
-- **Sutton & Barto (2018)** — _Reinforcement Learning: An Introduction_ (2nd ed.), Chapter 3.
-- **Amodei et al. (2016)** — _Concrete Problems in AI Safety_.
+**What's Next:** Through the rest of the chapter, we will introduces the concept of a _policy_, a strategy that tells the agent which action to take in each state, and the _value function_, which formalizes how good it is to be in a particular state, and how to optimize them to reach the optimal policy and value function.
 
 ---
+
+## Exercises
+
+The following questions are designed to test and deepen your understanding. Try answering them before checking any solutions.
+
+**Exercise 3.1 — Return calculation (Racecar).** Using the racecar MDP from Section 3.5, compute $G_0$ for the following trajectory, with $\gamma = 0.8$:
+
+$$S_0 = \text{cool} \xrightarrow{\text{slow}} S_1 = \text{cool} \xrightarrow{\text{fast}} S_2 = \text{warm} \xrightarrow{\text{slow}} S_3 = \text{cool} \xrightarrow{\text{fast}} S_4 = \text{warm} \xrightarrow{\text{fast}} S_5 = \text{overheated}$$
+
+The rewards along this trajectory are $R_1=+1,\ R_2=+2,\ R_3=+1,\ R_4=+2,\ R_5=-10$. What does the result tell you about the mixed strategy of alternating slow and fast?
+
+**Exercise 3.2 — Why $\gamma = 1$ is forbidden for continuing tasks.** The formula $G_t = \sum_{k=0}^{\infty} \gamma^k R_{t+k+1}$ requires $\gamma < 1$ for continuing tasks. Explain in two or three sentences, using plain language, why setting $\gamma = 1$ breaks the mathematics. Under what conditions would $\gamma = 1$ still be safe to use?
+
+**Exercise 3.3 — Designing a Markov state.** A hospital wants to build an RL agent to suggest treatment plans for patients. List at least four pieces of information that would need to be included in the state $S_t$ for it to satisfy the Markov property. What happens if you leave any of them out?
+
+**Exercise 3.4 — Identifying reward hacking.** You are training an RL agent to act as a customer service chatbot. You reward it with +1 every time it closes a conversation quickly. Describe a plausible way this agent might "hack" the reward while failing at the actual goal of helping customers. How would you redesign the reward to prevent this?
+
+**Exercise 3.5 — Reflection.** The Reward Hypothesis claims that _any_ goal can be encoded as reward maximization. Can you think of a goal that genuinely resists this encoding — something that seems important but difficult to capture in a scalar signal? What does your example suggest about the limits of the MDP framework as a model of human values?
+
+---
+
+## References
+
+Amodei, D., Olah, C., Steinhardt, J., Christiano, P., Schulman, J., & Mané, D. (2016). Concrete problems in AI safety. _arXiv preprint_, arXiv:1606.06565. https://arxiv.org/abs/1606.06565
+
+Bellman, R. (1957). _Dynamic programming_. Princeton University Press.
+
+Clark, J., & Amodei, D. (2016, December 21). Faulty reward functions in the wild. _OpenAI Blog_. https://openai.com/blog/faulty-reward-functions/
+
+Sutton, R. S., & Barto, A. G. (2018). _Reinforcement learning: An introduction_ (2nd ed.). MIT Press. http://incompleteideas.net/book/the-book.html
+
+UC Berkeley CS188 Course Staff. (n.d.). Introduction to artificial intelligence — Section 4.1: Markov decision processes. UC Berkeley. https://inst.eecs.berkeley.edu/~cs188/textbook/mdp/markov-decision-processes.html
+
+---
+
 ## Citation
 
 To cite this chapter, please use the following BibTeX:
