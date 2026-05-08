@@ -5,17 +5,21 @@ Robotics has traditionally relied on precise models and controlled environments,
 
 That world is changing. Modern robotic systems are increasingly expected to act in environments that are messy, unstructured, and unpredictable, where objects vary in shape and weight, lighting conditions shift, and no two interactions are the same.
 
+---
 > **Figure 9.1:** 
 ![Robotic arm in a structured environment](figures/roboticarm2.png)
 > *Caption: A robotic arm on a conveyor belt handling identical boxes in a fully structured environment. Classical control works well here because objects, timing, and system dynamics are all known in advance.*
+---
 
 In such predictable settings, classical approaches like PID controllers, Linear Quadratic Regulation (LQR), and model-based planners perform admirably. Every variable is known: the geometry of objects, their positions, the timing of events. Control policies can be designed and optimized entirely offline, before the robot ever touches the real world.
 
 But consider a fundamentally different scenario: a robotic arm tasked with sorting a pile of mixed recyclables, bottles, cans, and cardboard, each with different shapes, weights, and friction properties, where some objects can be slippery while others provide stable contact.
 
+---
 > **Figure 9.2:** 
 ![Robotic arm in an unstructured environment](figures/roboticarm.png)
 > *Caption: The same class of robotic arm now faces a pile of mixed recyclables. Object shapes, weights, and friction are all unknown, so classical control fails here.*
+---
 
 Here, classical control breaks down. No model can fully capture the contact dynamics of a deformable plastic bottle versus a rigid aluminum can, and you simply cannot write a rule for every possible object.
 
@@ -25,19 +29,19 @@ This chapter covers the two core continuous-control algorithms used in manipulat
 
 ---
 
-## Why Classical RL Falls Short in Robotics
+## 9.1 Why Classical RL Falls Short in Robotics
 
-### 1. The Continuous Action Problem
+### 9.1.1. The Continuous Action Problem
 
 As established in Chapter 6, classical RL algorithms such as Q-learning break down in continuous action spaces because solving $a^* = \arg\max_a Q(s,a)$ becomes computationally infeasible when actions are real-valued vectors rather than discrete choices. A 6-DOF robotic arm outputting joint torques in $\mathbb{R}^6$ at every time step is precisely this case. DDPG and SAC were designed specifically to address this limitation, which will be explained later in this chapter.
 
-### 2. High-Dimensional State Spaces and Contact Dynamics
+### 9.1.2. High-Dimensional State Spaces and Contact Dynamics
 
 A robotic system typically observes the world through camera images, joint angle sensors, and force/torque readings at the end-effector. Processing these high-dimensional inputs requires deep neural networks, which form the bridge between classical RL and modern deep RL. Manipulation tasks such as pushing, grasping, and insertion all involve contact between surfaces where friction and deformation play a significant role, and these effects are extremely difficult to model analytically [2].
 
 ---
 
-## Actor-Critic Architecture: The Foundation
+## 9.2 Actor-Critic Architecture: The Foundation
 
 Both DDPG and SAC are built on the **actor-critic** framework, which splits the learning problem into two cooperating components:
 
@@ -58,7 +62,7 @@ This is the **deterministic policy gradient theorem**, which forms the theoretic
 
 ---
 
-## Deep Deterministic Policy Gradient (DDPG)
+## 9.3 Deep Deterministic Policy Gradient (DDPG)
 
 ### Overview
 
@@ -126,7 +130,7 @@ DDPG was a milestone, but it carries known weaknesses. It is brittle to hyperpar
 
 ---
 
-## Soft Actor-Critic (SAC)
+## 9.4 Soft Actor-Critic (SAC)
 
 ### The Maximum Entropy Framework
 
@@ -202,7 +206,7 @@ model.learn(total_timesteps=500_000)
 
 ---
 
-## DDPG vs. SAC: A Structured Comparison
+## 9.5 DDPG vs. SAC: A Structured Comparison
 
 | Feature | DDPG | SAC |
 |---------|------|-----|
@@ -217,14 +221,16 @@ model.learn(total_timesteps=500_000)
 
 Performance is evaluated on standard continuous control benchmarks from the MuJoCo simulator, including HalfCheetah, Hopper, Walker2d, Ant, and Humanoid. These environments range from simple systems with few degrees of freedom to highly complex robotic bodies. SAC consistently achieves higher average returns and more stable convergence than DDPG, PPO, and TD3 across all tasks, particularly in challenging environments such as Humanoid. This improvement comes from entropy maximization and the use of twin Q-networks [22].
 
+---
 > **Figure 9.3:** 
 ![MuJoCo Tasks](figures/mujoco.png)
 > *Caption: Examples of MuJoCo continuous control environments used to evaluate RL algorithms. Adapted from Haarnoja et al. [22]*
+---
 These environments represent a range of control challenges, from simple systems with few degrees of freedom to highly complex robotic bodies. The agent must learn to output continuous actions corresponding to joint torques in order to achieve task-specific objectives such as balancing, locomotion, or reaching a target
 
 Haarnoja et al. [22] used some of these tasks to compare the performance of SAC to DDPG, TD3, PPO.
 
-
+---
 > **Figure 9.4:** 
 ![SAC vs DDPG performance](figures/Sacvsddpg.png)
 > *Caption: Training performance of SAC compared to DDPG, PPO, and TD3 on continuous control benchmarks. SAC achieves higher returns and more stable convergence across all tasks.*
@@ -234,7 +240,7 @@ DDPG is simpler and historically important, but SAC, as seen in Figure 9.4 and a
 ---
 
 
-# **9.1 Sim-to-Rel Transfer**
+## 9.6 Sim-to-Real Transfer
 
 Let's start with an uncomfortable truth about teaching robots to do things.
 Reinforcement learning works by letting an agent try stuff, fail, and gradually figure out what works ,purely through experience. No handholding, no instruction manual. In theory, this is beautiful. In practice, it means a robot arm might spend its first thousand attempts flailing around wildly before it learns anything useful. That's fine in a video game. It's considerably less fine when the arm is attached to a real motor, mounted on an expensive chassis, next to a human being.
@@ -247,9 +253,7 @@ This is the core problem that sim-to-real transfer tries to resolve. Train the r
 
 ---
 
----
-
-## **9.1.1 Motivation**
+### 9.6.1 Motivation
 
 Why train in a simulation? The three main reasons are:
 
@@ -261,7 +265,7 @@ Why train in a simulation? The three main reasons are:
 Together, these three factors make simulation indispensable. But they come with a catch.
 ---
 
-## **9.1.2 The Sim-to-Real Gap**
+### 9.6.2 The Sim-to-Real Gap
 
 
 Simulators are a great option, as we mentioned, but they’re not exact. What do we mean by that? We mean it’s hard to capture all the forces, frictions, and subtle dynamics of reality. A simulator is always a simplified approximation of the real world. That doesn’t make it useless, but it does mean that a policy trained in simulation often learns to exploit the specific conditions of its virtual environment. When deployed in reality, the environment no longer matches the virtualized one, leaving the policy to face new conditions it has never encountered. This mismatch is called the sim-to-real gap, or the reality gap. It shows up in three main areas.
@@ -272,20 +276,17 @@ Simulators are a great option, as we mentioned, but they’re not exact. What do
 > *Caption: Small mismatches between simulation and reality compound over time. A policy that looks fine in the simulator can behave completely differently after just a few seconds of real-world deployment.*
 ---
 
-### **Physics Mismatch**
-
+#### Physics Mismatch
 Simulators model friction. Real friction is messier. It depends on surface texture, temperature, humidity, and how worn down a surface is after months of use. A simulator uses a clean mathematical approximation; the real floor has history.
 The same goes for mass distribution, joint stiffness, and actuator response. The CAD model says a robotic limb weighs X grams, distributed in this exact way ,but the manufactured part is a little different. The motor responds a little slower than the simulator assumes. These are small errors individually. Over a long rollout, they stack [1, 2].
-### **The Visual Gap**
-
+#### The Visual Gap
 If a policy learns from visual input ,a camera feed rather than direct sensor readings ,then the gap between a rendered image and a real photograph becomes critical. Simulated scenes tend to look clean, evenly lit, and a bit plastic. Real cameras introduce blur, lens distortion, reflections, and noise. A policy trained to recognize a object in a perfect render may completely fail to spot the same object under a ceiling light at 3pm on a cloudy Tuesday [1].
-### **Unmodeled Dynamics**
-
+#### Unmodeled Dynamics
 Some real-world phenomena don't appear in standard simulators at all. Gear backlash ,the slight mechanical slop in a gearbox ,isn't there. Cable flex isn't there. The specific way a gripper's rubber fingers deform when they press against a surface isn't there. A policy will happily learn to exploit dynamics that only exist in simulation, or remain completely unprepared for dynamics that only exist in reality [5].
 The combined effect is a policy that performs beautifully in the simulator and puzzlingly in the real world. Bridging that gap is what the rest of this section is about.
 ---
 
-## **9.1.3 Approaches to Bridging the Sim-to-Real Gap**
+### 9.6.3 Approaches to Bridging the Sim-to-Real Gap
 
 
 
@@ -293,10 +294,9 @@ So we have a problem. Simulation is essential for training, but simulation isn't
 
 ---
 
-### **9.1.3.1 Domain Randomization**
+#### 9.6.3.1 Domain Randomization
 
-#### **Core Idea**
-
+##### Core Idea
 The first instinct when facing the sim-to-real gap is to make the simulator more accurate. Model friction better. Improve the lighting. Add noise to the sensors. This seems reasonable ,and it is ,but it's chasing an impossible goal. No simulator will ever be a perfect replica of the real world. There will always be something it gets wrong.
 Domain randomization flips the problem entirely. Instead of trying to make the simulator right, it deliberately makes the simulator random.
 The idea is this: if you train a policy across thousands of slightly different simulated worlds ,some with slippery floors, some with sticky ones, some with bright lights, some with dim ones, some with heavy robot arms, some with lighter ones ,the policy can't afford to specialize. It has to find behaviors that work across all of them. And if the distribution of those simulated worlds is broad enough, the real world starts to look like just one more sample from the training set [1].
@@ -307,8 +307,7 @@ Think of it like training for a hiking trip. You could obsess over memorizing th
 > *Caption: Domain randomization trains across a wide distribution of simulated environments, encouraging the policy to learn robust behaviors that generalize to the real world. The real world becomes just another point in the training distribution. Adapted from Tobin et al. [1]*
 ---
 
-#### **What Gets Randomized**
-
+##### What Gets Randomized
 In practice, randomization can be applied across a broad range of simulation properties [1, 2]:
 
 - **Physical parameters:** friction coefficients, mass and inertia tensors, joint damping, contact stiffness, and actuator gains.
@@ -332,17 +331,19 @@ def sample_domain_params():
 
 The episode runs, the policy learns, and next episode it gets a completely different set of numbers. Over millions of episodes, it builds up an implicit understanding of how to behave robustly across the whole distribution.
 
-### **What the Research Found**
+##### What the Research Found
+
+####### What the Research Found
 The landmark paper here is Tobin et al. [1], and the results are still a little surprising when you first read them. Their setup: train an object detector entirely on synthetic images ,not photorealistic ones, but deliberately ugly, algorithmically generated textures, randomized lighting, randomized camera angles (you can see them in Figure 9.7). Then deploy it on a real robot arm with a real camera in a real room, and ask it to locate objects precisely. No fine-tuning on any real images at all.
 It worked. Localization accuracy within 1.5 cm.The images it trained on looked nothing like the real world, but the diversity of those images was enough to generalize.
 
 Peng et al. [2] showed that the same principle holds in the dynamics domain ,randomizing mass, friction, and damping during locomotion and manipulation training produced policies that transferred significantly better to real hardware than those trained on a single, carefully calibrated simulation. They applied this training to a robotic arm whose task was to move objects to a desired spot, achieving 91% ± 3% accuracy.
 
 Even when calibration was done carefully, the results were not as good as those with randomization. This is a slightly counterintuitive result: random noise beats careful tuning. But it makes sense once you accept that the goal is not accuracy, but robustness.
-#### A striking real-world example of domain randomization at scale
+##### A Striking Real-World Example of Domain Randomization at Scale
 OpenAI's Dactyl project trained a robotic hand to solve a Rubik's Cube using massive domain randomization ,randomizing hundreds of physical parameters simultaneously. The full story and videos are at openai.com/research/solving-rubiks-cube. It's worth watching. The hand moves like nothing trained in clean simulation.
 
-#### **Trade-offs**
+##### Trade-offs
 
 Domain randomization is powerful but not free. The randomization distribution is a design choice, and getting it wrong hurts in both directions.
 Too narrow, and the real world still falls outside your training distribution ,you've just added noise without real coverage. Too wide, and the policy learns to be paralyzed. If friction can be anywhere from near-zero to near-infinite, the only universally safe behavior might be to barely move. You get a robot that's technically robust to everything but useful for nothing.
@@ -350,17 +351,17 @@ There's also a real training cost. A policy learning across a wide distribution 
 
 Finding the right distribution has historically been a job for domain experts working through trial and error. Which brings us neatly to the next approach.
 
-### **9.1.3.2 LLM-Guided Sim-to-Real Transfer: DrEureka**
+#### 9.6.3.2 LLM-Guided Sim-to-Real Transfer: DrEureka
 
 Domain randomization solves one problem and creates another. The gap it leaves ,figuring out which parameters to randomize, how widely, and designing a reward function that produces safe real-world behavior ,has historically been a slow, manual, expert-driven process. For every new robot task, an engineer sits down and makes judgment calls. How bouncy should the floor be? How wobbly should the joints be? What gets penalized?
 Ma et al. [5] asked a natural question: what if you just asked a language model to do this instead?
 The result is DrEureka ,Domain Randomization Eureka. And it's a good example of how language models are starting to show up in places you might not expect.
 
-#### The Problem with the Old Way
+##### The Problem with the Old Way
 Designing a reward function for a real-world robot task is harder than it sounds. You don't just want a policy that performs well in simulation ,you want one that performs well on hardware, which means it needs to be robust to the sim-to-real gap, and it needs to avoid damaging the robot in the process. A policy that sprints across a gym floor in simulation might drag its motors on real carpet. A reward function that doesn't penalize extreme torque outputs might produce behaviors that are thrilling to watch but ruinous for the hardware.
 Historically, there was no principled automated way to design either the reward or the randomization distribution. Every new task was a fresh engineering problem [5].
 
-#### Three Stages, One LLM
+##### Three Stages, One LLM
 DrEureka breaks the design problem into three sequential stages, each using an LLM for a different kind of reasoning [5].
 
 ---
@@ -368,13 +369,13 @@ DrEureka breaks the design problem into three sequential stages, each using an L
 ![Image 4](image4.png)
 > *Caption: The DrEureka pipeline. Adapted from Ma et al. [5]*
 ---
-#### Stage 1: Write the reward function. 
+##### Stage 1: Write the Reward Function
 The LLM is given the environment source code and a description of the task. It generates candidate reward functions as executable Python ,not vague natural-language descriptions, actual runnable code. Crucially, a safety instruction is included in the prompt, asking the LLM to penalize behaviors like excessive motor torques or unstable gaits. Multiple candidates are generated, each one is trained against, and the performance scores are fed back to the LLM so it can refine. It turns out that LLMs are quite good at balancing safety terms against task performance in ways that are genuinely difficult to achieve by manually tuning penalty weights after the fact.
-#### Stage 2: Figure out what the policy is sensitive to. 
+##### Stage 2: Figure Out What the Policy Is Sensitive To
 Once a good reward function and policy exist, RAPP (Reward-Aware Physics Prior) runs a systematic sensitivity analysis. RAPP is a lightweight mechanism that restricts the ranges of physics parameters to those where the policy still performs well, ensuring domain randomization is grounded in actual reward outcomes rather than arbitrary engineering choices. For each randomizable physics parameter, RAPP perturbs the value while holding everything else constant and measures how much the policy’s performance degrades. The output is a set of ranges: “the policy still succeeds when friction is anywhere from X to Y.” These are empirically grounded bounds, tied to the actual learned behavior rather than to intuition alone.
-#### Stage 3 
-Choose what to randomize. The sensitivity ranges from Stage 2 are handed to the LLM as context. It's then asked to select which parameters to include in the randomization distribution and to set the ranges , but it isn't just told to fill in the bounds mechanically. It applies physical reasoning. In the locomotion task, for example, the LLM chose a narrower range for restitution with the explanation that "restitution affects how the robot bounces off surfaces … lower range as we're not focusing on bouncing." That's not a lookup; that's a judgment call about task relevance.
-#### The Results
+##### Stage 3: Choose What to Randomize
+The sensitivity ranges from Stage 2 are handed to the LLM as context. It's then asked to select which parameters to include in the randomization distribution and to set the ranges , but it isn't just told to fill in the bounds mechanically. It applies physical reasoning. In the locomotion task, for example, the LLM chose a narrower range for restitution with the explanation that "restitution affects how the robot bounces off surfaces … lower range as we're not focusing on bouncing." That's not a lookup; that's a judgment call about task relevance.
+##### The Results
 DrEureka was tested on two platforms: a Unitree Go1 quadruped (walking) and a LEAP dexterous hand (rotating a cube in-hand) [5].
 On locomotion, the human-engineered baseline achieved a mean forward velocity of 1.32 m/s. DrEureka's mean was 1.66 m/s ,about 26% faster ,and the best DrEureka policy hit 1.83 m/s. Notably, policies designed using only the Eureka reward-generation framework but without any domain randomization failed to walk on real hardware at all. Good reward design alone is not enough.
 
@@ -384,13 +385,13 @@ The more impressive demonstration might be the yoga ball task. A robot dog balan
 
 The DrEureka paper page includes videos of the walking globe task and the cube rotation results ,eureka-research.github.io/dr-eureka. The yoga ball clips are genuinely remarkable.
 
-### 9.1.3.3 Bridging the Visual Gap: Data-Driven Simulation and Domain Abstraction
+#### 9.6.3.3 Bridging the Visual Gap: Data-Driven Simulation and Domain Abstraction
 Domain randomization addresses the visual sim-to-real gap by making the training distribution wide enough to hopefully include the real world. But this approach still depends on the renderer ,the software generating the images ,being at least roughly right. There's no guarantee that any amount of randomization over a synthetic renderer will produce the right coverage of real photographic conditions.
 Two research directions emerged that sidestep the renderer problem altogether, and they do it in opposite ways.
 Amini et al. [8] throw the renderer out entirely and replace it with real-world data. Schlereth-Groh et al. [9] go in the opposite direction: instead of making the training images more realistic, they strip images down to something so abstract that it looks the same whether it came from simulation or reality.
 
 
-#### VISTA: When You Use Reality as the Simulator
+##### VISTA: When You Use Reality as the Simulator
 The starting observation in Amini et al. [8] says: policies trained in CARLA didn't transfer to real roads. Full stop. Despite domain randomization, despite viewpoint augmentation, the visual gap was too large. The rendered world and the photographed world were just too different.
 Their solution: don't render the world at all. Collect an hour of real driving footage per environment ,a human drives, the camera records ,and build a simulator that generates training observations by transforming those real images, not by generating synthetic ones.
 
@@ -399,7 +400,7 @@ This approach covers the full range of positions within a lane ,up to ±1.5 m la
 ---
 > **Figure 9.9:**
 ![Image 8](image8.png)
-> *Panel A shows the autonomous agent’s interaction loop with the data‑driven simulator: at each time step the agent receives an observation and issues an action. Panel B compares the simulated motion in VISTA to the human’s estimated motion in the real world. Panel C illustrates how a new observation is generated by transforming a 3D scene representation into the agent’s virtual viewpoint. Adapted from Amini et al. [8].*
+> *Caption: Panel A shows the autonomous agent's interaction loop with the data-driven simulator; Panel B compares the simulated motion in VISTA to the human's estimated motion in the real world; Panel C illustrates how a new observation is generated from the agent's virtual viewpoint. Adapted from Amini et al. [8]*
 ---
 
 The training signal is sparse and clean: a reward of 1 for every timestep the agent stays in its lane, 0 the moment it doesn't. No human control labels. The agent discovers lane-stable driving on its own.
@@ -416,38 +417,41 @@ What if you removed all of that? What if you converted both simulated and real c
 Their pipeline has two stages. First, a YOLO-based segmentation network processes every camera frame and produces a binary mask: pixels belonging to the drivable area are white, everything else is black. Second, this mask is transformed into a bird's-eye view ,a top-down representation computed from the camera's intrinsic parameters. The result is a compact, geometrically consistent map of the drivable area, stripped of all texture, color, and lighting [9].
 
 The RL policy is then trained entirely on these BEV masks ,not on photographs, not on rendered images, just on binary top-down maps. Since the masks look the same whether they came from a simulated camera or a real one, the policy never encounters a visual domain shift. There's nothing domain-specific left to shift on.
-> **Figure 9.10:** 
+> **Figure 9.10a:** 
 ![Image 10](image10.png)
+> *Caption: BEV-RL full pipeline diagram, first panel. Adapted from Schlereth-Groh et al. [9]*
+
+> **Figure 9.10b:** 
 ![Image 11](image11.png)
-> *Caption: BEV-RL Full Pipeline Diagram. Adapted from Schlereth-Groh et al. [9]*
+> *Caption: BEV-RL full pipeline diagram, second panel. Adapted from Schlereth-Groh et al. [9]*
 
 
 Training happens in a vectorized Gymnasium environment ,thousands of parallel simulation instances ,completing a million training episodes in around five hours. The control network is a simple DQN with three fully connected layers. The segmentation and control components are trained independently, which means the segmentation model can be updated or retrained for a new environment without touching the driving policy [9].
 
 In CARLA ,the hardest test environment, with varying lighting conditions ,the RL policy outperformed a classical PD lane-following baseline that struggled badly with photometric changes. In DonkeyCar, the policy beat human driving time (11.66 s vs 12.95 s for a human). Physical deployment on the lab's RC car was attempted and the pipeline ran correctly, but motor communication issues prevented a clean evaluation.
 
-### 9.1.3.4 Safe Learning for Real-World Deployment
+#### 9.6.3.4 Safe Learning for Real-World Deployment
 
 Here's the thing that all the methods above have in common: they make the policy more likely to behave correctly.But not guaranteed.
 For a lot of applications, that's fine. A navigation robot that works 95% of the time is useful. But for some applications ,a robotic arm working next to a human, a drone flying over a crowd, a medical device ,"likely to be safe" isn't good enough. You need something stronger. You need to be able to say: regardless of what disturbances show up at deployment, this system will not violate its safety constraints.
 This is the domain of safe learning in robotics [3], and it's a field that has developed a sophisticated set of tools for exactly this problem.
 
-#### Why This Is Hard
+##### Why This Is Hard
 Even after training with domain randomization, real-world deployment introduces uncertainties that weren't in the training distribution. Sensor noise that was randomized slightly wrong. A configuration the robot was never placed in during training. An unexpected external disturbance. In a safety-critical system, any of these can cascade into a failure [3].
 Brunke et al. [3] lay out the challenge clearly. The robot's dynamics are never perfectly modeled ,there are always residual unknowns that grow more significant in unusual configurations. Sensors are noisy and may be systematically biased. The environment may contain other agents whose behavior can't be predicted. These aren't engineering oversights. They're fundamental properties of the real world. The question is how to build systems that remain safe in spite of them.
 
-### Three Levels of Safety
+##### Three Levels of Safety
 Not all safety guarantees are equal. Brunke et al. [3] define three levels of safety, which is worth understanding before diving into the methods.
-#### Level I is soft constraints.
+##### Level I: Soft Constraints
 The reward function includes a penalty for unsafe behavior, so the policy learns to avoid it. This is easy to implement and often works well in practice, but provides no formal guarantee ,the policy might still violate the constraint if conditions are unusual enough.
 
-#### Level II is probabilistic guarantees.
+##### Level II: Probabilistic Guarantees
 The policy satisfies safety constraints with high probability ,say, 99% of the time ,under its deployment distribution. This is formally stronger and often practically sufficient.
 
-#### Level III is hard constraints.
+##### Level III: Hard Constraints
 The system is guaranteed to satisfy all safety constraints, always, under any disturbance within a defined uncertainty set. No exceptions. This is the strongest and most demanding guarantee, and it requires the most prior knowledge about the system's dynamics.
 
-#### Safety Filters: A Practical Approach
+##### Safety Filters: A Practical Approach
 
 One of the most practically useful ideas in this space is the safety filter [3]. The concept is simple. The RL policy proposes an action each timestep, as usual. Before that action is executed, a separate supervisory module ,the safety filter ,checks whether it would violate a constraint. If it's safe, it passes through unchanged. If it's unsafe, the filter replaces it with the closest safe action and executes that instead.
 
@@ -459,20 +463,20 @@ Model Predictive Safety Certification (MPSC) takes a related approach: instead o
 
 Berkenkamp et al. [6] showed something particularly elegant: by modeling unknown dynamics with Gaussian processes ,which give not just predictions but calibrated uncertainty estimates ,you can expand the certified safe region of a controller incrementally during training, exploring only states from which the system can be provably stabilized. Safety is maintained throughout learning, not just at deployment.
 
-#### The Bigger Picture
+##### The Bigger Picture
 It's tempting to think of safe learning and sim-to-real transfer as alternatives ,two separate ways to handle uncertainty. Brunke et al. [3] make a compelling argument that they're better understood as complements. Sim-to-real transfer, including domain randomization, is about closing the gap: making the policy behave well in the real world. Safe learning is about managing what remains after the gap is closed: ensuring that the residual uncertainty doesn't lead to harm.
 
 In practice, robust deployed robotic systems tend to use both. The policy is trained in simulation with randomization to get it working well. Safety mechanisms are layered on top to ensure it stays within bounds when the unexpected happens. Neither is sufficient alone. Together, they're a meaningful step toward robots that can be trusted.
 
-### 9.1.4 Summary
+### 9.6.4 Summary
 Sim-to-real transfer is one of those problems that looks simple from a distance and gets more interesting the closer you get. Simulation is obviously necessary ,training on real hardware at the scale modern RL requires is impractical. But unfortunately, simulation is also not entirely correct, and the history of the field is largely a story of progressively more creative ways to handle that wrongness.
 
 Domain randomization [1, 2] reframes the problem: instead of trying to make the simulator accurate, make it diverse. A policy that has trained across thousands of different simulated worlds develops robustness by necessity. This is now a standard part of the robotics RL toolkit. Automating the hard parts of this process ,reward design and distribution selection ,is the contribution of DrEureka [5], which showed that language models can reason about physics well enough to replace the human engineer in the loop for many tasks. The yoga ball demonstration is the kind of result that makes you update your priors about what automated systems can do. For the visual gap specifically, VISTA [8] and BEV-RL [9] demonstrate two philosophically opposite strategies that both work: ground your training observations in reality directly, or strip them down to something so abstract that the domain stops mattering. And layered on top of all of this, safe learning methods [3, 6] provide the mathematical machinery to certify that policies behave safely at deployment ,not just probably, but provably, within defined bounds.
 
 No single approach eliminates the sim-to-real gap. But used together, they make it manageable. The field is moving fast, and new discoveries are made everyday.
-# **9.2 Applications of RL in Robot Navigation**
+## 9.7 Applications of RL in Robot Navigation
 
-## 9.2.1 What Is Robot Navigation?
+### 9.7.1 What Is Robot Navigation?
 Getting from A to B sounds simple. For a human, it mostly is ,we do it without thinking, constantly, in crowded spaces, in the dark, on unfamiliar terrain, while carrying a coffee. We read the room. We anticipate. We make a thousand micro-decisions per minute without being aware of any of them.
 
 Getting a robot to do this is one of the oldest unsolved problems in robotics.
@@ -487,35 +491,32 @@ One of the most interesting subproblems to emerge recently is social navigation 
 
 ---
 
-## **9.2.2 The Classical Navigation Pipeline**
+### 9.7.2 The Classical Navigation Pipeline
 
 Before learning-based methods arrived, robotics researchers spent decades building navigation systems the careful, engineering-heavy way. The result is a well-understood architecture that still underpins most deployed mobile robots today. It's worth understanding it clearly ,both because it works, and because knowing where it breaks is exactly what motivates everything that comes after.
 
 ---
 > **Figure 9.11:** 
 ![Image 6](image6.png)
-> *The classical navigation pipeline: a fixed stack of modular components, each solving one piece of the problem and handing its output to the next. Robust in structured environments, brittle when reality doesn't match the assumptions baked in at design time.*
+> *Caption: The classical navigation pipeline: a fixed stack of modular components, each solving one piece of the problem and handing its output to the next. Robust in structured environments, brittle when reality does not match the assumptions baked in at design time.
 ---
 
 The classical pipeline is modular. Each stage handles one well-defined sub-problem and passes its output downstream. Clean, auditable, and ,in the right environment ,very reliable.
 
-### **Mapping and Localization**
-
+#### Mapping and Localization
 You can't navigate if you don't know your position. Classical systems solve this with SLAM ,Simultaneous Localization and Mapping ,which does what the name says: builds a map of the environment while simultaneously figuring out where in that map the robot currently is.
 
 SLAM uses sensor data ,cameras, LiDAR rangefinders, sonar ,to identify landmarks in the environment and track how the robot's position changes relative to them. The map might be an occupancy grid (a 2D array of cells, each marked as free, occupied, or unknown), a feature map (a set of identified landmarks), or a topological graph (a network of waypoints connected by traversable paths). Uncertainty is managed using probabilistic filters ,the Extended Kalman Filter, the Particle Filter, and more recently factor graph optimization ,which track a probability distribution over possible positions rather than committing to a single estimate.
 
 Once a map exists, localization can run on its own. Monte Carlo Localization (MCL) keeps track of a cloud of hypotheses about where the robot might be and updates that cloud as new sensor readings come in. Over time the cloud converges to the correct position. Unless the environment has changed substantially since the map was built ,in which case it might converge to the wrong one, or not converge at all.
 
-### **Path Planning**
-
+#### Path Planning
 Given a map and a position, the robot needs to find a path to its goal. Classical planners search the map for the optimal route ,minimizing distance, or time, or energy, depending on the objective.
 
 Dijkstra's algorithm and A* are the most common. They treat the map as a graph and find the shortest path through it with guaranteed correctness ,if a path exists, they'll find the shortest one. For robots with complex dynamics or high-dimensional configuration spaces, sampling-based planners like RRT (Rapidly-exploring Random Tree) are more practical: instead of exhaustively searching a grid, they randomly sample the space and build a tree of reachable states. Less guaranteed, but much more scalable.
 
 The catch with all global planners: they assume the world holds still while the plan is being executed. The path is computed once, from a static map, and then followed. If something moves into the way ,a person, another robot, a chair that wasn't where it was yesterday ,the global plan doesn't know.
-### **Local Obstacle Avoidance**
-
+#### Local Obstacle Avoidance
 This is where the local planner comes in. While the global planner charts the overall route, the local planner handles moment-to-moment collision avoidance ,reacting to obstacles the sensors detect in real time, regardless of whether they're on the map.
 
 The Dynamic Window Approach (DWA) is the classic method here. At each timestep, it samples a range of possible velocity commands within what the robot can physically execute, scores each one against a function that balances proximity to the goal with clearance from obstacles, and picks the best. Potential field methods do something similar conceptually: the goal exerts an attractive force on the robot, obstacles exert repulsive forces, and the robot follows the gradient of the resulting field.
@@ -524,7 +525,7 @@ These methods are fast and easy to reason about. They also have well-known failu
 
 ---
 
-## **9.2.3 Limitations of Classical Navigation Approaches**
+### 9.7.3 Limitations of Classical Navigation Approaches
 
 The classical pipeline is a genuine engineering achievement. In the right environment ,structured, predictable, well-mapped, static ,it works remarkably well. The problem is that the real world is none of those things, most of the time.
 
@@ -540,7 +541,7 @@ These aren't edge cases that better implementations would fix. They're structura
 
 ---
 
-## **9.2.4 Reinforcement Learning for Robot Navigation**
+### 9.7.4 Reinforcement Learning for Robot Navigation
 
 RL reframes navigation from the ground up. Instead of designing a pipeline of hand-coded components, you define a reward signal and let the robot learn what works through experience. Reach the goal ,reward. Hit something ,penalty. Stay too close to a person ,penalty. Find a smooth, efficient path ,reward. The robot figures out the rest.
 
@@ -554,12 +555,11 @@ Deep RL extends this further. With neural networks approximating the policy and 
 
 ---
 
-## **9.2.5 Learning Architectures for Navigation**
+### 9.7.5 Learning Architectures for Navigation
 
 Once you've committed to using RL for navigation, the next question is architectural: how much of the pipeline does the learning handle, and how much stays hand-designed?
 
-### **End-to-End Learning**
-
+#### End-to-End Learning
 The most ambitious option is to let the network learn everything. Raw sensor data goes in. Velocity commands come out. Everything in between ,perception, state estimation, planning, action selection ,is handled by a single learned function, optimized end-to-end through the reward signal.
 
 The network can discover representations that are specifically useful for the task at hand, rather than representations that were useful for some other task that got repurposed here. End-to-end RL has achieved genuinely impressive results: pixel-based navigation in complex 3D environments, high-speed drone flight through obstacle fields, and continuous-control locomotion that looks nothing like what a hand-designed controller would produce.
@@ -567,13 +567,12 @@ The network can discover representations that are specifically useful for the ta
 The price is sample efficiency. Learning to perceive the environment, represent it usefully, and act well in it ,all at once, from scratch ,requires enormous amounts of experience. This is why end-to-end navigation is heavily dependent on simulation and the sim-to-real techniques from the previous section. There simply isn't a practical way to acquire this much experience on real hardware.
 
 ---
-> **Figure 9.12:**
+> **Figure 9.12:** 
 ![Image](img.png)
-> *Caption: End-to-End DRL Navigation Framework. This architecture illustrates the replacement of the classical, rigid pipeline with a learned policy. By bypassing traditional modules such as explicit localization and local planning, the agent interacts directly with the environment to maximize cumulative rewards based on raw sensory input. Adapted from Zhu et al.[17]*
+> *Caption: End-to-End DRL Navigation Framework. This architecture illustrates the replacement of the classical, rigid pipeline with a learned policy. By bypassing traditional modules such as explicit localization and local planning, the agent interacts directly with the environment to maximize cumulative rewards based on raw sensory input. Adapted from Zhu et al. [17]*
 ---
 
-### **Hybrid Architectures**
-
+#### Hybrid Architectures
 Hybrid approaches, as discussed by Zhu and Zhang [17], often integrate DRL into the traditional navigation framework to mitigate the errors that accumulate in classical pipelines. Instead of replacing the entire system, DRL is used to enhance specific modules or work alongside hand-coded logic to improve reactivity and robustness. 
 
 The division of labor in these systems typically follows two patterns:
@@ -588,24 +587,21 @@ This architectural synergy is particularly effective for overcoming the unpredic
 
 ---
 
-## **9.2.6 Case Studies**
+### 9.7.6 Case Studies
 
 ---
 
-### **9.2.6.1 UAV Navigation in Urban Environments: DDPG with Transfer Learning**
+#### 9.7.6.1 UAV Navigation in Urban Environments: DDPG with Transfer Learning
 
 When we move from 2D ground robots to 3D UAVs, the complexity doesn't just increase—it explodes. We are no longer dealing with simple $(x, y)$ coordinates; we are dealing with high-dimensional state spaces where classical grid-based RL (like DQN) falls apart due to the "curse of dimensionality". Bouhamed et al. [14] address this by leveraging Deep Deterministic Policy Gradient (DDPG), an actor-critic framework designed specifically for the continuous action spaces that real-world flight demands.
 
-#### **The Problem**
-
+##### The Problem
 In many autonomous systems, we simplify movement into discrete steps: "move left," "move right," or "climb." However, for a UAV, this leads to jittery trajectories and inefficient energy use. Classical path-planning solutions like Mixed-Integer Linear Programming (MILP) or Evolutionary Algorithms often struggle with real-time adaptation because they are computationally heavy and usually rely on a centralized controller.
 
 To achieve true autonomy, the drone needs to make decentralized, local decisions. It needs a framework that understands the world isn't a grid, but a continuous field of possibilities.
-#### **The Approach**
-
+##### The Approach
 Instead of forcing the drone to follow a rigid grid, the researchers gave it total freedom to move in any direction using a "spherical" coordinate system. This means that at every step, the drone’s brain chooses three simple things: how far to fly, which way to tilt, and which way to turn.  To make the learning process smoother, they designed a clever reward system. If the drone gets closer to the goal, it earns points; if it hits a building, it loses points based on the "crash depth"—basically, how hard it hit the wall. This gradual feedback is much more helpful than a simple "yes/no" penalty because it tells the drone exactly how much it needs to adjust its path to stay safe.
-#### **Architecture**
-
+##### Architecture
 The architecture uses a model called DDPG, which acts like a two-part team:
 
 **The Actor (The Pilot):** This part looks at where the drone is and decides the best move to make.
@@ -624,92 +620,79 @@ The most practical part of their method was a shortcut called **Transfer Learnin
 This "start simple" strategy allowed the drone to adapt to crowded urban environments much faster than if it had started from scratch.
 
 ---
-> **Figure 9.13:**
+> **Figure 9.13:** 
 ![Image_1](img_1.png)
-> *Caption: Illustration of the transfer-learning technique. Adapted from Bouhamed et al. [14], © 2020 IEEE.*
+> *Caption: Illustration of the transfer-learning technique. Adapted from Bouhamed et al. [14]*
 ---
 
 
 
-#### **Results**
+##### Results
 The results confirmed the efficiency of this staged approach. While the UAV reached a 100% success rate in open space, it maintained a solid ~83% success rate in complex urban environments. Interestingly, the agent learned to "exploit altitude"—choosing to fly over shorter buildings rather than detouring around them, a strategy that naturally emerged from the reward function.  
 
-#### **Limitations**
-
+##### Limitations
 The authors noted a lack of "pinpoint accuracy" at the final destination—a common side effect of the infinite action space in DDPG where the agent might oscillate slightly around the target instead of coming to a dead stop.
 
-### **9.2.6.2 Unmanned Surface Vehicle Navigation: ANOA with Dueling Deep Q-Networks**
+#### 9.7.6.2 Unmanned Surface Vehicle Navigation: ANOA with Dueling Deep Q-Networks
 
 Wu et al. [15] created the ANOA (Autonomous Navigation and Obstacle Avoidance) algorithm, a real-time navigation system for unmanned surface vehicles (USVs) powered by a dueling deep Q-network.
-#### **The Problem**
-
+##### The Problem
 Navigating a boat is inherently different and often more difficult than operating ground or aerial vehicles because marine environments are highly dynamic and unpredictable. Traditional path planning methods—like graph search or swarm intelligence—are too slow for real-time obstacle avoidance and frequently get stuck in suboptimal routes.
 
 On the other hand, standard AI approaches like basic DQNs struggle because they tend to overestimate the value of actions when presented with too many choices, leading the boat to make poor decisions. The challenge was to create a stable, real-time navigation system that actually respects the physical movement limitations of a boat.
 
-#### **The Approach**
-
+##### The Approach
 To solve the overestimation issue, ANOA uses a "dueling" network. Instead of trying to calculate one massive score for every possible move all at once, the network splits the problem into two simpler questions: How safe is my current location? and What is the specific benefit of taking this action right now?. 
 
 Combining these two streams creates a much more stable learning process.  The system acts as the "eyes" of the boat by looking at a simplified grid map that tracks the USV's position, the obstacles, and the final destination. Rather than testing this in the real world immediately, the team trained the AI in a 3D simulation using Unity. Crucially, they tied the AI to a realistic mathematical model of boat physics—accounting for forward thrust, sideways drift, and turning momentum—so the AI learned how to steer a physical vessel rather than just moving a digital dot.
 
 ---
-> **Figure 9.14:**
+> **Figure 9.14:** 
 ![Image_1](img_2.png)
-> *Caption: The main components and data flow of the ANOA algorithm.Adapted from Wu et al. [15], © 2020 Elsevier B.V.*
+> *Caption: The main components and data flow of the ANOA algorithm. Adapted from Wu et al. [15]*
 ---
 
-#### **Results** 
-
+##### Results
 ANOA outperformed older AI models like standard DQN and Deep Sarsa. It learned faster and more stably, mastering static obstacle courses in about 2,000 episodes (vs. ~3,000 for DQN and Deep Sarsa) and dynamic environments with moving obstacles in just 1,000 episodes. It also maintained lower peak loss values (0.01 vs. 0.03 for DQN and 0.068 for Deep Sarsa) and more stable Q-value estimates. The researchers tested it against Recast, a standard industry navigation tool. While Recast often failed when multiple obstacles moved at the same time and required rapid route changes, ANOA surpassed Recast’s success rate after about 70 million training steps, continued improving with further training, and maintained reliable real-time performance in dynamic environments.
-#### **Limitations and Future Work**
-
+##### Limitations and Future Work
 The simulation platform does not model wind velocity, wave dynamics, or ocean currents, all of which would meaningfully affect USV behaviour in real marine environments [15]. The grid-based discrete action space limits the smoothness and precision of trajectories compared to continuous control formulations. The ANOA approach has not been validated on a physical USV platform, and the gap between the simplified simulation and real marine physics remains an open challenge. Future directions include real sea deployment, integration of wind and current disturbance models, and extension to multi-USV collaborative navigation.
 
 
 
-### **9.2.6.3 Map-Less MAV Navigation: DQN with Sensor Fusion and Zero-Shot Transfer**
+#### 9.7.6.3 Map-Less MAV Navigation: DQN with Sensor Fusion and Zero-Shot Transfer
 
 Doukhi and Lee [16] demonstrate a complete learning system that allows a micro-aerial vehicle (MAV) to navigate and avoid obstacles autonomously. Impressively, they achieved zero-shot transfer, meaning a policy trained entirely in a simulator was deployed in the real world without any extra fine-tuning or real-world data collection.
 
-#### **The Problem**
-
+##### The Problem
 Traditionally, MAVs rely on resource-heavy 3D mapping and complex trajectory planning to navigate. While Deep Reinforcement Learning (DRL) can skip the map, taking a policy from a simulation directly to a real drone is highly risky; tiny errors in 3D space usually lead to catastrophic crashes. Furthermore, MAVs need to see both small, close objects (best seen by depth cameras) and large, distant structures (best seen by LiDAR).
 
-#### **The Approach**
-
+##### The Approach
 To solve this, the researchers divided the navigation problem into two main modules:  Collision Awareness Module (CAM): This handles sensor fusion by taking data from a 2D LiDAR (limited to a 90° field of view to reduce processing time) and a forward-facing RGB-D depth camera. Both sensor feeds are resized and converted into simple 90x90 binary images. By stacking two consecutive frames from both sensors, the system creates a single 4-channel observation tensor that captures both spatial structure and motion.  Collision-Free Control Policy Module (CFCPM): This feeds the fused observation tensor into a Deep Q-Network (DQN). The network uses two convolutional layers and max-pooling to process the data, ultimately outputting one of three simple discrete actions: move forward, turn left, or turn right.
 
 The training relies on a straightforward, LiDAR-based reward system. The agent gets a positive reward for safely moving forward, a small penalty for turning when the path is clear, and a massive penalty if an obstacle breaches a 2-meter safety radius, which ends the training episode.  The secret to their successful zero-shot transfer is the binarization of the sensor data. By converting depth and LiDAR readings into simple black-and-white visual maps during training, the simulated data looks almost identical to real-world data. This closes the "sim-to-real gap" without needing hyper-realistic graphics or complex domain randomization.
 
-#### **The Architecture**
-
+##### The Architecture
 The MAV was trained in a Gazebo simulator over 2,000 episodes (taking about 168 hours), learning to navigate both indoor corridors and outdoor forests.  In the real world, the drone processes the full pipeline in real-time using an onboard NVIDIA Jetson TX2. It operates using a smart toggle system: it uses standard waypoint navigation when the path is clear, but automatically switches to the DQN obstacle-avoidance mode the moment an object enters its 2-meter safety zone. 
 
-#### **Results**
-
+##### Results
 **Indoor generalisation:** In real-world tests, the MAV successfully navigated straight and L-shaped corridors from start to finish without hitting the walls.  
 **Outdoor missions:** During a fully autonomous forest mission, the drone reached a target 35 meters away, avoiding randomly placed trees and a moving pedestrian. It completed the 115-second mission without a single collision.
 
-#### **Limitations and Future Work**
-
+##### Limitations and Future Work
 While highly effective, the discrete action space (left, right, forward) limits the smoothness of the drone's flight. The MAV also operates at a fixed altitude throughout the flight, restricting the system to 2D planar obstacle avoidance rather than true 3D maneuvering. Additionally, the 2-meter safety threshold is quite conservative, which artificially limits the drone's forward speed. Finally, while binarizing the images enables zero-shot transfer, it throws away precise metric distance data that a more advanced model could exploit. Future work will need to integrate 3D altitude control and optimize for faster, longer-range navigation.
 
-### **9.2.6.4 Real-World Social Navigation: Incremental Residual RL**
+#### 9.7.6.4 Real-World Social Navigation: Incremental Residual RL
 
 Nagahisa et al. [10] proposed Incremental Residual Reinforcement Learning (IRRL) to solve a classic robotics headache: how to let a robot learn in the real world when its "onboard brain" (edge devices like a Jetson) has strictly limited memory and processing power.
 
-#### **The Problem**
-
+##### The Problem
 Social navigation is notoriously difficult because human behavior is implicit and context-dependent. A robot trained perfectly in a simulation often fails in the real world where pedestrians might be uncooperative or distracted. While "online learning" (learning on the fly) seems like the obvious fix, standard Reinforcement Learning (RL) usually requires a massive replay buffer—essentially a giant library of past experiences—that quickly exhausts a mobile robot’s memory.
 
-#### **The IRRL Framework**
-
+##### The IRRL Framework
 IRRL handles these constraints by combining two specialized strategies:Incremental Learning: The robot updates its model using only the most recent interaction and then moves on. This deletes the need for a massive replay buffer, making it feasible for low-power hardware. 
 
 Residual RL: Instead of letting the AI control the robot from scratch, they give it a "base policy" (using the Social Force Model). This base policy handles the basic physics of movement, while the AI only learns the residual—the small, corrective "tweaks" needed to handle complex human behavior.
-#### **Architecture**
-
+##### Architecture
 The system uses an actor-critic setup powered by Graph Attention Networks (GATv2).
 
 Crowd Modeling: This allows the robot to "pay attention" to different pedestrians based on how much of a threat they pose to its path, regardless of how many people are around.
@@ -719,15 +702,10 @@ Stability: To prevent the AI from "collapsing" or overreacting to a single bad e
 ---
 > **Figure 9.15:** 
 ![Image 7](image7.png)
-> *Caption: The full IRRL framework.Adapted from Nagahisa et al. [10]*
-> 
->**Left:** The frozen Social Force Model gives a base action (𝑎 𝑏 𝑎 𝑠 𝑒), while the residual policy network learns a corrective action (𝑎 𝑟 𝑒 𝑠) through online updates. These are summed before execution.
->
->**Right:** Actor–critic setup: both actor and critic use an MLP + GNN crowd feature network to capture robot–pedestrian interactions. The actor outputs a Gaussian residual policy, and the critic estimates Q-values.[10]*
+> *Caption: The full IRRL framework. Left: the frozen Social Force Model gives a base action while the residual policy network learns a corrective action through online updates. Right: the actor-critic setup uses an MLP and GNN crowd feature network to capture robot-pedestrian interactions. Adapted from Nagahisa et al. [10]*
 ---
 
-#### **Results**
-
+##### Results
 The researchers tested the system on a Mecanum-wheeled robot powered by an NVIDIA Jetson AGX Orin.  
 
 Simulation: Achieved a 98.8% success rate, proving the robot could learn effectively even without a replay buffer.  
@@ -736,8 +714,7 @@ Real-World (Online): After just 100 episodes of learning on the job, the success
 
 The "Personality" Change:
 The most notable result was how the robot's behavior evolved. It started with an aggressive "crossing" strategy but eventually learned that when humans are uncooperative, socially compliant waiting is actually the most efficient way to reach its goal safely.
-#### **Limitations and Future Work**
-
+##### Limitations and Future Work
 While IRRL is a major step for on-device learning, it currently has some training wheels:
 
 * The tests were limited to simple scenarios with two pedestrians.
@@ -748,11 +725,10 @@ The authors view this as a proof of feasibility, with future work focused on den
 
 ---
 
-### **9.2.6.5 Forest Trail Navigation: Semantic Segmentation RL**
+#### 9.7.6.5 Forest Trail Navigation: Semantic Segmentation RL
 
 Tibermacine et al. [12] developed a modular hybrid system to help robots navigate dense, "unstructured" forests. Instead of relying on GPS or pre-made maps, which often fail under heavy tree cover, this framework combines high-level visual understanding with adaptive decision-making.
-#### **The Problem**
-
+##### The Problem
 Forests are a nightmare for traditional robot navigation for several reasons:
 
 **Perceptual Chaos:** Dense trees create constant shadows and lighting shifts that confuse standard sensors.
@@ -761,8 +737,7 @@ Forests are a nightmare for traditional robot navigation for several reasons:
 
 **Irregular Geometry:** Unlike a paved road, forest trails have ambiguous edges, fallen logs, and varying textures that make simple rule-based steering fail.
 
-#### **The Approach**
-
+##### The Approach
 The system breaks navigation down into three distinct steps to ensure the robot stays on track:  
 
 **Perception (Mask R-CNN):** The robot looks at an RGB image and creates a pixel-level "mask" to identify exactly which parts of the image are the trail.  
@@ -772,8 +747,7 @@ The system breaks navigation down into three distinct steps to ensure the robot 
 **Control (Pure Pursuit):** A geometric controller smooths out the SAC agent’s choices to ensure the robot's physical movement is stable and doesn't jerk around.
 
 
-#### **Architecture**
-
+##### Architecture
 The framework was trained using a ResNet-50 backbone for feature extraction and tested across three simulated forest environments:
 
 Map A: Narrow, winding trails with heavy vegetation.
@@ -787,8 +761,7 @@ The reward function used to train the agent was a mix of five factors: staying o
 ![Image 9](image9.png)
 > *Caption:  Examples of trail detection results. Adapted from Tibermacine et al. [12]*
 
-#### **Results**
-
+##### Results
 In 90 different trials, the system showed it could handle the complexity of the woods better than traditional methods:
 
 Success Rate: It reached the goal 86.7% of the time across all maps.
@@ -807,26 +780,22 @@ The researchers proved that the "hybrid" nature of the system is what makes it w
 
 * Without the Pure Pursuit controller, the robot's motion became erratic and unstable.
 
-#### **Limitations and Future Work**
-
+##### Limitations and Future Work
 The system isn't perfect yet. It can still be blinded by extreme sunlight or "dappled" shadows that weren't common in its training data. It also lacks a "memory"—if the trail is blocked for several frames, the robot can get confused because it doesn't remember where the path was a few seconds ago. Future versions may include recurrent neural networks (RNNs) to give the robot a sense of time and better multispectral sensors to handle tricky lighting.
 
-### **9.2.6.6 Underwater Navigation: Digital Twin-Validated PPO**
+#### 9.7.6.6 Underwater Navigation: Digital Twin-Validated PPO
 
 Mari et al. [13] conducted a comparative study on deep reinforcement learning (RL) for autonomous underwater navigation, utilizing the BlueROV2 platform. The study centers on using Digital Twin (DT) technology—a high-fidelity virtual replica of a physical environment—to validate RL policies safely before they are deployed in high-risk harbor settings
 
-#### **The Problem**
-
+##### The Problem
 Underwater navigation is notoriously difficult because standard tools like GPS do not work submerged, visibility is often poor, and unpredictable water currents affect movement.
 
 Traditional algorithms, like the Dynamic Window Approach (DWA), are deterministic and reactive. While efficient, they often fail in "cluttered" zones because they lack the foresight to navigate around complex obstacles. In these scenarios, the robot often gets trapped in local minima—effectively becoming "stuck" because it cannot find a mathematically clear path to the goal despite one existing.
-#### **The Approach**
-
+##### The Approach
 To solve this, researchers used Proximal Policy Optimization (PPO), an RL algorithm known for its stability in handling complex, continuous movements.
 
 A standout feature of this research was the creation of a 3D Digital Twin of the Pointe Rouge harbor in Marseille. This model was built using photogrammetry (processing over 26,000 photos taken by divers) to ensure the virtual harbor matched the real one with millimeter-level accuracy. This allowed for "hardware-in-the-loop" testing, where the RL agent’s decisions were tested against virtual obstacles that mirrored the real-world site.
-#### **Architecture**
-
+##### Architecture
 The RL agent doesn't "see" like a human; it processes an 84-dimensional observation vector that combines three types of data:
 
 Target Info: The normalized distance and relative angle to the destination.
@@ -837,8 +806,7 @@ Boundary Rays: "Virtual rays" cast in multiple directions to ensure the vehicle 
 
 The PPO algorithm was selected for its stability and effectiveness in continuous action spaces, allowing for precise control of the ROV's thrusters.
 
-#### **Results**
-
+##### Results
 - **Comparative Success:** In highly cluttered harbor scenarios, the RL policy achieved a 55% success rate and 17% collision, whereas the classical DWA baseline achieved only 8% and 76% respectively, due to local minima traps.
 - **Transferability:** The study confirmed that policies validated through the Digital Twin exhibited high reliability when transitioned to physical hardware, with minimal behavioral drift.
 
@@ -846,15 +814,14 @@ While PPO was far better at reaching the goal and avoiding crashes, it had a hig
 
 Real-world sea trials confirmed a successful Sim-to-Real transfer. The BlueROV2 followed paths in the actual harbor that closely mirrored those predicted by the simulation, with only minor deviations caused by acoustic noise and water currents.
 
-#### **Limitations and Future Work**
-
+##### Limitations and Future Work
 A big limitation is that the virtual occupancy grid currently omits sonar multi-path artifacts (echoes that occur in narrow underwater channels). This may result in the agent being overconfident in environments with significant acoustic noise.
 
 So for future improvements, adding realistic "sonar noise" to the training, as the current model assumes perfect sonar data. Moving from 2D movement to full 3D maneuvers (allowing the robot to change depth to avoid obstacles). Integrating visual relocalization, using the massive database of harbor photos to help the robot "recognize" exactly where it is based on what its camera sees.
 
 ---
 
-### **Summary Table: Navigation Case Studies**
+#### 9.7.6.7 Summary Table: Navigation Case Studies
 
 | Paper / Case Study      | Application Domain              | Architecture                          | RL Algorithm                          | Sim-to-Real Solution                                | Key Contribution / Outcome                                                                                                                                   |
 |-------------------------|---------------------------------|---------------------------------------|---------------------------------------|-----------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -874,13 +841,13 @@ What's encouraging is the pace. The oldest paper in this table is from 2020. The
 
 ---
 
-## **9.2.7 Limitations and Open Problems in RL-Based Navigation**
+### 9.7.7 Limitations and Open Problems in RL-Based Navigation
 
 The case studies above show genuine progress. Policies that navigate crowded rooms, fly through forests, dodge obstacles underwater — things that would have been research fantasies a decade ago are now documented, reproducible results. But before we get too optimistic, it's worth being clear about what's still broken.
 
 **Learning is expensive.** Most of these systems required hundreds of thousands to millions of episodes to learn a competent policy. Even in simulation, that's a significant computational cost — days or weeks of GPU time. And simulation isn't the end of it. The sim-to-real gap means you almost always need some real-world experience to close the final performance delta. For social navigation, this is a real problem: you can't collect data from human pedestrians arbitrarily fast, and every training episode involves a real person who didn't sign up to be part of your dataset [10]. We need better reward functions, smarter state representations, curriculum learning strategies — anything that cuts the sample requirements without sacrificing final performance.
 
-**Exploration is dangerous.** An RL policy that's still learning is, by definition, going to make mistakes. In navigation, mistakes mean collisions. Collisions with obstacles damage the robot. Collisions with people hurt the people. The challenge of safe exploration — how to learn without taking actions that could cause harm — is especially acute in social settings, where a near-miss doesn't just break hardware, it breaks trust [10]. The safe RL techniques from Section 9.1.3.4 help, but integrating them into real systems running on constrained hardware with limited compute and no room for conservative slowdowns is still an open problem.
+**Exploration is dangerous.** An RL policy that's still learning is, by definition, going to make mistakes. In navigation, mistakes mean collisions. Collisions with obstacles damage the robot. Collisions with people hurt the people. The challenge of safe exploration — how to learn without taking actions that could cause harm — is especially acute in social settings, where a near-miss doesn't just break hardware, it breaks trust [10]. The safe RL techniques from Section 9.6.3.4 help, but integrating them into real systems running on constrained hardware with limited compute and no room for conservative slowdowns is still an open problem.
 
 **Social conventions aren't universal.** A policy trained on North American pedestrian behavior learns to pass on the right, maintain arm's-length personal space, and yield to people walking faster. Deploy that same policy in a culture with different conventions and it behaves inappropriately — not because the algorithm failed, but because the conventions it learned don't generalize [10]. A truly robust social navigation system would need to infer the local norms from context and adapt accordingly. That's a form of meta-learning — learning to learn new social rules — that current architectures aren't designed for.
 
@@ -892,11 +859,11 @@ The case studies above show genuine progress. Policies that navigate crowded roo
 
 
 
-# RL Applications in Robotic Manipulation
+## 9.8 RL Applications in Robotic Manipulation
 
 ---
 
-## What Is Robotic Manipulation?
+### 9.8.1 What Is Robotic Manipulation?
 
 Robotic manipulation is about getting a robot to physically interact with objects in its environment, whether that means picking them up, sliding them across a surface, pressing them into a socket, or rotating them in the palm of a hand. It sounds straightforward, but it sits among the hardest problems in robotics.
 
@@ -906,35 +873,38 @@ The following sections cover four manipulation task types, explain what makes ea
 
 ---
 
-## Task 1 — Grasping Unknown Objects
+### 9.8.2 Task 1 — Grasping Unknown Objects
 
-### Why Is Grasping Hard?
+#### Why Is Grasping Hard?
 
 Grasping is the first thing most people think of when they imagine a robot interacting with the world, and it is also one of the tasks that took the longest to get right. A classical grasp planner needs to know the exact shape, weight, and surface friction of whatever it is picking up. It can be carefully tuned to work on a specific object, and it will fall apart the moment you swap that object for something it has not seen before.
 
 Real environments do not cooperate this way. Objects come in endless varieties, and most of the properties a planner would need are not known ahead of time. RL sidesteps the modeling problem entirely: instead of writing rules, you let the robot try, fail, and accumulate experience until it figures out what works.
 
-### Levine et al. (2016/2018) [23]
+#### Levine et al. (2016/2018) [23]
 
 This work is probably the most widely cited demonstration that large-scale robotic learning is feasible. Google set up a cluster of 14 robotic arms that ran autonomously for two months, collecting over 800,000 grasp attempts with no human labeling whatsoever.
 
 The setup was deliberately simple. The robot saw an RGB image of its workspace, chose a gripper motion in task space (x, y, z, rotation), and received a reward of 1 for a successful grasp and 0 for a failure. A convolutional neural network learned to predict success from the image alone, without needing to know anything about the camera's calibration.
 
+> **Figure 9.17:** 
 ![14 robot array Levine](figures/14roboticArm.png)
-*Figure 9.17: Large-scale data collection with 14 robotic arms running autonomously (Levine et al., 2016 [23]). Each robot had slightly different camera angles and hardware wear, which forced the policy to learn generalizable grasping strategies rather than overfitting to any one setup.*
+> *Caption: Large-scale data collection with 14 robotic arms running autonomously. Each robot had slightly different camera angles and hardware wear, which forced the policy to learn generalizable grasping strategies rather than overfitting to any one setup. Adapted from Levine et al. [23]*
 
 
-What made the scale of this experiment so important was the variety it introduced. To test how well the learned policy generalized, the second set of experiments used approximately 1,100 different objects spanning an enormous range of shapes, weights, textures, and materials. Figures 6 and 7 give a sense of what the robot actually had to deal with.
+What made the scale of this experiment so important was the variety it introduced. To test how well the learned policy generalized, the second set of experiments used approximately 1,100 different objects spanning an enormous range of shapes, weights, textures, and materials. Figures 9.18 and 9.19 give a sense of what the robot actually had to deal with.
 
 Figure 9.18 shows softer and more irregular objects: a sponge ring, a foam brick, a pipe fitting, and a Lego brick. Each pair of photos shows the gripper approaching and then completing the grasp. These objects are challenging because their surfaces deform under contact and their geometry does not lend itself to any fixed grasp strategy.
 
+> **Figure 9.18:** 
 ![Levine grasping soft objects](figures/grasping.png)
-*Figure 9.19: The three-fingered gripper grasping soft and irregular objects from the Levine et al. experiments (2018 [23]). Sponge and foam objects deform under the fingers, making fixed grasp strategies unreliable. The policy learned to handle these entirely from visual feedback and binary success rewards.*
+> *Caption: The three-fingered gripper grasping soft and irregular objects. Sponge and foam objects deform under the fingers, making fixed grasp strategies unreliable. The policy learned to handle these entirely from visual feedback and binary success rewards. Adapted from Levine et al. [23]*
 
-Figure 9.20 shows the harder cases: transparent glasses frames, a screwdriver with a long thin handle, a clamp with complex geometry, and a chain. These objects combine low-friction surfaces, unusual aspect ratios, and in the case of the transparent frames, essentially no visual contrast against the background. These are precisely the kinds of objects that break classical grasp planners.
+Figure 9.19 shows the harder cases: transparent glasses frames, a screwdriver with a long thin handle, a clamp with complex geometry, and a chain. These objects combine low-friction surfaces, unusual aspect ratios, and in the case of the transparent frames, essentially no visual contrast against the background. These are precisely the kinds of objects that break classical grasp planners.
 
+> **Figure 9.19:** 
 ![Levine grasping hard objects](figures/grasp.png)
-*Figure 9.21: Grasp attempts on geometrically challenging objects from the Levine et al. experiments (2018 [23]). Transparent items, long thin handles, and complex-shaped tools represent the difficult end of the generalization test.*
+> *Caption: Grasp attempts on geometrically challenging objects. Transparent items, long thin handles, and complex-shaped tools represent the difficult end of the generalization test. Adapted from Levine et al. [23]*
 
 The results are summarized in the table below, comparing four approaches:
 
@@ -954,22 +924,22 @@ The closed-loop method achieved a failure rate of only 20% in the with-replaceme
 
 The open-loop baseline is worth noting separately. It used the same large dataset, which was more than an order of magnitude larger than prior work at the time, yet still performed worse than the closed-loop method. The reason is that it could not react to perturbations, object movement, or variability in gripper shape and actuation. The continuous visual feedback in the closed-loop variant is what made the difference.
 
-The paper also described a qualitative finding that lines up with what is shown in Figures 6 and 7. The policy learned different strategies for soft and hard objects without anyone telling it to. For hard objects it placed the fingers on either side. For soft objects it embedded one finger into the center of the object, since soft materials can be pinched rather than gripped around the outside. This kind of strategy differentiation emerged purely from the reward signal across 800,000 attempts.
-### Kalashnikov et al. (2018) — QT-Opt [24]
+The paper also described a qualitative finding that lines up with what is shown in Figures 9.18 and 9.19. The policy learned different strategies for soft and hard objects without anyone telling it to. For hard objects it placed the fingers on either side. For soft objects it embedded one finger into the center of the object, since soft materials can be pinched rather than gripped around the outside. This kind of strategy differentiation emerged purely from the reward signal across 800,000 attempts.
+#### Kalashnikov et al. (2018) — QT-Opt [24]
 
 A later extension of this work, QT-Opt, applied a SAC-style off-policy training pipeline to 580,000 real-world grasp attempts and reached 96% success on objects not seen during training. That number represents a significant jump over classical model-based planners on the same benchmark, and it set the state of the art for vision-based robotic grasping at the time.
 
 ---
 
-## Task 2 — Object Pushing and Rearrangement
+### 9.8.3 Task 2 — Object Pushing and Rearrangement
 
-### Why Is Pushing Hard?
+#### Why Is Pushing Hard?
 
 Pushing is a good example of a task that seems simpler than grasping but turns out to be surprisingly tricky. The contact point between the finger and the object shifts as the object moves, friction behaves nonlinearly depending on speed and surface properties, and small errors in the initial push direction can snowball into large position errors. Analytical models can handle pushing for simple convex shapes with known friction values, but they fall apart quickly when the objects change.
 
 RL handles this by learning the input-output relationship directly from interaction, without ever needing a friction model.
 
-### Results on Standard Benchmarks [22]
+#### Results on Standard Benchmarks [22]
 
 Pushing is a good example of a task that seems simpler than grasping but turns out to be surprisingly tricky. Unlike grasping, the robot never fully controls the object. It makes contact with one side, applies a force, and the object moves in a direction that depends on friction, surface properties, object shape, and the exact contact point, none of which are easy to know precisely.
 
@@ -977,12 +947,13 @@ The contact point between the finger and the object shifts continuously as the o
 
 RL learns the input-output relationship directly from interaction. The agent does not need to know why a push goes where it goes, it just learns from thousands of attempts which motions reliably move objects toward a goal.
 
-### The FetchPush Environment
+#### The FetchPush Environment
 
-One of the standard benchmarks for pushing is the FetchPush-v1 environment from OpenAI Gym, shown in Figure 9.21. A robot arm must push a small block from its starting position to a target location marked on the table. The robot cannot grasp the block, it can only make contact and push. The target position changes every episode, so the robot must learn a general pushing strategy rather than memorizing a fixed path.
+One of the standard benchmarks for pushing is the FetchPush-v1 environment from OpenAI Gym, shown in Figure 9.20. A robot arm must push a small block from its starting position to a target location marked on the table. The robot cannot grasp the block, it can only make contact and push. The target position changes every episode, so the robot must learn a general pushing strategy rather than memorizing a fixed path.
 
+> **Figure 9.20:** 
 ![FetchPush environment](figures/push.png)
-*Figure 9.22: The FetchPush-v1 MuJoCo environment. A robot arm must push the block (red) to the target location (green marker) using only contact forces, with no grasping allowed. The target position varies each episode.*
+> *Caption: The FetchPush-v1 MuJoCo environment. A robot arm must push the block to the target location using only contact forces, with no grasping allowed. The target position varies each episode. Adapted from Haarnoja et al. [22]*
 
 The state space includes the position and velocity of both the end-effector and the block, plus the relative position between the block and the goal. The action is a continuous 3D displacement of the end-effector. The reward is shaped to give the agent feedback on progress: a distance penalty that decreases as the block gets closer to the goal, a progress bonus each step the block moves in the right direction, and a success bonus when it arrives within 5cm of the target.
 
@@ -994,7 +965,7 @@ def compute_reward(object_pos, goal_pos, prev_object_pos):
     return progress + success_bonus - 0.01
 ```
 
-### Results [22]
+#### Results [22]
 
 SAC handles this task well because the entropy term encourages the agent to explore many different pushing trajectories before committing to one strategy. This matters for pushing because the optimal approach angle and speed depend heavily on the block's starting position relative to the goal, and a deterministic policy tends to get stuck in suboptimal habits. On FetchPush-v1, SAC reaches near-maximum reward in under 1 million steps, while DDPG plateaus significantly lower due to its limited exploration of the continuous pushing space [22].
 
@@ -1003,19 +974,20 @@ SAC handles this task well because the entropy term encourages the agent to expl
 
 ---
 
-## Task 3 — Contact-Rich Insertion (Peg-in-Hole)
+### 9.8.4 Task 3 — Contact-Rich Insertion (Peg-in-Hole)
 
-### Why Is Insertion Hard?
+#### Why Is Insertion Hard?
 
 Peg-in-hole insertion requires the robot to align a peg with a hole to millimeter accuracy, then guide it in while managing the forces that arise when the peg makes contact with the edge. Even small misalignments cause jamming, and applying more force once jammed usually makes things worse rather than better.
 
 Classical solutions to this problem need precise geometric models of both parts, carefully tuned force controllers, and significant re-engineering whenever the parts change. RL takes a different route: it learns from the force readings at the wrist what is happening at the contact point, and it figures out the right corrective motions through experience rather than through a model.
 
-Figure 9.23 shows a typical hardware setup for this task. The robot is a 6-DOF UR3e arm, a compact industrial manipulator commonly used in precision assembly research. Mounted between the arm and the gripper is a force/torque sensor, which measures the full 6D wrench at the wrist in real time. This sensor is what makes RL viable for insertion tasks: without it, the robot has no way to feel when it is jammed against the edge or when it has found the hole. The end-effector is a parallel gripper holding a cuboid peg, positioned just above the task board with the matching hole. The coordinate frame shown in the image illustrates the three axes the robot must control simultaneously during the insertion motion.
+Figure 9.21 shows a typical hardware setup for this task. The robot is a 6-DOF UR3e arm, a compact industrial manipulator commonly used in precision assembly research. Mounted between the arm and the gripper is a force/torque sensor, which measures the full 6D wrench at the wrist in real time. This sensor is what makes RL viable for insertion tasks: without it, the robot has no way to feel when it is jammed against the edge or when it has found the hole. The end-effector is a parallel gripper holding a cuboid peg, positioned just above the task board with the matching hole. The coordinate frame shown in the image illustrates the three axes the robot must control simultaneously during the insertion motion.
 
+> **Figure 9.21:** 
 ![Peg in hole insertion](figures/peginhole.png)
-*Figure 9.23: Hardware setup for the peg-in-hole task. A 6-DOF UR3e arm equipped with a force/torque sensor and a parallel gripper must insert a cuboid peg into the matching hole on the task board. The force/torque sensor provides the contact feedback the RL policy uses to detect misalignment and correct in real time.*
-### Findings from Singh et al. (2021) [19]
+> *Caption: Hardware setup for the peg-in-hole task. A 6-DOF UR3e arm equipped with a force/torque sensor and a parallel gripper must insert a cuboid peg into the matching hole on the task board. The force/torque sensor provides the contact feedback the RL policy uses to detect misalignment and correct in real time. Adapted from Singh et al. [19]*
+#### Findings from Singh et al. (2021) [19]
 
 Singh et al. discuss peg-in-hole as a representative contact-rich manipulation task in their survey. The state space combines joint angles with a 6D force/torque vector from the wrist sensor, and the action is a 6D end-effector velocity. SAC is preferred here because its stochastic policy naturally handles the uncertainty in alignment: rather than committing to a fixed path, it can spread probability over several possible corrections and adapt as the contact forces change.
 
@@ -1027,13 +999,13 @@ With this penalty, the robot learns the kind of gentle, compliance-aware inserti
 
 ---
 
-## Task 4 — Dexterous In-Hand Manipulation (OpenAI Dactyl)
+### 9.8.5 Task 4 — Dexterous In-Hand Manipulation (OpenAI Dactyl)
 
-### Why Is In-Hand Manipulation Hard?
+#### Why Is In-Hand Manipulation Hard?
 
 In-hand manipulation, meaning rotating or repositioning an object while holding it in a multi-fingered hand, sits at the top of the difficulty ladder for robotic manipulation. A Shadow Dexterous Hand has 24 degrees of freedom. Contact can occur at hundreds of points at any given moment, and losing grip at any one of them can cause the object to fall. The rolling and sliding that happens between fingertips and object surface is extremely sensitive to tiny parameter variations, and there is no known analytical model that captures all of it accurately enough to be useful for control.
 
-### Andrychowicz et al. (2020) — OpenAI Dactyl [25]
+#### Andrychowicz et al. (2020) — OpenAI Dactyl [25]
 
 OpenAI's Dactyl project is one of the more impressive things that has come out of deep RL research in recent years. The goal was to train a policy that could reorient a wooden block held in the palm of the Shadow Hand to match a target orientation shown to the system. Training happened entirely in MuJoCo simulation, using the same distributed RL infrastructure that ran OpenAI Five. No human demonstrations were used at any point.
 
@@ -1046,8 +1018,9 @@ Reward:   rotation_progress + 5 x (goal_achieved) - 20 x (object_dropped)
 Training: roughly 100 years of simulated experience
 ```
 
+> **Figure 9.22:** 
 ![OpenAI Dactyl](figures/openai.png)
-Figure 9.24: The Shadow Dexterous Hand from OpenAI's Dactyl project holding a colored wooden block. The hand has 24 degrees of freedom and must learn to reorient the block to match target orientations purely through finger contact, with no grasping or external support. The policy controlling it was trained entirely in simulation and transferred to this physical hand (Andrychowicz et al., 2020 [25]).*
+> *Caption: The Shadow Dexterous Hand from OpenAI's Dactyl project holding a colored wooden block. The hand has 24 degrees of freedom and must learn to reorient the block to match target orientations purely through finger contact, with no grasping or external support. The policy controlling it was trained entirely in simulation and transferred to this physical hand. Adapted from Andrychowicz et al. [25]*
 
 Policies trained with domain randomization achieved over 20 consecutive successful rotations before dropping the object, far more than the versions trained without it. The vision-based system performed nearly as well as one given ground-truth pose information, which validated the quality of the learned estimator.
 
@@ -1057,9 +1030,9 @@ The same hand was later used to solve a Rubik's cube [26], requiring roughly 13,
 
 ---
 
-## Algorithm Comparison: Benchmarking on Dexterous Manipulation
+### 9.8.6 Algorithm Comparison: Benchmarking on Dexterous Manipulation
 
-### Berscheid et al. (2024) [27]
+#### Berscheid et al. (2024) [27]
 
 Most papers in this area present results for a single algorithm on a single task. Berscheid et al. take a different approach: they run DDPG, SAC, and TD3 on three different tasks using the same three-fingered gripper hardware, with the same evaluation protocol for each. This kind of controlled comparison is rare and genuinely useful.
 
@@ -1073,24 +1046,27 @@ The three tasks covered a range of contact difficulty. The first was a reaching 
 
 DDPG showed the most variance across runs and the highest failure rates on the fine contact tasks. SAC converged more reliably than DDPG but trailed TD3 on final performance. TD3 exceeded 90% success at convergence across all three tasks.
 
+> **Figure 9.23:** 
 ![Berscheid reward curves](figures/rewardcurves.png)
-*Figure 9.25: Reward curves for DDPG, SAC, and TD3 on three dexterous gripper tasks (Berscheid et al., 2024 [27]). TD3 achieves the highest asymptotic reward; DDPG shows high variance, especially on fine contact tasks.*
+> *Caption: Reward curves for DDPG, SAC, and TD3 on three dexterous gripper tasks. TD3 achieves the highest asymptotic reward; DDPG shows high variance, especially on fine contact tasks. Adapted from Berscheid et al. [27]*
 
+> **Figure 9.24:** 
 ![Berscheid success rates](figures/successrate.png)
-*Figure 9.26: Success rate over training iterations (Berscheid et al., 2024 [27]). TD3 consistently exceeds 90% at convergence, while DDPG failure rates are significantly higher on precision tasks.*
+> *Caption: Success rate over training iterations. TD3 consistently exceeds 90% at convergence, while DDPG failure rates are significantly higher on precision tasks. Adapted from Berscheid et al. [27]*
 
 The paper also tested all three algorithms across the canonical grasping types, precision grasps on small objects, tripod configurations, and power grasps on larger objects. These represent genuinely different contact geometries and force distributions, which is why they serve as a meaningful stress test.
 
+> **Figure 9.25:** 
 ![Grasping types](figures/grasp_types.png)
-*Figure 9.27: Grasp and picking processes for three grasping types tested by Berscheid et al. (2024 [27]). Each type presents different contact challenges for the learning algorithm.*
+> *Caption: Grasp and picking processes for three grasping types. Each type presents different contact challenges for the learning algorithm. Adapted from Berscheid et al. [27]*
 
 The takeaway from this paper is straightforward: for simple tasks, any of the three algorithms will do. For tasks that require precise contact management, the gap between DDPG and the other two becomes large enough to matter in practice.
 
 ---
 
-## Broader Perspective: Deep RL in Robotics
+### 9.8.7 Broader Perspective: Deep RL in Robotics
 
-### Morales et al. (2021) [28]
+#### Morales et al. (2021) [28]
 
 Morales et al. provide a survey covering both deep learning and deep reinforcement learning applied to robotics, including a tutorial on DRL fundamentals and a taxonomy of existing approaches. For manipulation, they identify QT-Opt [24] as one of the most significant results in the field, and they note that combining force/torque sensing with visual feedback through an actor-critic architecture remains the most consistently effective approach for contact-rich tasks.
 
@@ -1104,9 +1080,9 @@ They organize DRL methods into three families. Value function methods, dominated
 
 ---
 
-## Comprehensive Survey: RL Across Robotic Platforms
+### 9.8.8 Comprehensive Survey: RL Across Robotic Platforms
 
-### Singh, Kumar & Singh (2021) [19]
+#### Singh, Kumar & Singh (2021) [19]
 
 Singh et al. cover RL applied to land-based, air-based, and underwater robotic systems. For manipulation, they trace how the field moved from simple 2-DOF manipulators in the early 2000s to 24-DOF dexterous hands today, driven almost entirely by the scaling of deep RL methods.
 
@@ -1122,12 +1098,13 @@ The survey also draws a useful theoretical distinction between the three main RL
 
 Critic-only methods require discretizing the action space, which undermines precision for fine contact tasks. Pure policy gradient methods have high variance in gradient estimates, which slows convergence. Actor-critic methods inherit the advantages of both, and this explains their dominance across the manipulation literature.
 
+> **Figure 9.26:** 
 ![Singh RL applications](figures/singh_applications.png)
-*Figure 9.28: Overview of RL application categories in robotics from Singh et al. (2021 [19]). Land-based manipulation tasks represent the largest and most studied application domain.*
+> *Caption: Overview of RL application categories in robotics. Land-based manipulation tasks represent the largest and most studied application domain. Adapted from Singh et al. [19]*
 
 ---
 
-## Reward Design Across Manipulation Tasks
+### 9.8.9 Reward Design Across Manipulation Tasks
 
 The reward function is the single design decision that most determines whether RL succeeds or fails on a given manipulation task. A reward that is too sparse means the agent never accidentally succeeds, so it never learns anything. A reward that is too easy to game means the agent finds an unintended solution that looks good numerically but fails in practice.
 
@@ -1142,7 +1119,7 @@ The reward function is the single design decision that most determines whether R
 
 ---
 
-## Open Challenges in Manipulation
+### 9.8.10 Open Challenges in Manipulation
 
 Despite the results above, several problems in robotic manipulation remain genuinely unsolved [19][28].
 
@@ -1157,8 +1134,7 @@ Long-horizon tasks, such as assembling a multi-part mechanism, require sequences
 ---
 
 
-## **References**
-
+## References
 [1] J. Tobin, R. Fong, A. Ray, J. Schneider, W. Zaremba, and P. Abbeel, "Domain Randomization for Transferring Deep Neural Networks from Simulation to the Real World," in *Proc. IEEE/RSJ Int. Conf. Intelligent Robots and Systems (IROS)*, Vancouver, BC, Canada, 2017, pp. 23–30.
 
 [2] X. B. Peng, M. Andrychowicz, W. Zaremba, and P. Abbeel, "Sim-to-Real Transfer of Robotic Control with Dynamics Randomization," in *Proc. IEEE Int. Conf. Robotics and Automation (ICRA)*, Brisbane, Australia, 2018, pp. 3803–3810.
