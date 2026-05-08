@@ -453,15 +453,4 @@ Along the way, we saw how the core RL concepts — MDPs, policy gradients, actor
 
 ---
 
-*To cite this chapter, please use the following BibTeX:*
 
-```bibtex
-@misc{fouad_hamdy_2026_ReinforcementLearning,
-  author       = {Omar Fouad and Ahmed Alaa Hamdy},
-  title        = {Reinforcement Learning: A Gentle Introduction, Chapter 11 – Applications in Games},
-  year         = {2026},
-  publisher    = {GitHub},
-  howpublished = {\url{https://github.com/amrmsab/reinforcement_learning_book}},
-  note         = {Accessed: May 2026}
-}
-```
