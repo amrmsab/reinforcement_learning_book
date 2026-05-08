@@ -563,54 +563,29 @@ could possibly be entries in a table, and approximations must be made.
 A well-defined notion of optimality organizes the approach to learning we describe in this book and provides a way to understand the theoretical properties of various learning algorithms, but it is an ideal that reinforcement learning agents can only approximate to varying degrees. In reinforcement learning we are very much concerned with cases in which optimal solutions cannot be found but must be approximated in some way.
 
 # References
-```bibtex
-@book{SuttonBarto2018,
-  author       = {Richard S. Sutton and Andrew G. Barto},
-  title        = {Reinforcement Learning: An Introduction},
-  edition      = {2},
-  year         = {2018},
-  publisher    = {MIT Press},
-  howpublished = {\url{https://web.stanford.edu/class/psych209/Readings/SuttonBartoIPRLBook2ndEd.pdf}}
-}
+Sutton, Richard S., and Andrew G. Barto. Reinforcement Learning: An Introduction. 2nd ed. MIT Press, 2018. Available at: \url{https://web.stanford.edu/class/psych209/Readings/SuttonBartoIPRLBook2ndEd.pdf}.
 
-@misc{Thomas2020MBRL,
-  author       = {Garrett Thomas},
-  title        = {A Survey of Model-Based Reinforcement Learning},
-  year         = {2020},
-  howpublished = {\url{https://arxiv.org/abs/2006.16712}}
-}
+Thomas, Garrett. “A Survey of Model-Based Reinforcement Learning.” 2020. Available at: \url{https://arxiv.org/abs/2006.16712}.
 
-@misc{BellmanSE2016,
-  title        = {Deriving Bellman's Equation in Reinforcement Learning},
-  year         = {2016},
-  howpublished = {\url{https://stats.stackexchange.com/questions/243384/deriving-bellmans-equation-in-reinforcement-learning}}
-}
+“Deriving Bellman’s Equation in Reinforcement Learning.” Cross Validated (Stack Exchange), 2016. Available at: \url{https://stats.stackexchange.com/questions/243384/deriving-bellmans-equation-in-reinforcement-learning}.
 
-@misc{BellmanMedium,
-  author       = {Bwhiz},
-  title        = {Deriving the Bellman Equation for the Value Function},
-  year         = {2017},
-  howpublished = {\url{https://medium.com/@Bwhiz/deriving-the-bellman-equation-for-the-value-function-594be80bfeb4}}
-}
+Bwhiz. “Deriving the Bellman Equation for the Value Function.” Medium, 2017. Available at: \url{https://medium.com/@Bwhiz/deriving-the-bellman-equation-for-the-value-function-594be80bfeb4}.
 
-@misc{3Blue1Brown,
-  author       = {{3Blue1Brown}},
-  title        = {3Blue1Brown YouTube Channel},
+3Blue1Brown. “3Blue1Brown YouTube Channel.” Accessed 2026. Available at: \url{https://www.youtube.com/@3blue1brown}.
+
+StatQuest with Josh Starmer. “StatQuest YouTube Channel.” Accessed 2026. Available at: \url{https://www.youtube.com/@statquest}.
+
+Gormley, Matthew. “Reinforcement Learning / Markov Decision Processes Lecture Notes.” 2017. Available at: \url{https://www.cs.cmu.edu/~mgormley/courses/10601-s17/slides/lecture26-ri.pdf}.
+
+# Citing
+To cite this chapter, please use the following bibtex
+
+'''bibtex
+@misc{Adham2026ReinforcementLearning,
+  author       = {Adam Adham},
+  title        = {Reinforcement Learning: A Gentle Introduction, Chapter \#},
   year         = {2026},
-  howpublished = {\url{https://www.youtube.com/@3blue1brown}}
+  publisher    = {GitHub},
+  howpublished = {\url{https://github.com/amrmsab/reinforcement_learning_book}},
 }
-
-@misc{StatQuest,
-  author       = {{StatQuest with Josh Starmer}},
-  title        = {StatQuest YouTube Channel},
-  year         = {2026},
-  howpublished = {\url{https://www.youtube.com/@statquest}}
-}
-
-@misc{GormleyCMU2017,
-  author       = {Matthew Gormley},
-  title        = {Reinforcement Learning / Markov Decision Processes Lecture Notes},
-  year         = {2017},
-  howpublished = {\url{https://www.cs.cmu.edu/~mgormley/courses/10601-s17/slides/lecture26-ri.pdf}}
-}
-```
+'''
