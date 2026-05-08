@@ -1,14 +1,248 @@
-﻿# **9.1 Sim-to-Real Transfer**
+﻿# Chapter 9: Applications in Robotics and Control
+**By Manuella Eskandar and Mostafa Ahmed**
+
+Robotics has traditionally relied on precise models and controlled environments, where system behavior can be predicted and control strategies can be designed in advance. In these settings, robots execute predefined actions with high accuracy and reliability.
+
+That world is changing. Modern robotic systems are increasingly expected to act in environments that are messy, unstructured, and unpredictable, where objects vary in shape and weight, lighting conditions shift, and no two interactions are the same.
+
+> **Figure 9.1:** 
+![Robotic arm in a structured environment](figures/roboticarm2.png)
+> *Caption: A robotic arm on a conveyor belt handling identical boxes in a fully structured environment. Classical control works well here because objects, timing, and system dynamics are all known in advance.*
+
+In such predictable settings, classical approaches like PID controllers, Linear Quadratic Regulation (LQR), and model-based planners perform admirably. Every variable is known: the geometry of objects, their positions, the timing of events. Control policies can be designed and optimized entirely offline, before the robot ever touches the real world.
+
+But consider a fundamentally different scenario: a robotic arm tasked with sorting a pile of mixed recyclables, bottles, cans, and cardboard, each with different shapes, weights, and friction properties, where some objects can be slippery while others provide stable contact.
+
+> **Figure 9.2:** 
+![Robotic arm in an unstructured environment](figures/roboticarm.png)
+> *Caption: The same class of robotic arm now faces a pile of mixed recyclables. Object shapes, weights, and friction are all unknown, so classical control fails here.*
+
+Here, classical control breaks down. No model can fully capture the contact dynamics of a deformable plastic bottle versus a rigid aluminum can, and you simply cannot write a rule for every possible object.
+
+Reinforcement learning (RL) offers a fundamentally different answer: instead of programming the robot with rules, let it *learn* from experience. The robot tries, fails, receives feedback, and gradually improves, much the same way a child learns to stack blocks [18].
+
+This chapter covers the two core continuous-control algorithms used in manipulation, DDPG and SAC, and then surveys the landmark applications of RL to each major class of manipulation task.
+
+---
+
+## Why Classical RL Falls Short in Robotics
+
+### 1. The Continuous Action Problem
+
+As established in Chapter 6, classical RL algorithms such as Q-learning break down in continuous action spaces because solving $a^* = \arg\max_a Q(s,a)$ becomes computationally infeasible when actions are real-valued vectors rather than discrete choices. A 6-DOF robotic arm outputting joint torques in $\mathbb{R}^6$ at every time step is precisely this case. DDPG and SAC were designed specifically to address this limitation, which will be explained later in this chapter.
+
+### 2. High-Dimensional State Spaces and Contact Dynamics
+
+A robotic system typically observes the world through camera images, joint angle sensors, and force/torque readings at the end-effector. Processing these high-dimensional inputs requires deep neural networks, which form the bridge between classical RL and modern deep RL. Manipulation tasks such as pushing, grasping, and insertion all involve contact between surfaces where friction and deformation play a significant role, and these effects are extremely difficult to model analytically [2].
+
+---
+
+## Actor-Critic Architecture: The Foundation
+
+Both DDPG and SAC are built on the **actor-critic** framework, which splits the learning problem into two cooperating components:
+
+| Component | Role | Output |
+|-----------|------|--------|
+| **Actor** $\mu(s)$ or $\pi(s)$ | Decides what action to take | Action vector $a \in \mathbb{R}^n$ |
+| **Critic** $Q(s, a)$ | Evaluates how good the action was | Scalar value estimate |
+
+The critic is updated using the Bellman equation:
+
+$$Q(s, a) \leftarrow r + \gamma \, Q(s', a')$$
+
+The actor is then updated by gradient ascent, pushing actions in the direction the critic says is better:
+
+$$\nabla_\theta J \approx \nabla_a Q(s, a)\big|_{a=\mu_\theta(s)} \cdot \nabla_\theta \mu_\theta(s)$$
+
+This is the **deterministic policy gradient theorem**, which forms the theoretical backbone of DDPG [20].
+
+---
+
+## Deep Deterministic Policy Gradient (DDPG)
+
+### Overview
+
+DDPG, introduced by Lillicrap et al. (2016) [21], was the first algorithm to successfully combine the actor-critic framework with deep neural networks for continuous control. Its key insight is that if the policy is deterministic, always outputting one specific action for each state, then the maximization over actions becomes a simple gradient computation.
+
+### Architecture
+
+DDPG maintains four neural networks:
+
+```
+Actor Network     μ(s; θ^μ)       →  outputs action a
+Critic Network    Q(s,a; θ^Q)     →  outputs scalar Q-value
+
+Target Actor      μ'(s; θ^μ')     →  slowly-updated copy of actor
+Target Critic     Q'(s,a; θ^Q')   →  slowly-updated copy of critic
+```
+
+Target networks are critical for stability. Without them, the Q-value target $r + \gamma Q(s', a')$ changes every step, which makes training unstable. Targets are updated via **Polyak averaging**:
+
+$$\theta' \leftarrow \tau \theta + (1 - \tau)\theta', \quad \tau \ll 1$$
+
+### Replay Buffer and Exploration
+
+DDPG uses an **experience replay buffer** that stores transitions $(s, a, r, s')$. Random mini-batch sampling breaks temporal correlations and improves data efficiency.
+
+Because the policy is deterministic, DDPG must add exploration explicitly via **Ornstein-Uhlenbeck (OU) noise**, which are temporally correlated random perturbations:
+
+$$a_{\text{explore}} = \mu(s) + \mathcal{N}$$
+
+### Training Loop
+
+```python
+for episode in range(max_episodes):
+    state = env.reset()
+    for step in range(max_steps):
+        action = actor(state) + ou_noise.sample()
+        action = clip(action, action_low, action_high)
+        next_state, reward, done = env.step(action)
+        buffer.store(state, action, reward, next_state, done)
+
+        if buffer.size() > batch_size:
+            batch = buffer.sample(batch_size)
+
+            # Update critic: minimize Bellman error
+            target_q = batch.reward + gamma * target_critic(
+                batch.next_state, target_actor(batch.next_state)
+            )
+            critic_loss = MSE(critic(batch.state, batch.action), target_q)
+            critic.update(critic_loss)
+
+            # Update actor: maximize Q
+            actor_loss = -critic(batch.state, actor(batch.state)).mean()
+            actor.update(actor_loss)
+
+            soft_update(target_actor, actor, tau)
+            soft_update(target_critic, critic, tau)
+
+        state = next_state
+        if done: break
+```
+
+### Limitations of DDPG
+
+DDPG was a milestone, but it carries known weaknesses. It is brittle to hyperparameter choices, relies on crude fixed-noise exploration, and tends to overestimate Q-values, which leads to instability. These limitations motivated the development of SAC.
+
+---
+
+## Soft Actor-Critic (SAC)
+
+### The Maximum Entropy Framework
+
+SAC, introduced by Haarnoja et al. (2018) [22], reframes the RL objective. Instead of simply maximizing expected reward, the agent maximizes reward and entropy at the same time:
+
+$$J(\pi) = \mathbb{E}_{\pi}\left[\sum_{t=0}^{\infty} \gamma^t \left(r_t + \alpha \, \mathcal{H}(\pi(\cdot \mid s_t))\right)\right]$$
+
+where $\mathcal{H}(\pi(\cdot \mid s)) = -\mathbb{E}_{a \sim \pi}[\log \pi(a \mid s)]$ is the policy entropy and $\alpha > 0$ is the **temperature parameter**. An agent that maximizes entropy is rewarded for keeping its options open, spreading probability mass across actions rather than locking into one. This naturally encourages exploration without any hand-tuned noise.
+
+### Architecture: Twin Critics
+
+SAC uses **two independent critic networks** and takes the minimum when computing targets, which is known as the clipped double-Q trick:
+
+$$y = r + \gamma \left(\min_{i=1,2} Q_i'(s', \tilde{a}') - \alpha \log \pi(\tilde{a}' \mid s')\right)$$
+
+This directly addresses DDPG's overestimation bias. By always using the more pessimistic estimate, SAC avoids the positive feedback loop where inflated Q-values lead to overconfident actions.
+
+### Automatic Temperature Tuning
+
+A key practical advantage of SAC is **automatic tuning** of $\alpha$. If the policy is too deterministic, meaning entropy is below the target, $\alpha$ increases and pushes toward exploration. If the policy is too random, $\alpha$ decreases and tightens it. This self-regulation is one of SAC's most practical strengths:
+
+$$\alpha^* = \arg\min_\alpha \;\mathbb{E}_{a \sim \pi}\left[-\alpha \log \pi(a \mid s) - \alpha \mathcal{H}_{\text{target}}\right]$$
+
+### Training Loop
+
+```python
+for step in range(max_steps):
+    action, log_prob = actor.sample(state)
+    next_state, reward, done = env.step(action)
+    buffer.store(state, action, reward, next_state, done)
+
+    if buffer.size() > batch_size:
+        batch = buffer.sample(batch_size)
+        next_action, next_log_prob = actor.sample(batch.next_state)
+
+        # Twin critic targets with entropy bonus
+        target_q = batch.reward + gamma * (
+            min(target_q1(batch.next_state, next_action),
+                target_q2(batch.next_state, next_action))
+            - alpha * next_log_prob
+        )
+
+        q1.update(MSE(q1(batch.state, batch.action), target_q))
+        q2.update(MSE(q2(batch.state, batch.action), target_q))
+
+        # Actor: maximize Q minus entropy cost
+        sampled_action, log_prob = actor.sample(batch.state)
+        actor_loss = (alpha * log_prob - min(
+            q1(batch.state, sampled_action),
+            q2(batch.state, sampled_action)
+        )).mean()
+        actor.update(actor_loss)
+
+        # Auto-tune temperature
+        alpha_loss = -(alpha * (log_prob + target_entropy)).mean()
+        alpha.update(alpha_loss)
+
+        soft_update(target_q1, q1, tau)
+        soft_update(target_q2, q2, tau)
+```
+
+### Python Libraries
+
+```python
+# Stable-Baselines3 (recommended)
+from stable_baselines3 import SAC, DDPG
+import gymnasium as gym
+
+env = gym.make("FetchReach-v2")
+model = SAC("MlpPolicy", env, verbose=1, learning_rate=3e-4)
+model.learn(total_timesteps=500_000)
+```
+
+---
+
+## DDPG vs. SAC: A Structured Comparison
+
+| Feature | DDPG | SAC |
+|---------|------|-----|
+| Policy type | Deterministic | Stochastic |
+| Exploration | External noise (OU noise) | Built-in via entropy maximization |
+| Number of critics | 1 | 2 (twin critics) |
+| Temperature $\alpha$ | N/A | Automatic tuning |
+| Overestimation bias | Prone | Reduced by min-Q trick |
+| Stability | Moderate | High |
+| Sample efficiency | Moderate | High |
+| Best suited for | Structured tasks | Complex, unstructured tasks |
+
+Performance is evaluated on standard continuous control benchmarks from the MuJoCo simulator, including HalfCheetah, Hopper, Walker2d, Ant, and Humanoid. These environments range from simple systems with few degrees of freedom to highly complex robotic bodies. SAC consistently achieves higher average returns and more stable convergence than DDPG, PPO, and TD3 across all tasks, particularly in challenging environments such as Humanoid. This improvement comes from entropy maximization and the use of twin Q-networks [22].
+
+> **Figure 9.3:** 
+![MuJoCo Tasks](figures/mujoco.png)
+> *Caption: Examples of MuJoCo continuous control environments used to evaluate RL algorithms. Adapted from Haarnoja et al. [22]*
+These environments represent a range of control challenges, from simple systems with few degrees of freedom to highly complex robotic bodies. The agent must learn to output continuous actions corresponding to joint torques in order to achieve task-specific objectives such as balancing, locomotion, or reaching a target
+
+Haarnoja et al. [22] used some of these tasks to compare the performance of SAC to DDPG, TD3, PPO.
+
+
+> **Figure 9.4:** 
+![SAC vs DDPG performance](figures/Sacvsddpg.png)
+> *Caption: Training performance of SAC compared to DDPG, PPO, and TD3 on continuous control benchmarks. SAC achieves higher returns and more stable convergence across all tasks.*
+
+DDPG is simpler and historically important, but SAC, as seen in Figure 9.4 and as you will see later in this chapter in applications section, has largely superseded it in robotics benchmarks due to its superior stability, exploration, and robustness.
+
+---
+
+
+# **9.1 Sim-to-Rel Transfer**
 
 Let's start with an uncomfortable truth about teaching robots to do things.
 Reinforcement learning works by letting an agent try stuff, fail, and gradually figure out what works ,purely through experience. No handholding, no instruction manual. In theory, this is beautiful. In practice, it means a robot arm might spend its first thousand attempts flailing around wildly before it learns anything useful. That's fine in a video game. It's considerably less fine when the arm is attached to a real motor, mounted on an expensive chassis, next to a human being.
 This is the core problem that sim-to-real transfer tries to resolve. Train the robot in a simulated world ,where crashes are free, time can be sped up, and nothing actually breaks ,then take the policy it learned and drop it into the real world. Simple enough as an idea. But tricky in practice.
 ---
 
-> **Figure 9.1:**
-
+> **Figure 9.5:** 
 ![Image 1](image1.png)
-
 > *Caption: The sim-to-real transfer pipeline.*
 
 ---
@@ -33,7 +267,7 @@ Together, these three factors make simulation indispensable. But they come with 
 Simulators are a great option, as we mentioned, but they’re not exact. What do we mean by that? We mean it’s hard to capture all the forces, frictions, and subtle dynamics of reality. A simulator is always a simplified approximation of the real world. That doesn’t make it useless, but it does mean that a policy trained in simulation often learns to exploit the specific conditions of its virtual environment. When deployed in reality, the environment no longer matches the virtualized one, leaving the policy to face new conditions it has never encountered. This mismatch is called the sim-to-real gap, or the reality gap. It shows up in three main areas.
 
 ---
-> **Figure 9.2:** 
+> **Figure 9.6:** 
 ![Image 3](image3.png)
 > *Caption: Small mismatches between simulation and reality compound over time. A policy that looks fine in the simulator can behave completely differently after just a few seconds of real-world deployment.*
 ---
@@ -68,10 +302,9 @@ Domain randomization flips the problem entirely. Instead of trying to make the s
 The idea is this: if you train a policy across thousands of slightly different simulated worlds ,some with slippery floors, some with sticky ones, some with bright lights, some with dim ones, some with heavy robot arms, some with lighter ones ,the policy can't afford to specialize. It has to find behaviors that work across all of them. And if the distribution of those simulated worlds is broad enough, the real world starts to look like just one more sample from the training set [1].
 Think of it like training for a hiking trip. You could obsess over memorizing the exact trail, or you could train on dozens of different terrains and trust that your legs will handle whatever shows up. Domain randomization takes the second approach.
 ---
-> **Figure 9.3:** 
+> **Figure 9.7:** 
 ![Image 2](image2.png)
-> 
-> *Caption: Domain randomization trains across a wide distribution of simulated environments, encouraging the policy to learn robust behaviors that generalize to the real world. The real world becomes just another point in the training distribution.Adapted from Tobin et al. [1]*
+> *Caption: Domain randomization trains across a wide distribution of simulated environments, encouraging the policy to learn robust behaviors that generalize to the real world. The real world becomes just another point in the training distribution. Adapted from Tobin et al. [1]*
 ---
 
 #### **What Gets Randomized**
@@ -100,7 +333,7 @@ def sample_domain_params():
 The episode runs, the policy learns, and next episode it gets a completely different set of numbers. Over millions of episodes, it builds up an implicit understanding of how to behave robustly across the whole distribution.
 
 ### **What the Research Found**
-The landmark paper here is Tobin et al. [1], and the results are still a little surprising when you first read them. Their setup: train an object detector entirely on synthetic images ,not photorealistic ones, but deliberately ugly, algorithmically generated textures, randomized lighting, randomized camera angles (you can see them in Figure 9.3). Then deploy it on a real robot arm with a real camera in a real room, and ask it to locate objects precisely. No fine-tuning on any real images at all.
+The landmark paper here is Tobin et al. [1], and the results are still a little surprising when you first read them. Their setup: train an object detector entirely on synthetic images ,not photorealistic ones, but deliberately ugly, algorithmically generated textures, randomized lighting, randomized camera angles (you can see them in Figure 9.7). Then deploy it on a real robot arm with a real camera in a real room, and ask it to locate objects precisely. No fine-tuning on any real images at all.
 It worked. Localization accuracy within 1.5 cm.The images it trained on looked nothing like the real world, but the diversity of those images was enough to generalize.
 
 Peng et al. [2] showed that the same principle holds in the dynamics domain ,randomizing mass, friction, and damping during locomotion and manipulation training produced policies that transferred significantly better to real hardware than those trained on a single, carefully calibrated simulation. They applied this training to a robotic arm whose task was to move objects to a desired spot, achieving 91% ± 3% accuracy.
@@ -131,9 +364,8 @@ Historically, there was no principled automated way to design either the reward 
 DrEureka breaks the design problem into three sequential stages, each using an LLM for a different kind of reasoning [5].
 
 ---
-> **Figure 9.4:**
+> **Figure 9.8:**
 ![Image 4](image4.png)
->
 > *Caption: The DrEureka pipeline. Adapted from Ma et al. [5]*
 ---
 #### Stage 1: Write the reward function. 
@@ -165,9 +397,8 @@ Their solution: don't render the world at all. Collect an hour of real driving f
 Here's how VISTA works. The system records the human's trajectory through the environment. When the virtual agent decides to take a slightly different path ,say, drifting toward the lane edge ,VISTA doesn't render what that view would look like. Instead, it takes the nearest real recorded frame, estimates a depth map using a neural network, lifts that frame into 3D space, shifts the virtual camera to where the agent actually is, and re-projects it back to 2D. The output is a photorealistic image of what the agent would actually see from its new position ,because it was built from a photograph, not a render [8].
 This approach covers the full range of positions within a lane ,up to ±1.5 m lateral offset and ±15° rotation ,including the off-center positions a car might end up in during a near-miss.
 ---
-> **Figure 9.5:**
+> **Figure 9.9:**
 ![Image 8](image8.png)
->
 > *Panel A shows the autonomous agent’s interaction loop with the data‑driven simulator: at each time step the agent receives an observation and issues an action. Panel B compares the simulated motion in VISTA to the human’s estimated motion in the real world. Panel C illustrates how a new observation is generated by transforming a 3D scene representation into the agent’s virtual viewpoint. Adapted from Amini et al. [8].*
 ---
 
@@ -185,7 +416,7 @@ What if you removed all of that? What if you converted both simulated and real c
 Their pipeline has two stages. First, a YOLO-based segmentation network processes every camera frame and produces a binary mask: pixels belonging to the drivable area are white, everything else is black. Second, this mask is transformed into a bird's-eye view ,a top-down representation computed from the camera's intrinsic parameters. The result is a compact, geometrically consistent map of the drivable area, stripped of all texture, color, and lighting [9].
 
 The RL policy is then trained entirely on these BEV masks ,not on photographs, not on rendered images, just on binary top-down maps. Since the masks look the same whether they came from a simulated camera or a real one, the policy never encounters a visual domain shift. There's nothing domain-specific left to shift on.
-> **Figure 9.6:** 
+> **Figure 9.10:** 
 ![Image 10](image10.png)
 ![Image 11](image11.png)
 > *Caption: BEV-RL Full Pipeline Diagram. Adapted from Schlereth-Groh et al. [9]*
@@ -261,7 +492,7 @@ One of the most interesting subproblems to emerge recently is social navigation 
 Before learning-based methods arrived, robotics researchers spent decades building navigation systems the careful, engineering-heavy way. The result is a well-understood architecture that still underpins most deployed mobile robots today. It's worth understanding it clearly ,both because it works, and because knowing where it breaks is exactly what motivates everything that comes after.
 
 ---
-> **Figure 9.7:** 
+> **Figure 9.11:** 
 ![Image 6](image6.png)
 > *The classical navigation pipeline: a fixed stack of modular components, each solving one piece of the problem and handing its output to the next. Robust in structured environments, brittle when reality doesn't match the assumptions baked in at design time.*
 ---
@@ -336,14 +567,14 @@ The network can discover representations that are specifically useful for the ta
 The price is sample efficiency. Learning to perceive the environment, represent it usefully, and act well in it ,all at once, from scratch ,requires enormous amounts of experience. This is why end-to-end navigation is heavily dependent on simulation and the sim-to-real techniques from the previous section. There simply isn't a practical way to acquire this much experience on real hardware.
 
 ---
-> **Figure 9.8:**
+> **Figure 9.12:**
 ![Image](img.png)
-> *Caption: End-to-End DRL Navigation Framework. This architecture illustrates the replacement of the classical, rigid pipeline with a learned policy. By bypassing traditional modules such as explicit localization and local planning, the agent interacts directly with the environment to maximize cumulative rewards based on raw sensory input. Adapted from Zhu et al.[24]*
+> *Caption: End-to-End DRL Navigation Framework. This architecture illustrates the replacement of the classical, rigid pipeline with a learned policy. By bypassing traditional modules such as explicit localization and local planning, the agent interacts directly with the environment to maximize cumulative rewards based on raw sensory input. Adapted from Zhu et al.[17]*
 ---
 
 ### **Hybrid Architectures**
 
-Hybrid approaches, as discussed by Zhu and Zhang [24], often integrate DRL into the traditional navigation framework to mitigate the errors that accumulate in classical pipelines. Instead of replacing the entire system, DRL is used to enhance specific modules or work alongside hand-coded logic to improve reactivity and robustness. 
+Hybrid approaches, as discussed by Zhu and Zhang [17], often integrate DRL into the traditional navigation framework to mitigate the errors that accumulate in classical pipelines. Instead of replacing the entire system, DRL is used to enhance specific modules or work alongside hand-coded logic to improve reactivity and robustness. 
 
 The division of labor in these systems typically follows two patterns:
 
@@ -363,7 +594,7 @@ This architectural synergy is particularly effective for overcoming the unpredic
 
 ### **9.2.6.1 UAV Navigation in Urban Environments: DDPG with Transfer Learning**
 
-When we move from 2D ground robots to 3D UAVs, the complexity doesn't just increase—it explodes. We are no longer dealing with simple $(x, y)$ coordinates; we are dealing with high-dimensional state spaces where classical grid-based RL (like DQN) falls apart due to the "curse of dimensionality". Bouhamed et al. [21] address this by leveraging Deep Deterministic Policy Gradient (DDPG), an actor-critic framework designed specifically for the continuous action spaces that real-world flight demands.
+When we move from 2D ground robots to 3D UAVs, the complexity doesn't just increase—it explodes. We are no longer dealing with simple $(x, y)$ coordinates; we are dealing with high-dimensional state spaces where classical grid-based RL (like DQN) falls apart due to the "curse of dimensionality". Bouhamed et al. [14] address this by leveraging Deep Deterministic Policy Gradient (DDPG), an actor-critic framework designed specifically for the continuous action spaces that real-world flight demands.
 
 #### **The Problem**
 
@@ -393,9 +624,9 @@ The most practical part of their method was a shortcut called **Transfer Learnin
 This "start simple" strategy allowed the drone to adapt to crowded urban environments much faster than if it had started from scratch.
 
 ---
-> **Figure 9.9:**
+> **Figure 9.13:**
 ![Image_1](img_1.png)
-> *Caption: Illustration of the transfer-learning technique. Adapted from Bouhamed et al. [21], © 2020 IEEE.*
+> *Caption: Illustration of the transfer-learning technique. Adapted from Bouhamed et al. [14], © 2020 IEEE.*
 ---
 
 
@@ -409,7 +640,7 @@ The authors noted a lack of "pinpoint accuracy" at the final destination—a com
 
 ### **9.2.6.2 Unmanned Surface Vehicle Navigation: ANOA with Dueling Deep Q-Networks**
 
-Wu et al. [22] created the ANOA (Autonomous Navigation and Obstacle Avoidance) algorithm, a real-time navigation system for unmanned surface vehicles (USVs) powered by a dueling deep Q-network.
+Wu et al. [15] created the ANOA (Autonomous Navigation and Obstacle Avoidance) algorithm, a real-time navigation system for unmanned surface vehicles (USVs) powered by a dueling deep Q-network.
 #### **The Problem**
 
 Navigating a boat is inherently different and often more difficult than operating ground or aerial vehicles because marine environments are highly dynamic and unpredictable. Traditional path planning methods—like graph search or swarm intelligence—are too slow for real-time obstacle avoidance and frequently get stuck in suboptimal routes.
@@ -423,9 +654,9 @@ To solve the overestimation issue, ANOA uses a "dueling" network. Instead of try
 Combining these two streams creates a much more stable learning process.  The system acts as the "eyes" of the boat by looking at a simplified grid map that tracks the USV's position, the obstacles, and the final destination. Rather than testing this in the real world immediately, the team trained the AI in a 3D simulation using Unity. Crucially, they tied the AI to a realistic mathematical model of boat physics—accounting for forward thrust, sideways drift, and turning momentum—so the AI learned how to steer a physical vessel rather than just moving a digital dot.
 
 ---
-> **Figure 9.10:**
+> **Figure 9.14:**
 ![Image_1](img_2.png)
-> *Caption: The main components and data flow of the ANOA algorithm.Adapted from Wu et al. [22], © 2020 Elsevier B.V.*
+> *Caption: The main components and data flow of the ANOA algorithm.Adapted from Wu et al. [15], © 2020 Elsevier B.V.*
 ---
 
 #### **Results** 
@@ -433,13 +664,13 @@ Combining these two streams creates a much more stable learning process.  The sy
 ANOA outperformed older AI models like standard DQN and Deep Sarsa. It learned faster and more stably, mastering static obstacle courses in about 2,000 episodes (vs. ~3,000 for DQN and Deep Sarsa) and dynamic environments with moving obstacles in just 1,000 episodes. It also maintained lower peak loss values (0.01 vs. 0.03 for DQN and 0.068 for Deep Sarsa) and more stable Q-value estimates. The researchers tested it against Recast, a standard industry navigation tool. While Recast often failed when multiple obstacles moved at the same time and required rapid route changes, ANOA surpassed Recast’s success rate after about 70 million training steps, continued improving with further training, and maintained reliable real-time performance in dynamic environments.
 #### **Limitations and Future Work**
 
-The simulation platform does not model wind velocity, wave dynamics, or ocean currents, all of which would meaningfully affect USV behaviour in real marine environments [22]. The grid-based discrete action space limits the smoothness and precision of trajectories compared to continuous control formulations. The ANOA approach has not been validated on a physical USV platform, and the gap between the simplified simulation and real marine physics remains an open challenge. Future directions include real sea deployment, integration of wind and current disturbance models, and extension to multi-USV collaborative navigation.
+The simulation platform does not model wind velocity, wave dynamics, or ocean currents, all of which would meaningfully affect USV behaviour in real marine environments [15]. The grid-based discrete action space limits the smoothness and precision of trajectories compared to continuous control formulations. The ANOA approach has not been validated on a physical USV platform, and the gap between the simplified simulation and real marine physics remains an open challenge. Future directions include real sea deployment, integration of wind and current disturbance models, and extension to multi-USV collaborative navigation.
 
 
 
 ### **9.2.6.3 Map-Less MAV Navigation: DQN with Sensor Fusion and Zero-Shot Transfer**
 
-Doukhi and Lee [23] demonstrate a complete learning system that allows a micro-aerial vehicle (MAV) to navigate and avoid obstacles autonomously. Impressively, they achieved zero-shot transfer, meaning a policy trained entirely in a simulator was deployed in the real world without any extra fine-tuning or real-world data collection.
+Doukhi and Lee [16] demonstrate a complete learning system that allows a micro-aerial vehicle (MAV) to navigate and avoid obstacles autonomously. Impressively, they achieved zero-shot transfer, meaning a policy trained entirely in a simulator was deployed in the real world without any extra fine-tuning or real-world data collection.
 
 #### **The Problem**
 
@@ -486,7 +717,7 @@ Crowd Modeling: This allows the robot to "pay attention" to different pedestrian
 Stability: To prevent the AI from "collapsing" or overreacting to a single bad experience, the team used stabilization techniques like penultimate normalization and TD error scaling rather than relying on heavy computational buffers.
 
 ---
-> **Figure 9.11:** 
+> **Figure 9.15:** 
 ![Image 7](image7.png)
 > *Caption: The full IRRL framework.Adapted from Nagahisa et al. [10]*
 > 
@@ -519,7 +750,7 @@ The authors view this as a proof of feasibility, with future work focused on den
 
 ### **9.2.6.5 Forest Trail Navigation: Semantic Segmentation RL**
 
-Tibermacine et al. [19] developed a modular hybrid system to help robots navigate dense, "unstructured" forests. Instead of relying on GPS or pre-made maps, which often fail under heavy tree cover, this framework combines high-level visual understanding with adaptive decision-making.
+Tibermacine et al. [12] developed a modular hybrid system to help robots navigate dense, "unstructured" forests. Instead of relying on GPS or pre-made maps, which often fail under heavy tree cover, this framework combines high-level visual understanding with adaptive decision-making.
 #### **The Problem**
 
 Forests are a nightmare for traditional robot navigation for several reasons:
@@ -552,9 +783,9 @@ Map B: Rugged terrain with elevation changes and fallen obstacles.
 Map C: Ambiguous junctions and "fake" trail branches.
 
 The reward function used to train the agent was a mix of five factors: staying on the trail, moving forward, reaching the goal, avoiding collisions, and minimizing lateral deviation.
-> **Figure 9.12:** 
+> **Figure 9.16:** 
 ![Image 9](image9.png)
-> *Caption:  Examples of trail detection results. Adapted from Tibermacine et al. [19]*
+> *Caption:  Examples of trail detection results. Adapted from Tibermacine et al. [12]*
 
 #### **Results**
 
@@ -582,7 +813,7 @@ The system isn't perfect yet. It can still be blinded by extreme sunlight or "da
 
 ### **9.2.6.6 Underwater Navigation: Digital Twin-Validated PPO**
 
-Mari et al. [20] conducted a comparative study on deep reinforcement learning (RL) for autonomous underwater navigation, utilizing the BlueROV2 platform. The study centers on using Digital Twin (DT) technology—a high-fidelity virtual replica of a physical environment—to validate RL policies safely before they are deployed in high-risk harbor settings
+Mari et al. [13] conducted a comparative study on deep reinforcement learning (RL) for autonomous underwater navigation, utilizing the BlueROV2 platform. The study centers on using Digital Twin (DT) technology—a high-fidelity virtual replica of a physical environment—to validate RL policies safely before they are deployed in high-risk harbor settings
 
 #### **The Problem**
 
@@ -627,12 +858,12 @@ So for future improvements, adding realistic "sonar noise" to the training, as t
 
 | Paper / Case Study      | Application Domain              | Architecture                          | RL Algorithm                          | Sim-to-Real Solution                                | Key Contribution / Outcome                                                                                                                                   |
 |-------------------------|---------------------------------|---------------------------------------|---------------------------------------|-----------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Bouhamed et al. [21]    | UAV urban navigation            | End-to-end                            | DDPG (continuous action)              | Transfer learning between scenarios (simulation only) | 100% obstacle-free success, 84%/82% with static/dynamic obstacles; demonstrates continuous control for aerial navigation                                      |
-| Wu et al. [22]          | Marine surface vehicle          | End-to-end                            | Dueling DQN                           | Integrated realistic USV control model in simulation | Faster convergence than DQN/Deep Sarsa; surpassed Recast baseline in dynamic environments with real-time obstacle avoidance                                    |
-| Doukhi & Lee [23]       | Micro-aerial vehicle            | End-to-end                            | DQN                                   | Zero-shot transfer via sensor binarization (LiDAR + depth) | 10km+ sim corridor flights, 115s outdoor forest mission with dynamic obstacles; no sim-to-real fine-tuning required                                           |
+| Bouhamed et al. [14]    | UAV urban navigation            | End-to-end                            | DDPG (continuous action)              | Transfer learning between scenarios (simulation only) | 100% obstacle-free success, 84%/82% with static/dynamic obstacles; demonstrates continuous control for aerial navigation                                      |
+| Wu et al. [15]          | Marine surface vehicle          | End-to-end                            | Dueling DQN                           | Integrated realistic USV control model in simulation | Faster convergence than DQN/Deep Sarsa; surpassed Recast baseline in dynamic environments with real-time obstacle avoidance                                    |
+| Doukhi & Lee [16]       | Micro-aerial vehicle            | End-to-end                            | DQN                                   | Zero-shot transfer via sensor binarization (LiDAR + depth) | 10km+ sim corridor flights, 115s outdoor forest mission with dynamic obstacles; no sim-to-real fine-tuning required                                           |
 | Nagahisa et al. [10]    | Social navigation (pedestrians) | Hybrid (residual on Social Force Model) | Incremental Actor-Critic with GAT     | Direct real-world online learning on edge device     | 98.8% simulation success; 40%→60% real-world success after 100 online episodes; learns socially compliant waiting behavior                                    |
-| Tibermacine et al. [19] | Forest trail following          | Hybrid (Mask R-CNN + SAC + Pure Pursuit) | SAC (entropy-regularized)             | None (simulation only)                               | 86.7% success across varied terrain; 0.31m lateral deviation, 0.2 collisions/episode; outperforms vision-only and LiDAR-only baselines                        |
-| Mari et al. [20]        | Underwater ROV harbor navigation | End-to-end                            | PPO                                   | Digital Twin validation (hardware-in-the-loop)       | 55% success in cluttered harbor vs 8% for classical DWA; validated policies transfer to physical ROV with minimal drift                                       |
+| Tibermacine et al. [12] | Forest trail following          | Hybrid (Mask R-CNN + SAC + Pure Pursuit) | SAC (entropy-regularized)             | None (simulation only)                               | 86.7% success across varied terrain; 0.31m lateral deviation, 0.2 collisions/episode; outperforms vision-only and LiDAR-only baselines                        |
+| Mari et al. [13]        | Underwater ROV harbor navigation | End-to-end                            | PPO                                   | Digital Twin validation (hardware-in-the-loop)       | 55% success in cluttered harbor vs 8% for classical DWA; validated policies transfer to physical ROV with minimal drift                                       |
 
 
 The diversity in this table is the story. Six different platforms — ground, surface, aerial, underwater. Six different architectural philosophies — some end-to-end, some hybrid, each splitting the problem differently depending on where the uncertainty actually lives. Six different sim-to-real strategies, from binarizing sensors to training directly on hardware to building Digital Twins that mirror the deployment environment down to the obstacle geometry.
@@ -659,6 +890,273 @@ The case studies above show genuine progress. Policies that navigate crowded roo
 
 ---
 
+
+
+# RL Applications in Robotic Manipulation
+
+---
+
+## What Is Robotic Manipulation?
+
+Robotic manipulation is about getting a robot to physically interact with objects in its environment, whether that means picking them up, sliding them across a surface, pressing them into a socket, or rotating them in the palm of a hand. It sounds straightforward, but it sits among the hardest problems in robotics.
+
+The difficulty comes from contact. Once a robot's finger touches an object, the physics get messy: friction, deformation, slipping, and sticking all happen at the same time, and none of it is easy to describe with a clean mathematical model. This is precisely the point where classical model-based control starts to break down, and where reinforcement learning has proven most useful [2].
+
+The following sections cover four manipulation task types, explain what makes each one hard, and go through what researchers have actually managed to achieve.
+
+---
+
+## Task 1 — Grasping Unknown Objects
+
+### Why Is Grasping Hard?
+
+Grasping is the first thing most people think of when they imagine a robot interacting with the world, and it is also one of the tasks that took the longest to get right. A classical grasp planner needs to know the exact shape, weight, and surface friction of whatever it is picking up. It can be carefully tuned to work on a specific object, and it will fall apart the moment you swap that object for something it has not seen before.
+
+Real environments do not cooperate this way. Objects come in endless varieties, and most of the properties a planner would need are not known ahead of time. RL sidesteps the modeling problem entirely: instead of writing rules, you let the robot try, fail, and accumulate experience until it figures out what works.
+
+### Levine et al. (2016/2018) [23]
+
+This work is probably the most widely cited demonstration that large-scale robotic learning is feasible. Google set up a cluster of 14 robotic arms that ran autonomously for two months, collecting over 800,000 grasp attempts with no human labeling whatsoever.
+
+The setup was deliberately simple. The robot saw an RGB image of its workspace, chose a gripper motion in task space (x, y, z, rotation), and received a reward of 1 for a successful grasp and 0 for a failure. A convolutional neural network learned to predict success from the image alone, without needing to know anything about the camera's calibration.
+
+![14 robot array Levine](figures/14roboticArm.png)
+*Figure 9.17: Large-scale data collection with 14 robotic arms running autonomously (Levine et al., 2016 [23]). Each robot had slightly different camera angles and hardware wear, which forced the policy to learn generalizable grasping strategies rather than overfitting to any one setup.*
+
+
+What made the scale of this experiment so important was the variety it introduced. To test how well the learned policy generalized, the second set of experiments used approximately 1,100 different objects spanning an enormous range of shapes, weights, textures, and materials. Figures 6 and 7 give a sense of what the robot actually had to deal with.
+
+Figure 9.18 shows softer and more irregular objects: a sponge ring, a foam brick, a pipe fitting, and a Lego brick. Each pair of photos shows the gripper approaching and then completing the grasp. These objects are challenging because their surfaces deform under contact and their geometry does not lend itself to any fixed grasp strategy.
+
+![Levine grasping soft objects](figures/grasping.png)
+*Figure 9.19: The three-fingered gripper grasping soft and irregular objects from the Levine et al. experiments (2018 [23]). Sponge and foam objects deform under the fingers, making fixed grasp strategies unreliable. The policy learned to handle these entirely from visual feedback and binary success rewards.*
+
+Figure 9.20 shows the harder cases: transparent glasses frames, a screwdriver with a long thin handle, a clamp with complex geometry, and a chain. These objects combine low-friction surfaces, unusual aspect ratios, and in the case of the transparent frames, essentially no visual contrast against the background. These are precisely the kinds of objects that break classical grasp planners.
+
+![Levine grasping hard objects](figures/grasp.png)
+*Figure 9.21: Grasp attempts on geometrically challenging objects from the Levine et al. experiments (2018 [23]). Transparent items, long thin handles, and complex-shaped tools represent the difficult end of the generalization test.*
+
+The results are summarized in the table below, comparing four approaches:
+
+- **Random baseline:** The robot picks a grasp position at random, with no learning or planning. This sets the floor for what any method needs to beat.
+- **Hand-designed baseline:** A classical perception pipeline that uses depth images to detect graspable objects and plan a grasp geometrically. This represents the traditional engineering approach.
+- **Open-loop learned baseline:** Uses the same neural network trained on the same large dataset, but commits to a fixed grasp plan at the start and does not adjust during execution. It cannot react to anything that changes after the motion begins.
+- **Closed-loop method (theirs):** The full proposed approach, where the robot continuously watches its own hand via the camera and corrects its motion in real time throughout the grasp. This is the key contribution of the paper.
+
+| Method | With Replacement (failure rate) | Without Replacement — first 10 | first 20 | first 30 |
+|--------|--------------------------------|-------------------------------|----------|----------|
+| Random | 69% | 67.5% | 70.0% | 72.5% |
+| Hand-designed | 35% | 32.5% | 35.0% | 50.8% |
+| Open-loop | 43% | 27.5% | 38.7% | 33.7% |
+| **Our method** | **20%** | **10.0%** | **17.5%** | **17.5%** |
+
+The closed-loop method achieved a failure rate of only 20% in the with-replacement condition, compared to 35% for the hand-designed baseline and 43% for the open-loop variant. In the without-replacement condition, where the bin is gradually emptied leaving only the hardest objects, the hand-designed baseline degraded significantly, reaching 50.8% failure on the first 30 grasps. This happened because the depth camera, positioned roughly a meter away, could not resolve small flat objects once the bin was nearly empty. The closed-loop method held at 17.5% under the same conditions.
+
+The open-loop baseline is worth noting separately. It used the same large dataset, which was more than an order of magnitude larger than prior work at the time, yet still performed worse than the closed-loop method. The reason is that it could not react to perturbations, object movement, or variability in gripper shape and actuation. The continuous visual feedback in the closed-loop variant is what made the difference.
+
+The paper also described a qualitative finding that lines up with what is shown in Figures 6 and 7. The policy learned different strategies for soft and hard objects without anyone telling it to. For hard objects it placed the fingers on either side. For soft objects it embedded one finger into the center of the object, since soft materials can be pinched rather than gripped around the outside. This kind of strategy differentiation emerged purely from the reward signal across 800,000 attempts.
+### Kalashnikov et al. (2018) — QT-Opt [24]
+
+A later extension of this work, QT-Opt, applied a SAC-style off-policy training pipeline to 580,000 real-world grasp attempts and reached 96% success on objects not seen during training. That number represents a significant jump over classical model-based planners on the same benchmark, and it set the state of the art for vision-based robotic grasping at the time.
+
+---
+
+## Task 2 — Object Pushing and Rearrangement
+
+### Why Is Pushing Hard?
+
+Pushing is a good example of a task that seems simpler than grasping but turns out to be surprisingly tricky. The contact point between the finger and the object shifts as the object moves, friction behaves nonlinearly depending on speed and surface properties, and small errors in the initial push direction can snowball into large position errors. Analytical models can handle pushing for simple convex shapes with known friction values, but they fall apart quickly when the objects change.
+
+RL handles this by learning the input-output relationship directly from interaction, without ever needing a friction model.
+
+### Results on Standard Benchmarks [22]
+
+Pushing is a good example of a task that seems simpler than grasping but turns out to be surprisingly tricky. Unlike grasping, the robot never fully controls the object. It makes contact with one side, applies a force, and the object moves in a direction that depends on friction, surface properties, object shape, and the exact contact point, none of which are easy to know precisely.
+
+The contact point between the finger and the object shifts continuously as the object moves. Friction behaves nonlinearly depending on speed and surface properties, and small errors in the initial push direction can snowball into large position errors by the time the object reaches the target. Analytical models can handle pushing for simple convex shapes with known friction values, but they fall apart quickly when the objects or surfaces change.
+
+RL learns the input-output relationship directly from interaction. The agent does not need to know why a push goes where it goes, it just learns from thousands of attempts which motions reliably move objects toward a goal.
+
+### The FetchPush Environment
+
+One of the standard benchmarks for pushing is the FetchPush-v1 environment from OpenAI Gym, shown in Figure 9.21. A robot arm must push a small block from its starting position to a target location marked on the table. The robot cannot grasp the block, it can only make contact and push. The target position changes every episode, so the robot must learn a general pushing strategy rather than memorizing a fixed path.
+
+![FetchPush environment](figures/push.png)
+*Figure 9.22: The FetchPush-v1 MuJoCo environment. A robot arm must push the block (red) to the target location (green marker) using only contact forces, with no grasping allowed. The target position varies each episode.*
+
+The state space includes the position and velocity of both the end-effector and the block, plus the relative position between the block and the goal. The action is a continuous 3D displacement of the end-effector. The reward is shaped to give the agent feedback on progress: a distance penalty that decreases as the block gets closer to the goal, a progress bonus each step the block moves in the right direction, and a success bonus when it arrives within 5cm of the target.
+
+```python
+def compute_reward(object_pos, goal_pos, prev_object_pos):
+    dist_to_goal  = np.linalg.norm(object_pos - goal_pos)
+    progress      = np.linalg.norm(prev_object_pos - goal_pos) - dist_to_goal
+    success_bonus = 10.0 if dist_to_goal < 0.05 else 0.0
+    return progress + success_bonus - 0.01
+```
+
+### Results [22]
+
+SAC handles this task well because the entropy term encourages the agent to explore many different pushing trajectories before committing to one strategy. This matters for pushing because the optimal approach angle and speed depend heavily on the block's starting position relative to the goal, and a deterministic policy tends to get stuck in suboptimal habits. On FetchPush-v1, SAC reaches near-maximum reward in under 1 million steps, while DDPG plateaus significantly lower due to its limited exploration of the continuous pushing space [22].
+
+---
+
+
+---
+
+## Task 3 — Contact-Rich Insertion (Peg-in-Hole)
+
+### Why Is Insertion Hard?
+
+Peg-in-hole insertion requires the robot to align a peg with a hole to millimeter accuracy, then guide it in while managing the forces that arise when the peg makes contact with the edge. Even small misalignments cause jamming, and applying more force once jammed usually makes things worse rather than better.
+
+Classical solutions to this problem need precise geometric models of both parts, carefully tuned force controllers, and significant re-engineering whenever the parts change. RL takes a different route: it learns from the force readings at the wrist what is happening at the contact point, and it figures out the right corrective motions through experience rather than through a model.
+
+Figure 9.23 shows a typical hardware setup for this task. The robot is a 6-DOF UR3e arm, a compact industrial manipulator commonly used in precision assembly research. Mounted between the arm and the gripper is a force/torque sensor, which measures the full 6D wrench at the wrist in real time. This sensor is what makes RL viable for insertion tasks: without it, the robot has no way to feel when it is jammed against the edge or when it has found the hole. The end-effector is a parallel gripper holding a cuboid peg, positioned just above the task board with the matching hole. The coordinate frame shown in the image illustrates the three axes the robot must control simultaneously during the insertion motion.
+
+![Peg in hole insertion](figures/peginhole.png)
+*Figure 9.23: Hardware setup for the peg-in-hole task. A 6-DOF UR3e arm equipped with a force/torque sensor and a parallel gripper must insert a cuboid peg into the matching hole on the task board. The force/torque sensor provides the contact feedback the RL policy uses to detect misalignment and correct in real time.*
+### Findings from Singh et al. (2021) [19]
+
+Singh et al. discuss peg-in-hole as a representative contact-rich manipulation task in their survey. The state space combines joint angles with a 6D force/torque vector from the wrist sensor, and the action is a 6D end-effector velocity. SAC is preferred here because its stochastic policy naturally handles the uncertainty in alignment: rather than committing to a fixed path, it can spread probability over several possible corrections and adapt as the contact forces change.
+
+The reward structure is worth paying attention to. A naive reward that only penalizes distance to goal will train the robot to jam the peg in with whatever force is necessary, which looks fine in simulation and damages hardware in the real world. Adding a force penalty term changes the behavior completely:
+
+$$r = -\text{distance\_to\_goal} - \lambda \|\mathbf{F}\|$$
+
+With this penalty, the robot learns the kind of gentle, compliance-aware insertion that a skilled technician would use. After training, peak contact forces during insertion fall by roughly 60% compared to the untrained policy, and the force profile shows a brief controlled peak at entry followed by smooth convergence rather than the erratic spikes seen before training.
+
+---
+
+## Task 4 — Dexterous In-Hand Manipulation (OpenAI Dactyl)
+
+### Why Is In-Hand Manipulation Hard?
+
+In-hand manipulation, meaning rotating or repositioning an object while holding it in a multi-fingered hand, sits at the top of the difficulty ladder for robotic manipulation. A Shadow Dexterous Hand has 24 degrees of freedom. Contact can occur at hundreds of points at any given moment, and losing grip at any one of them can cause the object to fall. The rolling and sliding that happens between fingertips and object surface is extremely sensitive to tiny parameter variations, and there is no known analytical model that captures all of it accurately enough to be useful for control.
+
+### Andrychowicz et al. (2020) — OpenAI Dactyl [25]
+
+OpenAI's Dactyl project is one of the more impressive things that has come out of deep RL research in recent years. The goal was to train a policy that could reorient a wooden block held in the palm of the Shadow Hand to match a target orientation shown to the system. Training happened entirely in MuJoCo simulation, using the same distributed RL infrastructure that ran OpenAI Five. No human demonstrations were used at any point.
+
+Three things made the transfer to the real hand work. First, the team used Automatic Domain Randomization: rather than trying to match the simulation to the real world exactly, they randomized every physical parameter they could think of, friction, mass, joint damping, object appearance, across every training episode. The idea is that if the real world is just one more sample in a wide enough distribution, the policy will not be surprised by it. Second, the policy used an LSTM so it could adapt online to whatever physical conditions it encountered, without being told explicitly what those conditions were. Third, pose estimation came from three RGB cameras rather than motion-capture markers, which meant no special instrumentation was needed on the real hardware.
+
+```
+State:    24 joint angles + object pose (position + quaternion) = 60D
+Action:   Relative joint angles (discretized to 11 bins for safety)
+Reward:   rotation_progress + 5 x (goal_achieved) - 20 x (object_dropped)
+Training: roughly 100 years of simulated experience
+```
+
+![OpenAI Dactyl](figures/openai.png)
+Figure 9.24: The Shadow Dexterous Hand from OpenAI's Dactyl project holding a colored wooden block. The hand has 24 degrees of freedom and must learn to reorient the block to match target orientations purely through finger contact, with no grasping or external support. The policy controlling it was trained entirely in simulation and transferred to this physical hand (Andrychowicz et al., 2020 [25]).*
+
+Policies trained with domain randomization achieved over 20 consecutive successful rotations before dropping the object, far more than the versions trained without it. The vision-based system performed nearly as well as one given ground-truth pose information, which validated the quality of the learned estimator.
+
+One of the more surprising results was that human-like manipulation strategies appeared in the learned policy without anyone teaching them. The robot developed tip pinch grips, tripod configurations, power grasps, and finger gaiting, behaviors drawn from established hand taxonomy literature, purely as a result of trying to maximize reward over billions of simulated steps.
+
+The same hand was later used to solve a Rubik's cube [26], requiring roughly 13,000 years of simulated experience. The trained policy held up under deliberate perturbations: rubber gloves placed over the fingers, individual fingers bound together, and an external object prodding the hand during the solve.
+
+---
+
+## Algorithm Comparison: Benchmarking on Dexterous Manipulation
+
+### Berscheid et al. (2024) [27]
+
+Most papers in this area present results for a single algorithm on a single task. Berscheid et al. take a different approach: they run DDPG, SAC, and TD3 on three different tasks using the same three-fingered gripper hardware, with the same evaluation protocol for each. This kind of controlled comparison is rare and genuinely useful.
+
+The three tasks covered a range of contact difficulty. The first was a reaching task with minimal contact requirements. The second was a grasping task with moderate contact complexity. The third was a fine insertion task requiring high precision and careful contact management.
+
+| Task | Contact Level | TD3 Success | SAC Success | DDPG Success |
+|------|--------------|-------------|-------------|--------------|
+| Reaching | Low | >90% | ~85% | ~70% |
+| Grasping | Moderate | >90% | ~83% | ~60% |
+| Fine insertion | High | >90% | ~80% | ~45% |
+
+DDPG showed the most variance across runs and the highest failure rates on the fine contact tasks. SAC converged more reliably than DDPG but trailed TD3 on final performance. TD3 exceeded 90% success at convergence across all three tasks.
+
+![Berscheid reward curves](figures/rewardcurves.png)
+*Figure 9.25: Reward curves for DDPG, SAC, and TD3 on three dexterous gripper tasks (Berscheid et al., 2024 [27]). TD3 achieves the highest asymptotic reward; DDPG shows high variance, especially on fine contact tasks.*
+
+![Berscheid success rates](figures/successrate.png)
+*Figure 9.26: Success rate over training iterations (Berscheid et al., 2024 [27]). TD3 consistently exceeds 90% at convergence, while DDPG failure rates are significantly higher on precision tasks.*
+
+The paper also tested all three algorithms across the canonical grasping types, precision grasps on small objects, tripod configurations, and power grasps on larger objects. These represent genuinely different contact geometries and force distributions, which is why they serve as a meaningful stress test.
+
+![Grasping types](figures/grasp_types.png)
+*Figure 9.27: Grasp and picking processes for three grasping types tested by Berscheid et al. (2024 [27]). Each type presents different contact challenges for the learning algorithm.*
+
+The takeaway from this paper is straightforward: for simple tasks, any of the three algorithms will do. For tasks that require precise contact management, the gap between DDPG and the other two becomes large enough to matter in practice.
+
+---
+
+## Broader Perspective: Deep RL in Robotics
+
+### Morales et al. (2021) [28]
+
+Morales et al. provide a survey covering both deep learning and deep reinforcement learning applied to robotics, including a tutorial on DRL fundamentals and a taxonomy of existing approaches. For manipulation, they identify QT-Opt [24] as one of the most significant results in the field, and they note that combining force/torque sensing with visual feedback through an actor-critic architecture remains the most consistently effective approach for contact-rich tasks.
+
+They organize DRL methods into three families. Value function methods, dominated by DQN variants, tend to be sample efficient but are limited to discrete actions. Policy gradient methods, dominated by PPO-based algorithms, are more stable but less sample efficient. Actor-critic methods, covering SAC, DDPG, and TD3, offer the best balance for manipulation tasks. The survey also notes that model-free approaches are more common than model-based ones in practice, mainly because learning a reliable dynamics model is itself a difficult problem that adds a second source of error.
+
+| Approach | Main Algorithms | Characteristic |
+|----------|----------------|----------------|
+| Value function | DQN variants | Sample efficient, discrete actions only |
+| Policy gradient | PPO-based | Stable convergence, less sample efficient |
+| Actor-critic | SAC, DDPG, TD3 | Best balance for manipulation |
+
+---
+
+## Comprehensive Survey: RL Across Robotic Platforms
+
+### Singh, Kumar & Singh (2021) [19]
+
+Singh et al. cover RL applied to land-based, air-based, and underwater robotic systems. For manipulation, they trace how the field moved from simple 2-DOF manipulators in the early 2000s to 24-DOF dexterous hands today, driven almost entirely by the scaling of deep RL methods.
+
+On object picking, the survey reviews several representative approaches: integrated algorithms combining RL with cooperative co-evolution for automatic behavior development; interactive RL for table-cleaning tasks; learning to pick without slipping using reactive control combined with RL on the Openbionics ADA hand; and a 7-DOF ABB Yumi arm trained with DeepRL to learn grasping, reaching, and lifting simultaneously.
+
+The survey also draws a useful theoretical distinction between the three main RL method classes as they apply to manipulation:
+
+| Method | Action Space | Convergence | Gradient Variance |
+|--------|-------------|-------------|-------------------|
+| Critic-only (Q-learning, SARSA) | Discrete only | Weak | Low |
+| Actor-only (Policy Gradient) | Continuous | Strong | High |
+| Actor-Critic (DDPG, SAC, TD3) | Continuous | Strong | Low |
+
+Critic-only methods require discretizing the action space, which undermines precision for fine contact tasks. Pure policy gradient methods have high variance in gradient estimates, which slows convergence. Actor-critic methods inherit the advantages of both, and this explains their dominance across the manipulation literature.
+
+![Singh RL applications](figures/singh_applications.png)
+*Figure 9.28: Overview of RL application categories in robotics from Singh et al. (2021 [19]). Land-based manipulation tasks represent the largest and most studied application domain.*
+
+---
+
+## Reward Design Across Manipulation Tasks
+
+The reward function is the single design decision that most determines whether RL succeeds or fails on a given manipulation task. A reward that is too sparse means the agent never accidentally succeeds, so it never learns anything. A reward that is too easy to game means the agent finds an unintended solution that looks good numerically but fails in practice.
+
+| Strategy | Formula | Application |
+|---------|---------|-------------|
+| Distance reward | $-\|s - g\|_2$ | Reaching, pushing |
+| Binary success | $+R$ if task complete | Grasping |
+| Force penalty | $-\lambda \|\mathbf{F}\|$ | Peg insertion, delicate assembly |
+| Smoothness penalty | $-\lambda \|\dot{a}\|^2$ | Real hardware |
+| Progress reward | $d_{t-1} - d_t$ | Pushing, sliding |
+| Entropy bonus | $+\alpha \mathcal{H}(\pi)$ | SAC built-in |
+
+---
+
+## Open Challenges in Manipulation
+
+Despite the results above, several problems in robotic manipulation remain genuinely unsolved [19][28].
+
+Sample inefficiency is the most persistent one. Even SAC needs millions of interactions for tasks a human picks up in a few tries. Closing that gap through model-based RL, meta-learning, or imitation learning is an active area of research.
+
+Safety during training is a practical concern that often goes unmentioned. A robot that is exploring a contact-rich task will occasionally apply excessive force or make unexpected contact with things it should not. Safe RL methods that constrain exploration to stay within defined operating limits are one direction, though they introduce their own complexity.
+
+Generalization after training on a limited object set remains brittle. A policy that works on the 50 objects in the training set may fail on the 51st if it has a different weight distribution or surface texture than anything seen before.
+
+Long-horizon tasks, such as assembling a multi-part mechanism, require sequences of many steps, and standard RL algorithms struggle to propagate reward signals reliably across such long chains. Hierarchical RL approaches, where a high-level planner breaks the task into subtasks handled by low-level controllers, are promising but not yet mature.
+
+---
+
+
 ## **References**
 
 [1] J. Tobin, R. Fong, A. Ray, J. Schneider, W. Zaremba, and P. Abbeel, "Domain Randomization for Transferring Deep Neural Networks from Simulation to the Real World," in *Proc. IEEE/RSJ Int. Conf. Intelligent Robots and Systems (IROS)*, Vancouver, BC, Canada, 2017, pp. 23–30.
@@ -683,37 +1181,47 @@ The case studies above show genuine progress. Policies that navigate crowded roo
 
 [11] C. Chen, Y. Liu, S. Kreiss, and A. Alahi, "Crowd-Robot Interaction: Crowd-Aware Robot Navigation with Attention-Based Deep Reinforcement Learning," in *Proc. IEEE ICRA*, Montreal, Canada, 2019, pp. 6015–6022.
 
-[12] Y. F. Chen, M. Everett, M. Liu, and J. P. How, "Socially Aware Motion Planning with Deep Reinforcement Learning," in *Proc. IEEE/RSJ IROS*, Vancouver, BC, Canada, 2017, pp. 1343–1350.
+[12] Tibermacine, Ahmed, et al. "Autonomous navigation in unstructured outdoor environments using semantic segmentation guided reinforcement learning: A. Tibermacine et al." Scientific Reports 16.1 (2026): 2633.
 
-[13] D. Helbing and P. Molnár, "Social Force Model for Pedestrian Dynamics," *Physical Review E*, pp. 4282–4286, 1995.
+[13] Mari, Z.; Nawaf, M.M.; Drap, P. Deep Reinforcement Learning for Autonomous Underwater Navigation: A Comparative Study with DWA and Digital Twin Validation. Sensors 2026, 26, 2179.
 
-[14] T. Silver, K. R. Allen, J. Tenenbaum, and L. P. Kaelbling, "Residual Policy Learning," *CoRR*, vol. abs/1812.06298, 2018.
+[14] O. Bouhamed, H. Ghazzai, H. Besbes, and Y. Massoud, "Autonomous UAV Navigation: A DDPG-based Deep Reinforcement Learning Approach," in Proc. IEEE International Symposium on Circuits and Systems (ISCAS), 2020.
 
-[15] T. Johannink, S. Bahl, A. Nair, J. Luo, A. Kumar, M. Loskyll, J. A. Ojea, E. Solowjow, and S. Levine, "Residual Reinforcement Learning for Robot Control," in *Proc. IEEE ICRA*, Montreal, Canada, 2019, pp. 6023–6029.
+[15] X. Wu, H. Chen, C. Chen, M. Zhong, S. Xie, Y. Guo, and H. Fujita, "The Autonomous Navigation and Obstacle Avoidance for USVs with ANOA Deep Reinforcement Learning Method," Knowledge-Based Systems, vol. 196, p. 105201, 2020.
 
-[16] S. Brody, U. Alon, and E. Yahav, "How Attentive Are Graph Attention Networks?," in *Proc. International Conference on Learning Representations (ICLR)*, 2022.
+[16] O. Doukhi and D. J. Lee, "Deep Reinforcement Learning for Autonomous Map-Less Navigation of a Flying Robot," IEEE Access, vol. 10, pp. 82964–82976, 2022.
 
-[17] J. Björck, C. P. Gomes, and K. Q. Weinberger, "Is High Variance Unavoidable in RL? A Case Study in Continuous Control," in *Proc. ICLR*, 2022.
+[17] Zhu, Kai, and Tao Zhang. "Deep reinforcement learning based mobile robot navigation: A review." Tsinghua Science and Technology 26.5 (2021): 674-691.
 
-[18] J. van den Berg, S. J. Guy, M. C. Lin, and D. Manocha, "Reciprocal n-Body Collision Avoidance," in *Proc. International Symposium of Robotics Research (ISRR)*, 2009, pp. 3–19.
+[18] Sutton, R. S., & Barto, A. G. (2018). *Reinforcement Learning: An Introduction* (2nd ed.). MIT Press.
 
-[19] Tibermacine, Ahmed, et al. "Autonomous navigation in unstructured outdoor environments using semantic segmentation guided reinforcement learning: A. Tibermacine et al." Scientific Reports 16.1 (2026): 2633.
+[19] Singh, B., Kumar, R., & Singh, V. P. (2021). Reinforcement learning in robotic applications: A comprehensive survey. *Artificial Intelligence Review, 55*, 945–990.
 
-[20] Mari, Z.; Nawaf, M.M.; Drap, P. Deep Reinforcement Learning for Autonomous Underwater Navigation: A Comparative Study with DWA and Digital Twin Validation. Sensors 2026, 26, 2179.
+[20] Silver, D., Lever, G., Heess, N., Degris, T., Wierstra, D., & Riedmiller, M. (2014). Deterministic policy gradient algorithms. *Proceedings of ICML*.
 
-[21] O. Bouhamed, H. Ghazzai, H. Besbes, and Y. Massoud, "Autonomous UAV Navigation: A DDPG-based Deep Reinforcement Learning Approach," in Proc. IEEE International Symposium on Circuits and Systems (ISCAS), 2020.
+[21] Lillicrap, T. P., Hunt, J. J., Pritzel, A., et al. (2016). Continuous control with deep reinforcement learning. *arXiv:1509.02971*.
 
-[22] X. Wu, H. Chen, C. Chen, M. Zhong, S. Xie, Y. Guo, and H. Fujita, "The Autonomous Navigation and Obstacle Avoidance for USVs with ANOA Deep Reinforcement Learning Method," Knowledge-Based Systems, vol. 196, p. 105201, 2020.
+[22] Haarnoja, T., Zhou, A., Abbeel, P., & Levine, S. (2018). Soft Actor-Critic: Off-policy maximum entropy deep reinforcement learning with a stochastic actor. *arXiv:1801.01290*.
 
-[23] O. Doukhi and D. J. Lee, "Deep Reinforcement Learning for Autonomous Map-Less Navigation of a Flying Robot," IEEE Access, vol. 10, pp. 82964–82976, 2022.
+[23] Levine, S., Pastor, P., Krizhevsky, A., Ibarz, J., & Quillen, D. (2018). Learning hand-eye coordination for robotic grasping with deep learning and large-scale data collection. *The International Journal of Robotics Research, 37*(4–5), 421–436.
 
-[24] Zhu, Kai, and Tao Zhang. "Deep reinforcement learning based mobile robot navigation: A review." Tsinghua Science and Technology 26.5 (2021): 674-691.
+[24] Kalashnikov, D., Irpan, A., Pastor, P., et al. (2018). QT-Opt: Scalable deep reinforcement learning for vision-based robotic manipulation. *arXiv:1806.10293*.
+
+[25] Andrychowicz, O. M., Baker, B., Chociej, M., et al. (2020). Learning dexterous in-hand manipulation. *The International Journal of Robotics Research, 39*(1), 3–20.
+
+[26] OpenAI, Akkaya, I., Andrychowicz, M., et al. (2019). Solving the Rubik's cube with a robot hand. *arXiv:1910.07113*.
+
+[27] Berscheid, L., Friedrich, C., & Kröger, T. (2024). Benchmarking reinforcement learning methods for dexterous robotic manipulation with a three-fingered gripper. *arXiv:2408.14747*.
+
+[28] Morales, E. F., Murrieta-Cid, R., Becerra, I., & Esquivel-Basaldua, M. A. (2021). A survey on deep learning and deep reinforcement learning in robotics. *Intelligent Service Robotics, 14*, 773–805.
+
+
 
 To cite this, please use the following bibtex:
 
 ```bibtex
 @misc{Eskandar_2026_ReinforcementLearning,
-  author       = {Manuella Eskandar},
+  author       = {Manuella Eskandar and Mostafa Ahmed},
   title        = {Reinforcement Learning: A Gentle Introduction, Chapter 9},
   year         = {2026},
   publisher    = {GitHub},
