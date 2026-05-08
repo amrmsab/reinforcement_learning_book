@@ -101,7 +101,9 @@ Battleship's 100 possible grid coordinates feel manageable. But many real-time g
 RISK is a classic board game of global domination. The game is played on a world map divided into **42 territories** grouped into **6 continents** (North America, South America, Europe, Africa, Asia, and Australia). Players control armies and take turns reinforcing, attacking, and fortifying. The endgame goal: eliminate all other players.
 
 ![The Hybrid Commander: RL Meta-Controller for Risk](risk_infograohic.png)
+
 *Figure 11.1: Overview of the RL meta-controller for RISK, showing the four expert strategies and the 73.1% win rate achieved. (Hamdy, 2025)*
+
 
 **Why is RISK hard for RL?**
 
@@ -161,7 +163,9 @@ Rather than learning every low-level action (which territory to attack, how many
 This hybrid design dramatically reduces the action space: instead of choosing among thousands of possible territory moves, the agent picks among just 4 options. The selected strategy then executes its own logic for all low-level decisions.
 
 ![RL Policy Selector architecture: Game State feeds into REINFORCE which selects among CLD, RE, OMA, and PB](risk_diagram_multi.png)
+
 *Figure 11.2: The meta-controller architecture. The game state is fed into a REINFORCE-based policy selector, which picks one of four expert strategies each turn. (Hamdy, 2025)*
+
 
 **The Policy Network Architecture**
 
@@ -184,7 +188,9 @@ Softmax → strategy probability distribution
 Action selection uses **epsilon-greedy exploration**: with probability ε, a random strategy is chosen (to explore); otherwise, the strategy is sampled from the softmax output (to exploit learned knowledge). ε decays slowly over training to shift from exploration toward exploitation.
 
 ![Full RL system architecture showing Risk Environment, State Observer, Policy Network, Reward Calc, Policy Update, and Strategy modules](Arch.png)
+
 *Figure 11.3: Detailed RL system architecture. The state observer encodes the game state, the policy network selects a strategy via epsilon-greedy sampling, rewards are calculated from game events, and policy updates run every episode via REINFORCE. (Hamdy, 2025)*
+
 
 **The Reward System — Shaped for Strategy**
 
@@ -241,7 +247,9 @@ An early training challenge was reward imbalance causing the agent to over-rely 
 Clash Royale is a real-time strategy (RTS) mobile game where two players simultaneously deploy troops, spells, and buildings on a shared arena (32,000 × 18,000 pixels) trying to destroy the opponent's towers within a three-minute match.
 
 ![Annotated Clash Royale game frame showing Major Tower, Minor Tower, Battle Field, Battle Troops, Hand Cards, and Total Elixir](Clash_Royale_Game_Frame.png)
+
 *Figure 11.4: The Clash Royale arena annotated with key game elements. The RL agent must observe all of these simultaneously to make decisions. (Chen et al., 2019)*
+
 
 **Why is Clash Royale harder than RISK?**
 
@@ -259,7 +267,9 @@ Researchers cleverly divided the decision into two sub-problems handled by two s
 This divide-and-conquer approach mirrors how human expert players actually think: first decide what to use, then decide where to use it.
 
 ![SEAT Selection-Attention Model architecture showing Enemy Units, All Units, Card Features feeding into Selection and Attention parts to output Selected Card and Attention Grid](clashe_royale_Seat_diagram.png)
+
 *Figure 11.5: The SEAT (Selection-Attention) model architecture. Enemy unit maps and card features are processed by two sub-networks: the Selection Part chooses which card to play, and the Attention Part identifies where to deploy it. (Chen et al., IJCAI 2019)*
+
 
 **Results:**
 - **90% win rate** against aggressive and defensive rule-based bots
@@ -373,10 +383,14 @@ Games are not just entertainment — they are increasingly accurate physics simu
 Gran Turismo is a hyper-realistic racing simulation that models tire friction, air resistance, and suspension geometry with extraordinary fidelity. Sony AI built **GT Sophy** — an RL agent trained entirely within the game — that went on to beat world champion human drivers.
 
 ![GT Sophy on the cover of Nature: "Driving Force — AI algorithm outcompetes human champions in Gran Turismo racing game"](GtsophyNature.png)
+
 *Figure 11.6: GT Sophy's results were published on the cover of Nature (February 2022), marking the first time an RL agent surpassed world-champion human drivers in a realistic racing simulation. (Wurman et al., 2022)*
 
+
 ![Gran Turismo physics simulation (left) and in-game racing (right)](gta_racing_realism.png)
+
 *Figure 11.7: Gran Turismo models real aerodynamics and physics (left), making it an unusually faithful simulation environment for training agents intended for real-world transfer (right).*
+
 
 **The Algorithm: QR-SAC (Quantile-Regression Soft Actor-Critic)**
 
@@ -385,12 +399,16 @@ GT Sophy used a variant of the Soft Actor-Critic (SAC) algorithm with **distribu
 A unique addition was an **etiquette reward**: penalties for unsportsmanlike behavior like collisions, forcing opponents off the track, or dangerous blocking maneuvers. This ensured the agent would race aggressively but *fairly*.
 
 ![GT Sophy learned three capabilities: Race Car Control (operating at the edge), Racing Tactics (split-second decision-making), and Racing Etiquette (essential for fair play)](gt_sophy_controltacticettiguestte.png)
+
 *Figure 11.8: The three capabilities GT Sophy mastered: precise car control, tactical racing maneuvers, and fair-play etiquette — each enforced through careful reward design. (Sony AI / Gran Turismo Sophy)*
+
 
 **Training Timeline:**
 
 ![GT Sophy training RL loop: AI Agent (Sony AI logo) receives State (Speed, Position) and Reward from the GT Environment, outputs Actions (Throttle, Steering, Brake)](gt_sophy_training.png)
+
 *Figure 11.9: The GT Sophy RL training loop. The agent observes speed, position, and other physical state variables from the Gran Turismo environment, and outputs continuous control actions — throttle, steering angle, and braking force. (Sony AI)*
+
 
 | Duration | Milestone |
 |---|---|
@@ -480,4 +498,15 @@ Along the way, we saw how the core RL concepts — MDPs, policy gradients, actor
 
 ---
 
+*To cite this chapter, please use the following BibTeX:*
 
+```bibtex
+@misc{fouad_hamdy_2026_ReinforcementLearning,
+  author       = {Omar Fouad and Ahmed Alaa Hamdy},
+  title        = {Reinforcement Learning: A Gentle Introduction, Chapter 11 – Applications in Games},
+  year         = {2026},
+  publisher    = {GitHub},
+  howpublished = {\url{https://github.com/amrmsab/reinforcement_learning_book}},
+  note         = {Accessed: May 2026}
+}
+```
