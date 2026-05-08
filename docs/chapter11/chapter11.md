@@ -26,12 +26,16 @@ Before we dive into specific games, let us set up the shared vocabulary. In RL, 
 
 Games map onto this framework naturally. Here's a quick comparison:
 
+<div align="center">
+
 | Concept | Robotics | Video Game |
 |---|---|---|
 | **State** | Sensor readings | Board position, unit health, resources |
 | **Actions** | Servo commands | Button presses, mouse clicks, ability casts |
 | **Environment** | Physical world with real constraints | A customizable virtual world |
 | **Agent** | Robot arm, drone | Any in-game character or player entity |
+
+</div>
 
 In more complex games, the raw game image (a grid of pixels) is typically fed through a **Convolutional Neural Network (CNN)** to extract a meaningful internal state vector. The agent then reasons on top of that compressed representation rather than raw pixels.
 
@@ -68,12 +72,16 @@ The state space, despite the finite 10×10 grid, is actually enormous. Because e
 
 **Battleship as a PO-MDP:**
 
+<div align="center">
+
 | Component | Details |
 |---|---|
 | **State** | Known shot history, known ship placements |
 | **Hidden State** | Enemy board (partially observable) |
 | **Actions** | Place a ship / Fire at a coordinate |
 | **Reward** | +1 for hit, penalty for miss or wasted shot |
+
+</div>
 
 > 💡 **Try it yourself!** You can implement a simple Battleship RL agent using Q-learning on a belief-state representation. Libraries like `gymnasium` (formerly OpenAI Gym) make it easy to set up custom environments.
 
@@ -120,6 +128,8 @@ RISK is a classic board game of global domination. The game is played on a world
 
 To apply RL to RISK, the game must be formally encoded as an MDP. Here is how each component maps:
 
+<div align="center">
+
 | MDP Component | RISK Encoding |
 |---|---|
 | **State S** | 50-dimensional vector (see below) |
@@ -127,6 +137,8 @@ To apply RL to RISK, the game must be formally encoded as an MDP. Here is how ea
 | **Reward R** | Shaped signal based on territory/continent events |
 | **Transition T** | Determined by strategy execution + dice randomness |
 | **Policy π** | A neural network mapping state → strategy probabilities |
+
+</div>
 
 **The State Vector — What the Agent Actually Sees**
 
@@ -157,12 +169,16 @@ def _get_game_phase(self):
 
 Rather than learning every low-level action (which territory to attack, how many troops to move), the agent operates as a **meta-controller**: it learns *which high-level strategy to use*, and delegates the actual moves to one of four hand-crafted expert modules:
 
+<div align="center">
+
 | Strategy | Core Idea | Best Phase |
 |---|---|---|
 | **CLD** – Continent Lockdown | Secure full continents for bonus troops | Early |
 | **OMA** – One Man Army | Concentrate troops into one massive attack force | Mid–Late |
 | **PB** – Pressure Breaker | Disrupt enemy continent bonuses | Mid |
 | **RE** – Rapid Expansion | Probability-optimized aggressive attacks | Late |
+
+</div>
 
 This hybrid design dramatically reduces the action space: instead of choosing among thousands of possible territory moves, the agent picks among just 4 options. The selected strategy then executes its own logic for all low-level decisions.
 
@@ -212,6 +228,8 @@ Action selection uses **epsilon-greedy exploration**: with probability ε, a ran
 
 Raw win/loss signals are too sparse for a 114-turn game. The reward function provides dense intermediate feedback:
 
+<div align="center">
+
 | Event | Reward |
 |---|---|
 | Win the game | +15 |
@@ -223,6 +241,8 @@ Raw win/loss signals are too sparse for a 114-turn game. The reward function pro
 | Lose a territory | −3 |
 | Lose continent control | −5 additional |
 | Complete continent during initial placement | +8 |
+
+</div>
 
 The phase-dependent bonuses reflect real strategic value: owning a continent early compounds across dozens of turns (extra troops every turn), while winning a continent in the late game provides much smaller returns. This phase-aware design guides the agent to prioritize continent control early and shift to aggressive finishing in the late game.
 
@@ -244,6 +264,8 @@ An **entropy bonus** is added to prevent the policy from collapsing to always pi
 - Achieved a **73.1% win rate** — a 17% advantage over the best single rule-based strategy (OMA at 56.4%)
 - The agent learned **phase-specific strategy preferences**: CLD slightly preferred in early game, PB dominant in mid game, RE heavily preferred in late game — all without being told which strategy suits which phase
 
+<div align="center">
+
 | Strategy | Win Rate vs Random |
 |---|---|
 | CLD | 29.5% |
@@ -251,6 +273,8 @@ An **entropy bonus** is added to prevent the policy from collapsing to always pi
 | PB | 37.5% |
 | RE | 41.2% |
 | **RL Agent** | **73.1%** |
+
+</div>
 
 An early training challenge was reward imbalance causing the agent to over-rely on one strategy across all phases. This was corrected through careful reward function tuning and a reduced epsilon decay rate — a reminder that **reward design is often the hardest part of RL engineering**.
 
@@ -310,12 +334,16 @@ Now we enter the hardest tier. Games like Dota 2 (a MOBA — Multiplayer Online 
 
 **The core challenges of MARL in complex games:**
 
+<div align="center">
+
 | Challenge | Detail |
 |---|---|
 | **Partial Observability** | Large maps with "fog of war" — agents cannot see the whole map |
 | **Sparse & Delayed Rewards** | Games last 30–60 minutes at high frame rates; credit assignment is difficult |
 | **Team Coordination** | Agents must collaborate; pure individual reward signals are insufficient |
 | **Scalability** | More agents = exponentially more states and joint actions to reason over |
+
+</div>
 
 To give you a sense of scale: MOBAs like Dota 2 can reach state spaces on the order of **10²⁰⁰⁰⁰** — a number so large it makes the Battleship state space look like a rounding error.
 
@@ -454,11 +482,15 @@ A unique addition was an **etiquette reward**: penalties for unsportsmanlike beh
 </div>
 
 
+<div align="center">
+
 | Duration | Milestone |
 |---|---|
 | 2 hours | Learns to stay on track safely |
 | 2 days | Beats ~95% of all human players |
 | 10–12 days | Reaches superhuman level (~45,000 driving hours equivalent) |
+
+</div>
 
 **Results:**
 - In October 2021, GT Sophy beat the world's best drivers **104 to 52**
