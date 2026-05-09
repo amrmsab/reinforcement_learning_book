@@ -583,7 +583,7 @@ The division of labor in these systems typically follows two patterns:
 
 A novel direction proposed by Ogunsina et al. [4] involves combining RL with adaptive planning algorithms. This framework leverages the adaptability of RL to learn from experience while utilizing the structured decision-making of adaptive planning to handle real-time changes in dynamic or unstructured environments. While RL provides the flexibility to adapt to new situations, adaptive planning allows the system to adjust its plan "on the fly," providing a layer of reliability that pure RL may lack.  
 
-This architectural synergy is particularly effective for overcoming the unpredictability of dynamic obstacles—like pedestrians or other vehicles—where the system must continuously interpret sensory data and predict future trajectories to ensure safe, real-time navigation.
+This architectural synergy is particularly effective for overcoming the unpredictability of dynamic obstacles, like pedestrians or other vehicles,where the system must continuously interpret sensory data and predict future trajectories to ensure safe, real-time navigation.
 
 ---
 
@@ -593,14 +593,14 @@ This architectural synergy is particularly effective for overcoming the unpredic
 
 #### 9.7.6.1 UAV Navigation in Urban Environments: DDPG with Transfer Learning
 
-When we move from 2D ground robots to 3D UAVs, the complexity doesn't just increase—it explodes. We are no longer dealing with simple $(x, y)$ coordinates; we are dealing with high-dimensional state spaces where classical grid-based RL (like DQN) falls apart due to the "curse of dimensionality". Bouhamed et al. [14] address this by leveraging Deep Deterministic Policy Gradient (DDPG), an actor-critic framework designed specifically for the continuous action spaces that real-world flight demands.
+When we move from 2D ground robots to 3D UAVs, the complexity doesn't just increase,it explodes. We are no longer dealing with simple $(x, y)$ coordinates; we are dealing with high-dimensional state spaces where classical grid-based RL (like DQN) falls apart due to the "curse of dimensionality". Bouhamed et al. [14] address this by leveraging Deep Deterministic Policy Gradient (DDPG), an actor-critic framework designed specifically for the continuous action spaces that real-world flight demands.
 
 ##### The Problem
 In many autonomous systems, we simplify movement into discrete steps: "move left," "move right," or "climb." However, for a UAV, this leads to jittery trajectories and inefficient energy use. Classical path-planning solutions like Mixed-Integer Linear Programming (MILP) or Evolutionary Algorithms often struggle with real-time adaptation because they are computationally heavy and usually rely on a centralized controller.
 
 To achieve true autonomy, the drone needs to make decentralized, local decisions. It needs a framework that understands the world isn't a grid, but a continuous field of possibilities.
 ##### The Approach
-Instead of forcing the drone to follow a rigid grid, the researchers gave it total freedom to move in any direction using a "spherical" coordinate system. This means that at every step, the drone’s brain chooses three simple things: how far to fly, which way to tilt, and which way to turn.  To make the learning process smoother, they designed a clever reward system. If the drone gets closer to the goal, it earns points; if it hits a building, it loses points based on the "crash depth"—basically, how hard it hit the wall. This gradual feedback is much more helpful than a simple "yes/no" penalty because it tells the drone exactly how much it needs to adjust its path to stay safe.
+Instead of forcing the drone to follow a rigid grid, the researchers gave it total freedom to move in any direction using a "spherical" coordinate system. This means that at every step, the drone’s brain chooses three simple things: how far to fly, which way to tilt, and which way to turn.  To make the learning process smoother, they designed a clever reward system. If the drone gets closer to the goal, it earns points; if it hits a building, it loses points based on the "crash depth",basically, how hard it hit the wall. This gradual feedback is much more helpful than a simple "yes/no" penalty because it tells the drone exactly how much it needs to adjust its path to stay safe.
 ##### Architecture
 The architecture uses a model called DDPG, which acts like a two-part team:
 
@@ -628,23 +628,23 @@ This "start simple" strategy allowed the drone to adapt to crowded urban environ
 
 
 ##### Results
-The results confirmed the efficiency of this staged approach. While the UAV reached a 100% success rate in open space, it maintained a solid ~83% success rate in complex urban environments. Interestingly, the agent learned to "exploit altitude"—choosing to fly over shorter buildings rather than detouring around them, a strategy that naturally emerged from the reward function.  
+The results confirmed the efficiency of this staged approach. While the UAV reached a 100% success rate in open space, it maintained a solid ~83% success rate in complex urban environments. Interestingly, the agent learned to "exploit altitude",choosing to fly over shorter buildings rather than detouring around them, a strategy that naturally emerged from the reward function.  
 
 ##### Limitations
-The authors noted a lack of "pinpoint accuracy" at the final destination—a common side effect of the infinite action space in DDPG where the agent might oscillate slightly around the target instead of coming to a dead stop.
+The authors noted a lack of "pinpoint accuracy" at the final destination,a common side effect of the infinite action space in DDPG where the agent might oscillate slightly around the target instead of coming to a dead stop.
 
 #### 9.7.6.2 Unmanned Surface Vehicle Navigation: ANOA with Dueling Deep Q-Networks
 
 Wu et al. [15] created the ANOA (Autonomous Navigation and Obstacle Avoidance) algorithm, a real-time navigation system for unmanned surface vehicles (USVs) powered by a dueling deep Q-network.
 ##### The Problem
-Navigating a boat is inherently different and often more difficult than operating ground or aerial vehicles because marine environments are highly dynamic and unpredictable. Traditional path planning methods—like graph search or swarm intelligence—are too slow for real-time obstacle avoidance and frequently get stuck in suboptimal routes.
+Navigating a boat is inherently different and often more difficult than operating ground or aerial vehicles because marine environments are highly dynamic and unpredictable. Traditional path planning methods,like graph search or swarm intelligence,are too slow for real-time obstacle avoidance and frequently get stuck in suboptimal routes.
 
 On the other hand, standard AI approaches like basic DQNs struggle because they tend to overestimate the value of actions when presented with too many choices, leading the boat to make poor decisions. The challenge was to create a stable, real-time navigation system that actually respects the physical movement limitations of a boat.
 
 ##### The Approach
 To solve the overestimation issue, ANOA uses a "dueling" network. Instead of trying to calculate one massive score for every possible move all at once, the network splits the problem into two simpler questions: How safe is my current location? and What is the specific benefit of taking this action right now?. 
 
-Combining these two streams creates a much more stable learning process.  The system acts as the "eyes" of the boat by looking at a simplified grid map that tracks the USV's position, the obstacles, and the final destination. Rather than testing this in the real world immediately, the team trained the AI in a 3D simulation using Unity. Crucially, they tied the AI to a realistic mathematical model of boat physics—accounting for forward thrust, sideways drift, and turning momentum—so the AI learned how to steer a physical vessel rather than just moving a digital dot.
+Combining these two streams creates a much more stable learning process.  The system acts as the "eyes" of the boat by looking at a simplified grid map that tracks the USV's position, the obstacles, and the final destination. Rather than testing this in the real world immediately, the team trained the AI in a 3D simulation using Unity. Crucially, they tied the AI to a realistic mathematical model of boat physics,accounting for forward thrust, sideways drift, and turning momentum,so the AI learned how to steer a physical vessel rather than just moving a digital dot.
 
 ---
 > **Figure 9.14:** 
@@ -686,12 +686,12 @@ While highly effective, the discrete action space (left, right, forward) limits 
 Nagahisa et al. [10] proposed Incremental Residual Reinforcement Learning (IRRL) to solve a classic robotics headache: how to let a robot learn in the real world when its "onboard brain" (edge devices like a Jetson) has strictly limited memory and processing power.
 
 ##### The Problem
-Social navigation is notoriously difficult because human behavior is implicit and context-dependent. A robot trained perfectly in a simulation often fails in the real world where pedestrians might be uncooperative or distracted. While "online learning" (learning on the fly) seems like the obvious fix, standard Reinforcement Learning (RL) usually requires a massive replay buffer—essentially a giant library of past experiences—that quickly exhausts a mobile robot’s memory.
+Social navigation is notoriously difficult because human behavior is implicit and context-dependent. A robot trained perfectly in a simulation often fails in the real world where pedestrians might be uncooperative or distracted. While "online learning" (learning on the fly) seems like the obvious fix, standard Reinforcement Learning (RL) usually requires a massive replay buffer,essentially a giant library of past experiences,that quickly exhausts a mobile robot’s memory.
 
 ##### The IRRL Framework
 IRRL handles these constraints by combining two specialized strategies:Incremental Learning: The robot updates its model using only the most recent interaction and then moves on. This deletes the need for a massive replay buffer, making it feasible for low-power hardware. 
 
-Residual RL: Instead of letting the AI control the robot from scratch, they give it a "base policy" (using the Social Force Model). This base policy handles the basic physics of movement, while the AI only learns the residual—the small, corrective "tweaks" needed to handle complex human behavior.
+Residual RL: Instead of letting the AI control the robot from scratch, they give it a "base policy" (using the Social Force Model). This base policy handles the basic physics of movement, while the AI only learns the residual,the small, corrective "tweaks" needed to handle complex human behavior.
 ##### Architecture
 The system uses an actor-critic setup powered by Graph Attention Networks (GATv2).
 
@@ -781,16 +781,16 @@ The researchers proved that the "hybrid" nature of the system is what makes it w
 * Without the Pure Pursuit controller, the robot's motion became erratic and unstable.
 
 ##### Limitations and Future Work
-The system isn't perfect yet. It can still be blinded by extreme sunlight or "dappled" shadows that weren't common in its training data. It also lacks a "memory"—if the trail is blocked for several frames, the robot can get confused because it doesn't remember where the path was a few seconds ago. Future versions may include recurrent neural networks (RNNs) to give the robot a sense of time and better multispectral sensors to handle tricky lighting.
+The system isn't perfect yet. It can still be blinded by extreme sunlight or "dappled" shadows that weren't common in its training data. It also lacks a "memory",if the trail is blocked for several frames, the robot can get confused because it doesn't remember where the path was a few seconds ago. Future versions may include recurrent neural networks (RNNs) to give the robot a sense of time and better multispectral sensors to handle tricky lighting.
 
 #### 9.7.6.6 Underwater Navigation: Digital Twin-Validated PPO
 
-Mari et al. [13] conducted a comparative study on deep reinforcement learning (RL) for autonomous underwater navigation, utilizing the BlueROV2 platform. The study centers on using Digital Twin (DT) technology—a high-fidelity virtual replica of a physical environment—to validate RL policies safely before they are deployed in high-risk harbor settings
+Mari et al. [13] conducted a comparative study on deep reinforcement learning (RL) for autonomous underwater navigation, utilizing the BlueROV2 platform. The study centers on using Digital Twin (DT) technology,a high-fidelity virtual replica of a physical environment,to validate RL policies safely before they are deployed in high-risk harbor settings
 
 ##### The Problem
 Underwater navigation is notoriously difficult because standard tools like GPS do not work submerged, visibility is often poor, and unpredictable water currents affect movement.
 
-Traditional algorithms, like the Dynamic Window Approach (DWA), are deterministic and reactive. While efficient, they often fail in "cluttered" zones because they lack the foresight to navigate around complex obstacles. In these scenarios, the robot often gets trapped in local minima—effectively becoming "stuck" because it cannot find a mathematically clear path to the goal despite one existing.
+Traditional algorithms, like the Dynamic Window Approach (DWA), are deterministic and reactive. While efficient, they often fail in "cluttered" zones because they lack the foresight to navigate around complex obstacles. In these scenarios, the robot often gets trapped in local minima,effectively becoming "stuck" because it cannot find a mathematically clear path to the goal despite one existing.
 ##### The Approach
 To solve this, researchers used Proximal Policy Optimization (PPO), an RL algorithm known for its stability in handling complex, continuous movements.
 
@@ -833,27 +833,27 @@ So for future improvements, adding realistic "sonar noise" to the training, as t
 | Mari et al. [13]        | Underwater ROV harbor navigation | End-to-end                            | PPO                                   | Digital Twin validation (hardware-in-the-loop)       | 55% success in cluttered harbor vs 8% for classical DWA; validated policies transfer to physical ROV with minimal drift                |
 
 
-The diversity in this table is the story. Six different platforms — ground, surface, aerial, underwater. Six different architectural philosophies — some end-to-end, some hybrid, each splitting the problem differently depending on where the uncertainty actually lives. Six different sim-to-real strategies, from binarizing sensors to training directly on hardware to building Digital Twins that mirror the deployment environment down to the obstacle geometry.
+The diversity in this table is the story. Six different platforms , ground, surface, aerial, underwater. Six different architectural philosophies , some end-to-end, some hybrid, each splitting the problem differently depending on where the uncertainty actually lives. Six different sim-to-real strategies, from binarizing sensors to training directly on hardware to building Digital Twins that mirror the deployment environment down to the obstacle geometry.
 
 This isn't an accident. RL navigation isn't a monolithic solved problem you download from a repository. It's a toolkit. The sensor fusion that works for a MAV avoiding trees wouldn't make sense for a USV dodging reefs. The residual learning approach that lets a social robot train safely around real pedestrians wouldn't help a forest trail-follower operating solo in the wilderness. The right solution depends entirely on your sensors, your platform dynamics, your deployment constraints, and whether you can afford to fail during learning.
 
-What's encouraging is the pace. The oldest paper in this table is from 2020. The newest from 2026. In six years we went from "can we get a policy to work in simulation" to "zero-shot outdoor flight missions with dynamic obstacles" and "real-world online learning on edge devices without replay buffers." The solutions are getting faster, smaller, more robust, and more deployable. New algorithms, new sim-to-real techniques, new hardware — the landscape is moving quickly. There's still a long way to go before you see fully autonomous RL-based delivery robots navigating crowded malls at scale, but the progress is real, and it's accelerating.
+What's encouraging is the pace. The oldest paper in this table is from 2020. The newest from 2026. In six years we went from "can we get a policy to work in simulation" to "zero-shot outdoor flight missions with dynamic obstacles" and "real-world online learning on edge devices without replay buffers." The solutions are getting faster, smaller, more robust, and more deployable. New algorithms, new sim-to-real techniques, new hardware , the landscape is moving quickly. There's still a long way to go before you see fully autonomous RL-based delivery robots navigating crowded malls at scale, but the progress is real, and it's accelerating.
 
 ---
 
 ### 9.7.7 Limitations and Open Problems in RL-Based Navigation
 
-The case studies above show genuine progress. Policies that navigate crowded rooms, fly through forests, dodge obstacles underwater — things that would have been research fantasies a decade ago are now documented, reproducible results. But before we get too optimistic, it's worth being clear about what's still broken.
+The case studies above show genuine progress. Policies that navigate crowded rooms, fly through forests, dodge obstacles underwater , things that would have been research fantasies a decade ago are now documented, reproducible results. But before we get too optimistic, it's worth being clear about what's still broken.
 
-**Learning is expensive.** Most of these systems required hundreds of thousands to millions of episodes to learn a competent policy. Even in simulation, that's a significant computational cost — days or weeks of GPU time. And simulation isn't the end of it. The sim-to-real gap means you almost always need some real-world experience to close the final performance delta. For social navigation, this is a real problem: you can't collect data from human pedestrians arbitrarily fast, and every training episode involves a real person who didn't sign up to be part of your dataset [10]. We need better reward functions, smarter state representations, curriculum learning strategies — anything that cuts the sample requirements without sacrificing final performance.
+**Learning is expensive.** Most of these systems required hundreds of thousands to millions of episodes to learn a competent policy. Even in simulation, that's a significant computational cost , days or weeks of GPU time. And simulation isn't the end of it. The sim-to-real gap means you almost always need some real-world experience to close the final performance delta. For social navigation, this is a real problem: you can't collect data from human pedestrians arbitrarily fast, and every training episode involves a real person who didn't sign up to be part of your dataset [10]. We need better reward functions, smarter state representations, curriculum learning strategies , anything that cuts the sample requirements without sacrificing final performance.
 
-**Exploration is dangerous.** An RL policy that's still learning is, by definition, going to make mistakes. In navigation, mistakes mean collisions. Collisions with obstacles damage the robot. Collisions with people hurt the people. The challenge of safe exploration — how to learn without taking actions that could cause harm — is especially acute in social settings, where a near-miss doesn't just break hardware, it breaks trust [10]. The safe RL techniques from Section 9.6.3.4 help, but integrating them into real systems running on constrained hardware with limited compute and no room for conservative slowdowns is still an open problem.
+**Exploration is dangerous.** An RL policy that's still learning is, by definition, going to make mistakes. In navigation, mistakes mean collisions. Collisions with obstacles damage the robot. Collisions with people hurt the people. The challenge of safe exploration , how to learn without taking actions that could cause harm , is especially acute in social settings, where a near-miss doesn't just break hardware, it breaks trust [10]. The safe RL techniques from Section 9.6.3.4 help, but integrating them into real systems running on constrained hardware with limited compute and no room for conservative slowdowns is still an open problem.
 
-**Social conventions aren't universal.** A policy trained on North American pedestrian behavior learns to pass on the right, maintain arm's-length personal space, and yield to people walking faster. Deploy that same policy in a culture with different conventions and it behaves inappropriately — not because the algorithm failed, but because the conventions it learned don't generalize [10]. A truly robust social navigation system would need to infer the local norms from context and adapt accordingly. That's a form of meta-learning — learning to learn new social rules — that current architectures aren't designed for.
+**Social conventions aren't universal.** A policy trained on North American pedestrian behavior learns to pass on the right, maintain arm's-length personal space, and yield to people walking faster. Deploy that same policy in a culture with different conventions and it behaves inappropriately , not because the algorithm failed, but because the conventions it learned don't generalize [10]. A truly robust social navigation system would need to infer the local norms from context and adapt accordingly. That's a form of meta-learning , learning to learn new social rules , that current architectures aren't designed for.
 
-**You can't ask the network why.** Neural network policies are black boxes. You can't inspect one and figure out why it chose to turn left at that particular moment in that particular corridor. This makes failure analysis hard. It makes debugging hard. And for navigation systems that operate in public spaces — delivery robots, hospital transport, airport guidance — it creates legal and ethical problems. If the robot does something unexpected and someone gets hurt, "the neural network made that decision and we don't know why" is not an acceptable answer. Interpretability isn't just a nice-to-have for public-facing robotics; it's a deployment requirement that the field hasn't solved yet.
+**You can't ask the network why.** Neural network policies are black boxes. You can't inspect one and figure out why it chose to turn left at that particular moment in that particular corridor. This makes failure analysis hard. It makes debugging hard. And for navigation systems that operate in public spaces , delivery robots, hospital transport, airport guidance , it creates legal and ethical problems. If the robot does something unexpected and someone gets hurt, "the neural network made that decision and we don't know why" is not an acceptable answer. Interpretability isn't just a nice-to-have for public-facing robotics; it's a deployment requirement that the field hasn't solved yet.
 
-**Policies don't remember.** Current RL navigation systems operate with short observation windows — the last few seconds of sensor data, maybe a local occupancy grid. They have no long-term memory. A robot that operates in the same building for a year doesn't learn that the third-floor corridor is crowded every day at noon, or that the person in the red jacket always cuts corners unpredictably. It can't incorporate that knowledge into its strategy because it has nowhere to store it. Extending RL to leverage long-horizon context — through explicit memory networks, world models, or continual learning architectures — is a research direction with a lot of promise but not many concrete solutions yet [10].
+**Policies don't remember.** Current RL navigation systems operate with short observation windows , the last few seconds of sensor data, maybe a local occupancy grid. They have no long-term memory. A robot that operates in the same building for a year doesn't learn that the third-floor corridor is crowded every day at noon, or that the person in the red jacket always cuts corners unpredictably. It can't incorporate that knowledge into its strategy because it has nowhere to store it. Extending RL to leverage long-horizon context , through explicit memory networks, world models, or continual learning architectures , is a research direction with a lot of promise but not many concrete solutions yet [10].
 
 ---
 
@@ -873,7 +873,7 @@ The following sections cover four manipulation task types, explain what makes ea
 
 ---
 
-### 9.8.2 Task 1 — Grasping Unknown Objects
+### 9.8.2 Task 1 : Grasping Unknown Objects
 
 #### Why Is Grasping Hard?
 
@@ -915,7 +915,7 @@ The results are summarized in the table below, comparing four approaches:
 - **Open-loop learned baseline:** Uses the same neural network trained on the same large dataset, but commits to a fixed grasp plan at the start and does not adjust during execution. It cannot react to anything that changes after the motion begins.
 - **Closed-loop method (theirs):** The full proposed approach, where the robot continuously watches its own hand via the camera and corrects its motion in real time throughout the grasp. This is the key contribution of the paper.
 
-| Method | With Replacement (failure rate) | Without Replacement — first 10 | first 20 | first 30 |
+| Method | With Replacement (failure rate) | Without Replacement , first 10 | first 20 | first 30 |
 |--------|--------------------------------|-------------------------------|----------|----------|
 | Random | 69% | 67.5% | 70.0% | 72.5% |
 | Hand-designed | 35% | 32.5% | 35.0% | 50.8% |
@@ -927,13 +927,13 @@ The closed-loop method achieved a failure rate of only 20% in the with-replaceme
 The open-loop baseline is worth noting separately. It used the same large dataset, which was more than an order of magnitude larger than prior work at the time, yet still performed worse than the closed-loop method. The reason is that it could not react to perturbations, object movement, or variability in gripper shape and actuation. The continuous visual feedback in the closed-loop variant is what made the difference.
 
 The paper also described a qualitative finding that lines up with what is shown in Figures 9.18 and 9.19. The policy learned different strategies for soft and hard objects without anyone telling it to. For hard objects it placed the fingers on either side. For soft objects it embedded one finger into the center of the object, since soft materials can be pinched rather than gripped around the outside. This kind of strategy differentiation emerged purely from the reward signal across 800,000 attempts.
-#### Kalashnikov et al. (2018) — QT-Opt [24]
+#### Kalashnikov et al. (2018) : QT-Opt [24]
 
 A later extension of this work, QT-Opt, applied a SAC-style off-policy training pipeline to 580,000 real-world grasp attempts and reached 96% success on objects not seen during training. That number represents a significant jump over classical model-based planners on the same benchmark, and it set the state of the art for vision-based robotic grasping at the time.
 
 ---
 
-### 9.8.3 Task 2 — Object Pushing and Rearrangement
+### 9.8.3 Task 2 : Object Pushing and Rearrangement
 
 #### Why Is Pushing Hard?
 
@@ -976,7 +976,7 @@ SAC handles this task well because the entropy term encourages the agent to expl
 
 ---
 
-### 9.8.4 Task 3 — Contact-Rich Insertion (Peg-in-Hole)
+### 9.8.4 Task 3 : Contact-Rich Insertion (Peg-in-Hole)
 
 #### Why Is Insertion Hard?
 
@@ -1002,13 +1002,13 @@ With this penalty, the robot learns the kind of gentle, compliance-aware inserti
 
 ---
 
-### 9.8.5 Task 4 — Dexterous In-Hand Manipulation (OpenAI Dactyl)
+### 9.8.5 Task 4 : Dexterous In-Hand Manipulation (OpenAI Dactyl)
 
 #### Why Is In-Hand Manipulation Hard?
 
 In-hand manipulation, meaning rotating or repositioning an object while holding it in a multi-fingered hand, sits at the top of the difficulty ladder for robotic manipulation. A Shadow Dexterous Hand has 24 degrees of freedom. Contact can occur at hundreds of points at any given moment, and losing grip at any one of them can cause the object to fall. The rolling and sliding that happens between fingertips and object surface is extremely sensitive to tiny parameter variations, and there is no known analytical model that captures all of it accurately enough to be useful for control.
 
-#### Andrychowicz et al. (2020) — OpenAI Dactyl [25]
+#### Andrychowicz et al. (2020) : OpenAI Dactyl [25]
 
 OpenAI's Dactyl project is one of the more impressive things that has come out of deep RL research in recent years. The goal was to train a policy that could reorient a wooden block held in the palm of the Shadow Hand to match a target orientation shown to the system. Training happened entirely in MuJoCo simulation, using the same distributed RL infrastructure that ran OpenAI Five. No human demonstrations were used at any point.
 
@@ -1036,7 +1036,7 @@ The same hand was later used to solve a Rubik's cube [26], requiring roughly 13,
 
 ### 9.8.6 Algorithm Comparison: Benchmarking on Dexterous Manipulation
 
-#### Berscheid et al. (2024) — Which Algorithm Actually Works? [27]
+#### Berscheid et al. (2024) : Which Algorithm Actually Works? [27]
 
 Most papers in the manipulation literature pick one algorithm and show that it works on one task. What they do not tell you is whether that algorithm would still win if you swapped it for something else, or whether the task was simply easy enough that anything would have worked. Berscheid et al. set out to answer that question directly by running DDPG, SAC, and TD3 side by side under identical conditions.
 
@@ -1084,7 +1084,7 @@ The paper acknowledges that the success rate numbers are specific to this grippe
 
 ### 9.8.7 Broader Perspective: Deep RL in Robotics
 
-#### Morales et al. (2021) — Mapping the Field [28]
+#### Morales et al. (2021) : Mapping the Field [28]
 
 #### The Problem
 
@@ -1116,13 +1116,13 @@ The survey is particularly useful for its honest assessment of what the field ha
 
 #### Limitations
 
-As a survey paper, Morales et al. do not contribute new experimental results. The coverage is necessarily selective — a field this large cannot be fully covered in one paper. Some of the specific performance numbers cited from individual papers are difficult to compare across papers because evaluation protocols vary widely. The authors acknowledge this and call for standardized benchmarks as a priority for the field.
+As a survey paper, Morales et al. do not contribute new experimental results. The coverage is necessarily selective , a field this large cannot be fully covered in one paper. Some of the specific performance numbers cited from individual papers are difficult to compare across papers because evaluation protocols vary widely. The authors acknowledge this and call for standardized benchmarks as a priority for the field.
 
 ---
 
 ### 9.8.8 Comprehensive Survey: RL Across Robotic Platforms
 
-#### Singh, Kumar & Singh (2021) — The Full Landscape [19]
+#### Singh, Kumar & Singh (2021) : The Full Landscape [19]
 
 #### The Problem
 
