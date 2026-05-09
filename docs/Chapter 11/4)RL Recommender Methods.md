@@ -25,7 +25,7 @@ Two well-known examples are:
 - **Q-learning**
 - **SARSA**
 
-![Q-learning vs SARSA](images/sarsa%20and%20q%20learning.png)
+![Q-learning vs SARSA](Images/sarsa%20and%20q%20learning.png)
 
 ### Limitations
 
