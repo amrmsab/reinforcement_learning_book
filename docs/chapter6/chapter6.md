@@ -1,5 +1,7 @@
 # Chapter 6: Function Approximation in Reinforcement Learning
 
+**Authors:** _Marwan Mohamed_, _Mohamed Ahmed Gamal Eldin_
+
 ## 1. Introduction.
 
 Early reinforcement learning (RL) methods assumed a **tabular setting**, where the value of every state or state–action pair is stored explicitly in a table. While intuitive and mathematically convenient, this approach becomes impractical in real-world environments.
@@ -53,8 +55,8 @@ A key motivation for function approximation is the **explosion of the state spac
 
 Consider a simple robot equipped with:
 
-- 10 sensors  
-- each sensor can take 100 distinct readings  
+- 10 sensors
+- each sensor can take 100 distinct readings
 
 The number of possible states becomes:
 
@@ -72,6 +74,7 @@ This highlights a deeper issue:
 > They only learn about states that have been visited.
 
 ---
+
 <figure>
 	<img src="figures/Curse of dimensionality.png" >
 	<figcaption>Figure: As the dimensionality of the feature space increases, the number of configurations can grow exponentially.</figcaption>
@@ -110,9 +113,9 @@ A single experience can therefore improve value estimates for **unseen but simil
 
 This is the core idea that allows reinforcement learning to scale to:
 
-- Robotics  
-- Autonomous driving  
-- Game playing  
+- Robotics
+- Autonomous driving
+- Game playing
 - Real-world decision-making systems---
 
 ## 3. RL as Supervised Learning (But Harder)
@@ -122,11 +125,11 @@ In both settings, we learn a function that maps inputs to target outputs and imp
 
 However, reinforcement learning introduces several additional difficulties that make the problem significantly harder.
 
-| Property     | Supervised Learning | Reinforcement Learning |
-|--------------|--------------------|------------------------|
-| Dataset      | Fixed and pre-collected | Generated online during interaction |
+| Property     | Supervised Learning       | Reinforcement Learning               |
+| ------------ | ------------------------- | ------------------------------------ |
+| Dataset      | Fixed and pre-collected   | Generated online during interaction  |
 | Targets      | Stationary (fixed labels) | Non-stationary (constantly changing) |
-| Independence | IID samples | Sequential and correlated data |
+| Independence | IID samples               | Sequential and correlated data       |
 
 ---
 
@@ -146,11 +149,11 @@ $$
 
 In value prediction, the analogy becomes:
 
-| Supervised Learning | Reinforcement Learning |
-|---|---|
-| Input $x$ | State $s$ |
-| Label $y$ | Target value $V_t$ |
-| Model $\hat{y}(x)$ | Approximate value $\hat{v}(s,\mathbf{w})$ |
+| Supervised Learning | Reinforcement Learning                    |
+| ------------------- | ----------------------------------------- |
+| Input $x$           | State $s$                                 |
+| Label $y$           | Target value $V_t$                        |
+| Model $\hat{y}(x)$  | Approximate value $\hat{v}(s,\mathbf{w})$ |
 
 So we can write a similar loss:
 
@@ -165,10 +168,12 @@ Although the mathematics looks familiar, the **data-generation process** is comp
 ### 3.2 Online Learning
 
 In supervised learning:
+
 - The dataset is fixed before training begins.
 - The algorithm can iterate over the same data many times.
 
 In reinforcement learning:
+
 - The agent must **generate its own data** by interacting with the environment.
 - Every new action changes the future data the agent will observe.
 
@@ -179,6 +184,7 @@ $$
 $$
 
 Because of this loop:
+
 - The data distribution is constantly changing.
 - The algorithm must learn **incrementally and continuously**.
 
@@ -195,6 +201,7 @@ S_t \rightarrow S_{t+1} \rightarrow S_{t+2} \rightarrow \dots
 $$
 
 This means:
+
 - Samples are highly correlated.
 - Standard optimization assumptions break down.
 - Learning becomes less stable.
@@ -208,9 +215,11 @@ This is one reason experience replay is used in deep RL.
 This is the most important difference.
 
 In supervised learning:
+
 - The label $y$ never changes.
 
 In reinforcement learning:
+
 - The target value **depends on the model itself**.
 
 For example, the TD target is:
@@ -234,9 +243,9 @@ This makes RL inherently more unstable than supervised learning.
 
 Because of these challenges, RL with function approximation requires:
 
-- Small learning rates  
-- Careful feature design  
-- Stable algorithms (e.g., linear TD methods)  
+- Small learning rates
+- Careful feature design
+- Stable algorithms (e.g., linear TD methods)
 
 Understanding this connection to supervised learning helps us reuse optimization tools, while also highlighting the unique difficulties of reinforcement learning.
 
@@ -289,9 +298,9 @@ $$
 
 Where:
 
-- $\alpha$ is the **step-size (learning rate)**  
-- $V_t$ is the **target value**  
-- $\nabla \hat{v}(S_t,\mathbf{w}_t)$ is the gradient of the value estimate with respect to the weights  
+- $\alpha$ is the **step-size (learning rate)**
+- $V_t$ is the **target value**
+- $\nabla \hat{v}(S_t,\mathbf{w}_t)$ is the gradient of the value estimate with respect to the weights
 
 ### Intuition
 
@@ -301,8 +310,8 @@ $$
 \text{Error} = V_t - \hat{v}(S_t,\mathbf{w}_t)
 $$
 
-- If the prediction is too low → weights increase  
-- If the prediction is too high → weights decrease  
+- If the prediction is too low → weights increase
+- If the prediction is too high → weights decrease
 
 The gradient term determines **how each parameter influences the prediction**, guiding the direction of the update.
 
@@ -359,8 +368,7 @@ Monte-Carlo and TD methods illustrate a classic tradeoff:
 - MC → **accurate but noisy**
 - TD → **slightly biased but efficient**
 
-In practice, TD methods are widely preferred for large or continuing tasks because they learn **faster and more incrementally**.
----
+### In practice, TD methods are widely preferred for large or continuing tasks because they learn **faster and more incrementally**.
 
 ## 7. Linear Function Approximation
 
@@ -952,3 +960,14 @@ While powerful, function approximation introduces new challenges:
 Important takeaway:
 
 > The success of RL with function approximation depends more on representation than on the algorithm itself.
+
+```bibtex
+@misc{Elsisi-Gamal_2026_ReinforcementLearning,
+    author       = {Marwan Mohamed and Mohamed Ahmed Gamal Eldin},
+  title        = {Reinforcement Learning: A Gentle Introduction, Chapter 6},
+  year         = {2026},
+  publisher    = {GitHub},
+  howpublished = {\url{https://github.com/amrmsab/reinforcement_learning_book}},
+  note         = {Accessed: April 30, 2026}
+}
+```
