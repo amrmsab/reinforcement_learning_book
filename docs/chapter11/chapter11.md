@@ -528,21 +528,7 @@ RL in games raises a few concerns worth thinking about:
 
 ---
 
-## 11.8 Reflective Questions
 
-Test your understanding with these questions:
-
-1. Why is Battleship a PO-MDP rather than a standard MDP? What information is hidden, and how does partial observability affect the agent's strategy?
-
-2. The RISK agent used reward shaping to solve the sparse reward problem. Can you think of another game where sparse rewards would be a challenge, and propose an intermediate reward signal?
-
-3. AlphaStar was penalized for diverging too far from human playing styles. Why might this be useful, and what might be lost by adding this constraint?
-
-4. GT Sophy was trained entirely in simulation but competed against human drivers in the real game. What could go wrong in a sim-to-real transfer, and how might you test for it?
-
-5. OpenAI Five used a "team spirit" hyperparameter. What do you think happens when team spirit = 0 (pure individual reward)? What about team spirit = 1 (pure team reward)?
-
----
 
 ## Summary
 
@@ -574,7 +560,21 @@ Along the way, we saw how the core RL concepts — MDPs, policy gradients, actor
 
 ---
 
+*To cite this chapter, please use the following BibTeX:*
 
+```bibtex
+
+@misc{fouad_hamdy_2026_ReinforcementLearning,
+  author       = {Omar Fouad and Ahmed Alaa Hamdy},
+  title        = {Reinforcement Learning: A Gentle Introduction, Chapter 11 – Applications in Games},
+  year         = {2026},
+  publisher    = {GitHub},
+  howpublished = {\url{https://github.com/amrmsab/reinforcement_learning_book}},
+  note         = {Accessed: May 2026}
+}
+
+
+```
 
 
 
