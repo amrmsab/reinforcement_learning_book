@@ -498,7 +498,7 @@ Before learning-based methods arrived, robotics researchers spent decades buildi
 ---
 > **Figure 9.11:** 
 ![Image 6](image6.png)
-> *Caption: The classical navigation pipeline: a fixed stack of modular components, each solving one piece of the problem and handing its output to the next. Robust in structured environments, brittle when reality does not match the assumptions baked in at design time.
+> *Caption: The classical navigation pipeline: a fixed stack of modular components, each solving one piece of the problem and handing its output to the next. Robust in structured environments, brittle when reality does not match the assumptions baked in at design time. Adapted from Ogunsina et al. [4]*
 ---
 
 The classical pipeline is modular. Each stage handles one well-defined sub-problem and passes its output downstream. Clean, auditable, and ,in the right environment ,very reliable.
@@ -867,7 +867,7 @@ The case studies above show genuine progress. Policies that navigate crowded roo
 
 Robotic manipulation is about getting a robot to physically interact with objects in its environment, whether that means picking them up, sliding them across a surface, pressing them into a socket, or rotating them in the palm of a hand. It sounds straightforward, but it sits among the hardest problems in robotics.
 
-The difficulty comes from contact. Once a robot's finger touches an object, the physics get messy: friction, deformation, slipping, and sticking all happen at the same time, and none of it is easy to describe with a clean mathematical model. This is precisely the point where classical model-based control starts to break down, and where reinforcement learning has proven most useful [2].
+The difficulty comes from contact. Once a robot's finger touches an object, the physics get messy: friction, deformation, slipping, and sticking all happen at the same time, and none of it is easy to describe with a clean mathematical model. This is precisely the point where classical model-based control starts to break down, and where reinforcement learning has proven most useful [19].
 
 The following sections cover four manipulation task types, explain what makes each one hard, and go through what researchers have actually managed to achieve.
 
@@ -887,22 +887,24 @@ This work is probably the most widely cited demonstration that large-scale robot
 
 The setup was deliberately simple. The robot saw an RGB image of its workspace, chose a gripper motion in task space (x, y, z, rotation), and received a reward of 1 for a successful grasp and 0 for a failure. A convolutional neural network learned to predict success from the image alone, without needing to know anything about the camera's calibration.
 
-> **Figure 9.17:** 
+
+> **Figure 9.17:**
 ![14 robot array Levine](figures/14roboticArm.png)
 > *Caption: Large-scale data collection with 14 robotic arms running autonomously. Each robot had slightly different camera angles and hardware wear, which forced the policy to learn generalizable grasping strategies rather than overfitting to any one setup. Adapted from Levine et al. [23]*
+
 
 
 What made the scale of this experiment so important was the variety it introduced. To test how well the learned policy generalized, the second set of experiments used approximately 1,100 different objects spanning an enormous range of shapes, weights, textures, and materials. Figures 9.18 and 9.19 give a sense of what the robot actually had to deal with.
 
 Figure 9.18 shows softer and more irregular objects: a sponge ring, a foam brick, a pipe fitting, and a Lego brick. Each pair of photos shows the gripper approaching and then completing the grasp. These objects are challenging because their surfaces deform under contact and their geometry does not lend itself to any fixed grasp strategy.
 
-> **Figure 9.18:** 
+> **Figure 9.18:**
 ![Levine grasping soft objects](figures/grasping.png)
 > *Caption: The three-fingered gripper grasping soft and irregular objects. Sponge and foam objects deform under the fingers, making fixed grasp strategies unreliable. The policy learned to handle these entirely from visual feedback and binary success rewards. Adapted from Levine et al. [23]*
 
 Figure 9.19 shows the harder cases: transparent glasses frames, a screwdriver with a long thin handle, a clamp with complex geometry, and a chain. These objects combine low-friction surfaces, unusual aspect ratios, and in the case of the transparent frames, essentially no visual contrast against the background. These are precisely the kinds of objects that break classical grasp planners.
 
-> **Figure 9.19:** 
+> **Figure 9.19:**
 ![Levine grasping hard objects](figures/grasp.png)
 > *Caption: Grasp attempts on geometrically challenging objects. Transparent items, long thin handles, and complex-shaped tools represent the difficult end of the generalization test. Adapted from Levine et al. [23]*
 
@@ -951,7 +953,7 @@ RL learns the input-output relationship directly from interaction. The agent doe
 
 One of the standard benchmarks for pushing is the FetchPush-v1 environment from OpenAI Gym, shown in Figure 9.20. A robot arm must push a small block from its starting position to a target location marked on the table. The robot cannot grasp the block, it can only make contact and push. The target position changes every episode, so the robot must learn a general pushing strategy rather than memorizing a fixed path.
 
-> **Figure 9.20:** 
+> **Figure 9.20:**
 ![FetchPush environment](figures/push.png)
 > *Caption: The FetchPush-v1 MuJoCo environment. A robot arm must push the block to the target location using only contact forces, with no grasping allowed. The target position varies each episode. Adapted from Haarnoja et al. [22]*
 
@@ -984,9 +986,10 @@ Classical solutions to this problem need precise geometric models of both parts,
 
 Figure 9.21 shows a typical hardware setup for this task. The robot is a 6-DOF UR3e arm, a compact industrial manipulator commonly used in precision assembly research. Mounted between the arm and the gripper is a force/torque sensor, which measures the full 6D wrench at the wrist in real time. This sensor is what makes RL viable for insertion tasks: without it, the robot has no way to feel when it is jammed against the edge or when it has found the hole. The end-effector is a parallel gripper holding a cuboid peg, positioned just above the task board with the matching hole. The coordinate frame shown in the image illustrates the three axes the robot must control simultaneously during the insertion motion.
 
-> **Figure 9.21:** 
+> **Figure 9.21:**
 ![Peg in hole insertion](figures/peginhole.png)
 > *Caption: Hardware setup for the peg-in-hole task. A 6-DOF UR3e arm equipped with a force/torque sensor and a parallel gripper must insert a cuboid peg into the matching hole on the task board. The force/torque sensor provides the contact feedback the RL policy uses to detect misalignment and correct in real time. Adapted from Singh et al. [19]*
+
 #### Findings from Singh et al. (2021) [19]
 
 Singh et al. discuss peg-in-hole as a representative contact-rich manipulation task in their survey. The state space combines joint angles with a 6D force/torque vector from the wrist sensor, and the action is a 6D end-effector velocity. SAC is preferred here because its stochastic policy naturally handles the uncertainty in alignment: rather than committing to a fixed path, it can spread probability over several possible corrections and adapt as the contact forces change.
@@ -1018,7 +1021,7 @@ Reward:   rotation_progress + 5 x (goal_achieved) - 20 x (object_dropped)
 Training: roughly 100 years of simulated experience
 ```
 
-> **Figure 9.22:** 
+> **Figure 9.22:**
 ![OpenAI Dactyl](figures/openai.png)
 > *Caption: The Shadow Dexterous Hand from OpenAI's Dactyl project holding a colored wooden block. The hand has 24 degrees of freedom and must learn to reorient the block to match target orientations purely through finger contact, with no grasping or external support. The policy controlling it was trained entirely in simulation and transferred to this physical hand. Adapted from Andrychowicz et al. [25]*
 
@@ -1030,47 +1033,74 @@ The same hand was later used to solve a Rubik's cube [26], requiring roughly 13,
 
 ---
 
+
 ### 9.8.6 Algorithm Comparison: Benchmarking on Dexterous Manipulation
 
-#### Berscheid et al. (2024) [27]
+#### Berscheid et al. (2024) — Which Algorithm Actually Works? [27]
 
-Most papers in this area present results for a single algorithm on a single task. Berscheid et al. take a different approach: they run DDPG, SAC, and TD3 on three different tasks using the same three-fingered gripper hardware, with the same evaluation protocol for each. This kind of controlled comparison is rare and genuinely useful.
+Most papers in the manipulation literature pick one algorithm and show that it works on one task. What they do not tell you is whether that algorithm would still win if you swapped it for something else, or whether the task was simply easy enough that anything would have worked. Berscheid et al. set out to answer that question directly by running DDPG, SAC, and TD3 side by side under identical conditions.
 
-The three tasks covered a range of contact difficulty. The first was a reaching task with minimal contact requirements. The second was a grasping task with moderate contact complexity. The third was a fine insertion task requiring high precision and careful contact management.
+#### The Problem
 
-| Task | Contact Level | TD3 Success | SAC Success | DDPG Success |
-|------|--------------|-------------|-------------|--------------|
+Practitioners building robotic manipulation systems face a choice that the literature does not answer clearly: given a specific task, which RL algorithm should you use? DDPG is older and simpler. SAC has better theoretical properties around exploration. TD3 was designed to fix the overestimation problems that DDPG suffers from. All three are actor-critic methods for continuous action spaces, and all three have been used in manipulation research. But they are almost never compared on the same hardware doing the same tasks, which makes it impossible to draw any practical conclusion from the existing literature.
+
+The question the paper asks is simple: does the choice of algorithm actually matter, and if so, under what conditions?
+
+#### The Approach
+
+The authors used a three-fingered robotic gripper and defined three tasks that form a difficulty ladder. The first task was pure reaching: move the end-effector to a target position with no object contact required. The second was grasping: pick up objects of varying shape from a table. The third was fine insertion: place a grasped object into a tight-fitting socket, requiring precision at the millimeter scale.
+
+All three algorithms ran on the same hardware with the same reward functions, the same training budget, and the same evaluation protocol. Each algorithm was run across multiple seeds to measure variance, not just average performance. The state space included joint positions, end-effector pose, and object position. Actions were continuous end-effector velocity commands.
+
+The reward was shaped differently per task. Reaching used a pure distance penalty. Grasping added a binary success bonus. Insertion added a force penalty on top of distance, discouraging the robot from jamming the object into the socket rather than guiding it in gently.
+
+#### Results
+
+| Task | Contact Level | TD3 | SAC | DDPG |
+|------|--------------|-----|-----|------|
 | Reaching | Low | >90% | ~85% | ~70% |
 | Grasping | Moderate | >90% | ~83% | ~60% |
 | Fine insertion | High | >90% | ~80% | ~45% |
 
-DDPG showed the most variance across runs and the highest failure rates on the fine contact tasks. SAC converged more reliably than DDPG but trailed TD3 on final performance. TD3 exceeded 90% success at convergence across all three tasks.
+The results were clear. On the reaching task, all three algorithms learned successfully, though DDPG showed noticeably more variance across runs. On grasping, the gap between DDPG and the other two opened up significantly. On fine insertion, DDPG's failure rate climbed to around 45% while TD3 and SAC both held above 80%. TD3 was the most consistent performer across all three tasks, exceeding 90% success rate at convergence in every case.
 
-> **Figure 9.23:** 
-![Berscheid reward curves](figures/rewardcurves.png)
+> **Figure 9.23:**
+![Berscheid reward curves](figures/rewardcuves.png)
 > *Caption: Reward curves for DDPG, SAC, and TD3 on three dexterous gripper tasks. TD3 achieves the highest asymptotic reward; DDPG shows high variance, especially on fine contact tasks. Adapted from Berscheid et al. [27]*
 
-> **Figure 9.24:** 
+> **Figure 9.24:**
 ![Berscheid success rates](figures/successrate.png)
 > *Caption: Success rate over training iterations. TD3 consistently exceeds 90% at convergence, while DDPG failure rates are significantly higher on precision tasks. Adapted from Berscheid et al. [27]*
 
-The paper also tested all three algorithms across the canonical grasping types, precision grasps on small objects, tripod configurations, and power grasps on larger objects. These represent genuinely different contact geometries and force distributions, which is why they serve as a meaningful stress test.
+#### Why Does DDPG Fall Behind?
 
-> **Figure 9.25:** 
-![Grasping types](figures/grasp_types.png)
-> *Caption: Grasp and picking processes for three grasping types. Each type presents different contact challenges for the learning algorithm. Adapted from Berscheid et al. [27]*
+The authors attribute DDPG's poor performance on contact-rich tasks primarily to its exploration mechanism. DDPG relies on Ornstein-Uhlenbeck noise added to the action, which is a fixed perturbation scheme that does not adapt based on what the agent has or has not explored. For simple reaching, this is fine. For fine insertion, where the agent needs to discover very specific force-compliant behaviors, fixed noise is not enough. SAC and TD3 both have mechanisms that produce more systematic exploration: SAC through its entropy bonus, TD3 through its clipped double-Q and delayed policy updates that prevent premature convergence.
 
-The takeaway from this paper is straightforward: for simple tasks, any of the three algorithms will do. For tasks that require precise contact management, the gap between DDPG and the other two becomes large enough to matter in practice.
+#### Limitations
+
+The paper acknowledges that the success rate numbers are specific to this gripper and these task definitions. Different hardware or tighter tolerances on the insertion task would likely shift the numbers. The study also does not include more recent algorithms such as SAC with automatic entropy tuning variants or distributional critics, which may perform differently. Still, as a controlled comparison it fills a genuine gap in the literature.
 
 ---
 
 ### 9.8.7 Broader Perspective: Deep RL in Robotics
 
-#### Morales et al. (2021) [28]
+#### Morales et al. (2021) — Mapping the Field [28]
 
-Morales et al. provide a survey covering both deep learning and deep reinforcement learning applied to robotics, including a tutorial on DRL fundamentals and a taxonomy of existing approaches. For manipulation, they identify QT-Opt [24] as one of the most significant results in the field, and they note that combining force/torque sensing with visual feedback through an actor-critic architecture remains the most consistently effective approach for contact-rich tasks.
+#### The Problem
 
-They organize DRL methods into three families. Value function methods, dominated by DQN variants, tend to be sample efficient but are limited to discrete actions. Policy gradient methods, dominated by PPO-based algorithms, are more stable but less sample efficient. Actor-critic methods, covering SAC, DDPG, and TD3, offer the best balance for manipulation tasks. The survey also notes that model-free approaches are more common than model-based ones in practice, mainly because learning a reliable dynamics model is itself a difficult problem that adds a second source of error.
+By 2021, deep reinforcement learning had produced a large number of impressive results in robotics, but the field had grown in many directions at once. Different papers used different benchmarks, different hardware, different algorithm families, and different evaluation metrics, making it very hard to understand the overall landscape or to know which direction was most promising. Morales et al. wrote this survey to map the field systematically: what has been tried, what has worked, how the approaches relate to each other, and where the open problems are.
+
+#### The Approach
+
+The survey covers both deep learning and deep reinforcement learning applied to robotics, organized around two dimensions. The first is the type of learning technique: value function methods, policy gradient methods, and actor-critic methods. The second is the robotics application domain: navigation, manipulation, tracking, motion planning, and multi-robot systems. For each combination, the authors identify the representative papers, describe the techniques used, and assess what the results actually showed.
+
+For manipulation specifically, they trace the progression from early learning-based grasping systems through to large-scale vision-based approaches like QT-Opt [24], identifying the key ingredients that made each step forward possible.
+
+#### Key Findings on Manipulation
+
+The survey identifies combining force/torque sensing with visual feedback through an actor-critic architecture as the most consistently effective approach for contact-rich manipulation tasks. No single algorithm dominates across all task types, but the actor-critic family (SAC, DDPG, TD3) outperforms pure value function or pure policy gradient methods in manipulation because it handles continuous actions without the high variance that plagues pure policy gradient approaches.
+
+The authors organize DRL methods into three families and their trade-offs:
 
 | Approach | Main Algorithms | Characteristic |
 |----------|----------------|----------------|
@@ -1078,17 +1108,41 @@ They organize DRL methods into three families. Value function methods, dominated
 | Policy gradient | PPO-based | Stable convergence, less sample efficient |
 | Actor-critic | SAC, DDPG, TD3 | Best balance for manipulation |
 
+A recurring finding across papers in the survey is that model-free approaches dominate in practice, not because model-based methods are theoretically inferior, but because learning an accurate dynamics model is itself a hard problem that introduces a second source of error on top of the policy learning. When the model is wrong, the policy trained on it will be wrong too.
+
+#### Open Challenges Identified
+
+The survey is particularly useful for its honest assessment of what the field has not solved. Sample inefficiency is the dominant bottleneck: state-of-the-art algorithms still need millions of interactions for tasks that take a human minutes to learn. Generalization after training on a limited object set remains brittle. Safety during training is a real concern, since a robot exploring a manipulation task can apply dangerous forces. Long-horizon tasks involving many sequential steps are beyond the reach of standard RL without hierarchical structures. And the simulation-to-real gap, while partially addressed by domain randomization, remains an active research problem.
+
+#### Limitations
+
+As a survey paper, Morales et al. do not contribute new experimental results. The coverage is necessarily selective — a field this large cannot be fully covered in one paper. Some of the specific performance numbers cited from individual papers are difficult to compare across papers because evaluation protocols vary widely. The authors acknowledge this and call for standardized benchmarks as a priority for the field.
+
 ---
 
 ### 9.8.8 Comprehensive Survey: RL Across Robotic Platforms
 
-#### Singh, Kumar & Singh (2021) [19]
+#### Singh, Kumar & Singh (2021) — The Full Landscape [19]
 
-Singh et al. cover RL applied to land-based, air-based, and underwater robotic systems. For manipulation, they trace how the field moved from simple 2-DOF manipulators in the early 2000s to 24-DOF dexterous hands today, driven almost entirely by the scaling of deep RL methods.
+#### The Problem
 
-On object picking, the survey reviews several representative approaches: integrated algorithms combining RL with cooperative co-evolution for automatic behavior development; interactive RL for table-cleaning tasks; learning to pick without slipping using reactive control combined with RL on the Openbionics ADA hand; and a 7-DOF ABB Yumi arm trained with DeepRL to learn grasping, reaching, and lifting simultaneously.
+Most RL robotics papers focus on one platform type, usually a robotic arm or a ground vehicle, and one task category. This creates a fragmented picture of the field where it is hard to see what techniques transfer across domains and what is specific to one type of robot. Singh et al. set out to produce the most comprehensive survey of RL in robotics to date, covering land-based, air-based, and underwater systems together in a single unified review.
 
-The survey also draws a useful theoretical distinction between the three main RL method classes as they apply to manipulation:
+The question the paper addresses is: across all these different platforms and applications, what learning mechanisms have researchers developed, what problems have they solved, and what patterns emerge when you look at the whole field at once?
+
+#### The Approach
+
+The survey is organized into three platform categories. Land-based robots cover ground vehicles, robotic arms, humanoids, and mobile manipulators across tasks including navigation, object picking, manufacturing, human-robot interaction, and control. Air-based robots cover UAVs across tasks including transportation, navigation, flock control, and disaster management. Underwater robots cover autonomous underwater vehicles across tracking, navigation, and target search tasks.
+
+For each application, the survey identifies the specific RL algorithm used, the hardware platform, the task objective, and the key result. The authors also review the theoretical foundations of each algorithm class in detail, covering critic-only methods, actor-only methods, actor-critic methods, deep RL, multi-agent RL, human-centered RL, and neuro-evolution.
+
+#### Key Findings on Manipulation
+
+For manipulation tasks specifically, the survey traces a clear progression. Early work in the 2000s used simple fuzzy-logic combined with Q-learning on 2-DOF manipulators for basic tasks like surface smoothing and control. By the 2010s, deep RL had scaled this to 7-DOF arms learning grasping, reaching, and lifting simultaneously. By 2020, the same family of algorithms running on distributed infrastructure was controlling 24-DOF dexterous hands.
+
+The survey reviews representative manipulation results including a hybridized algorithm combining RL with cooperative co-evolution for object picking, interactive RL for table-cleaning tasks, reactive-control-plus-RL for slip-free grasping on the Openbionics ADA hand, and the ABB Yumi 7-DOF arm learning multiple manipulation skills through DeepRL.
+
+The theoretical comparison the paper draws between algorithm classes is one of the most useful contributions for practitioners:
 
 | Method | Action Space | Convergence | Gradient Variance |
 |--------|-------------|-------------|-------------------|
@@ -1096,14 +1150,19 @@ The survey also draws a useful theoretical distinction between the three main RL
 | Actor-only (Policy Gradient) | Continuous | Strong | High |
 | Actor-Critic (DDPG, SAC, TD3) | Continuous | Strong | Low |
 
-Critic-only methods require discretizing the action space, which undermines precision for fine contact tasks. Pure policy gradient methods have high variance in gradient estimates, which slows convergence. Actor-critic methods inherit the advantages of both, and this explains their dominance across the manipulation literature.
+Critic-only methods require discretizing the action space, which destroys the precision needed for fine contact tasks. Pure policy gradient methods suffer from high variance in gradient estimates, which makes convergence slow and unreliable. Actor-critic methods combine the advantages of both, and this is why they appear in virtually every manipulation paper in the survey.
 
-> **Figure 9.26:** 
-![Singh RL applications](figures/singh_applications.png)
-> *Caption: Overview of RL application categories in robotics. Land-based manipulation tasks represent the largest and most studied application domain. Adapted from Singh et al. [19]*
+
+
+#### Results Across Platforms
+
+Looking across all three platform types, the survey identifies several patterns. First, actor-critic methods dominate across all platforms, not just manipulation. Second, hybrid approaches that combine RL with classical controllers (fuzzy logic, model predictive control, impedance control) consistently outperform pure RL on tasks that require stability guarantees or physical safety constraints. Third, multi-agent RL shows promise for coordination tasks but adds significant complexity and is still maturing. Fourth, human-centered RL, where human feedback guides the learning process, significantly reduces the number of trials needed, which is critical for real-hardware deployment.
+
+#### Limitations
+
+The survey acknowledges that comparing results across papers is difficult because experimental conditions vary widely. Hardware differs, reward functions differ, and evaluation metrics differ. The authors do not attempt to rank algorithms by absolute performance across the board, which is the right call given the lack of standardized benchmarks. The survey also predates several important results that appeared in 2022 and beyond, including advances in language-conditioned manipulation and diffusion-based policies.
 
 ---
-
 ### 9.8.9 Reward Design Across Manipulation Tasks
 
 The reward function is the single design decision that most determines whether RL succeeds or fails on a given manipulation task. A reward that is too sparse means the agent never accidentally succeeds, so it never learns anything. A reward that is too easy to game means the agent finds an unintended solution that looks good numerically but fails in practice.
