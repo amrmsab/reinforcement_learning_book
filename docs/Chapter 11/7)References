@@ -1,0 +1,25 @@
+#References
+
+Afsar, M. M., Crump, T., & Far, B. (2023). Reinforcement learning-based recommender systems: A survey. 
+
+Chen, X., Yao, L., McAuley, J., Zhou, G., & Wang, X. (2023). Deep reinforcement learning in recommender systems: A survey and new perspectives. 
+
+Rossiiev, O. D., et al. (2024). A comprehensive survey on reinforcement learning-based recommender systems.
+
+Wang, G., Ding, J., & Hu, F. (2024). Deep reinforcement learning recommendation system algorithm based on multi-level attention mechanisms. 
+
+Wang, J., Karatzoglou, A., Arapakis, I., & Jose, J. M. (2024). Reinforcement learning-based recommender systems with large language models for state, reward and action modeling. 
+
+Rymarczyk, P., Smutek, T., Stefańczak, D., Cwynar, W., & Zupok, S. (2024). Self-learning recommendation system using reinforcement learning. 
+
+
+To cite this, please use the following bibtex:
+```bibtex
+@misc{yourlastname_2026_ReinforcementLearning,
+  author       = {Haytham Hesham},
+  title        = {Reinforcement Learning: RL in Recommendation Systems, Chapter 11},
+  year         = {2026},
+  publisher    = {GitHub},
+  howpublished = {\url{https://github.com/amrmsab/reinforcement_learning_book}},
+  note         = {Accessed: April 30, 2026}
+}
