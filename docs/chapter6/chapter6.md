@@ -961,10 +961,18 @@ Important takeaway:
 
 > The success of RL with function approximation depends more on representation than on the algorithm itself.
 
+# References
+
+- Sutton, Richard S., and Andrew G. Barto. _Reinforcement Learning: An Introduction_. 2nd ed. MIT Press, 2018. Available at: https://web.stanford.edu/class/psych209/Readings/SuttonBartoIPRLBook2ndEd.pdf
+
+# Citation
+
+To cite this, please use the following bibtex:
+
 ```bibtex
 @misc{Elsisi-Gamal_2026_ReinforcementLearning,
     author       = {Marwan Mohamed and Mohamed Ahmed Gamal Eldin},
-  title        = {Reinforcement Learning: A Gentle Introduction, Chapter 6},
+  title        = {Reinforcement Learning: A Gentle Introduction, Chapter 6: Function Approximation in Reinforcement Learning},
   year         = {2026},
   publisher    = {GitHub},
   howpublished = {\url{https://github.com/amrmsab/reinforcement_learning_book}},
