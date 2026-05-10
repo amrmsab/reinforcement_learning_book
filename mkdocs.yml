@@ -16,7 +16,7 @@ nav:
   # - Chapter 13 - Applications in [Select Domain]: chapter13/chapter13.md
   # - Chapter 14 - Open Challenges: chapter14/chapter14.md
 theme:
-  name: mkdocs
+  name: material
 
 markdown_extensions:
   - pymdownx.arithmatex:
