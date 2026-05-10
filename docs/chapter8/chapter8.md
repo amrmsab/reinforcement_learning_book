@@ -1,6 +1,6 @@
 # Chapter 8.2 — Teaching Your Agent to Walk Without Falling: TRPO and PPO
 
-**Author:** [Yaseen Ashraf](https://www.linkedin.com/in/zoatel)
+**Author:** [Yaseen Abdulmajeed](https://www.linkedin.com/in/zoatel)
 
 > This chapter covers the second half of Week 8 in the course. The first half, covering Deep Q-Networks and their improvements, is in Chapter 8.1. If you are not yet familiar with policy gradient methods and the REINFORCE algorithm, Chapter 7 is a good place to start before reading this one.
 
@@ -198,7 +198,7 @@ That measurement tool is KL divergence. And building it from the ground up is ex
 
 We have been circling the same problem for a while now. The policy needs to stay close to its previous version during updates, but "close" has been poorly defined. Close in parameter space is meaningless, we saw why. Close in terms of the importance ratio is a symptom we can observe after things go wrong, not a constraint we can enforce before they do.
 
-What we need is a way to measure, before we take a step, how differently the new policy will actually behave compared to the old one. Not how different their weights are. How different their *decisions* are.
+What we need is a way to measure, before we take a step, how differently the new policy will actually behave compared to the old one. Not how different their weights are. How different their _decisions_ are.
 
 The tool that gives us this is KL divergence. It is worth understanding properly, not just as a formula to plug in, but as an idea that makes intuitive sense from the ground up, because it will follow us for the rest of this chapter and well beyond it.
 
@@ -474,7 +474,7 @@ The action had a positive advantage, it was better than expected. The new policy
 
 **Case 2: Good action, policy moving away from it (A > 0, r < 1−ε)**
 
-The action was good, but the new policy is assigning it lower probability. This is a problem , we are moving away from something that worked. The clip does not activate here. The gradient signal is preserved and continues pushing the policy back toward this action.
+The action was good, but the new policy is assigning it lower probability. This is a problem, we are moving away from something that worked. The clip does not activate here. The gradient signal is preserved and continues pushing the policy back toward this action.
 
 **Case 3: Bad action, policy moving away from it (A < 0, r < 1−ε)**
 
@@ -603,7 +603,6 @@ The most prominent off-policy algorithm for continuous action spaces is Soft Act
 
 SAC trades PPO's simplicity for sample efficiency and exploration depth. It is harder to implement and requires careful management of the replay buffer. But in environments where interactions are expensive or rewards are sparse, it can be dramatically more effective. Chapter 9 covers SAC and the broader family of off-policy continuous control algorithms in detail.
 
-
 ---
 
 <a name="summary"></a>
@@ -627,7 +626,6 @@ PPO clip bypassed the whole measurement-and-penalty framework and went straight 
 And then we looked honestly at what PPO clip cannot do, and found that its limitations are coherent, not random. They all trace back to being on-policy. Understanding that root cause points directly toward what to look for next, in Chapter 9.
 
 > _"There is no universally best algorithm in reinforcement learning. There is only the best algorithm for your problem. The goal of this chapter was not to hand you PPO as the answer, it was to show you the reasoning that produced it, so you can follow the same reasoning when the next problem, and the next algorithm, comes along."_
-
 
 ---
 
@@ -700,11 +698,11 @@ No single row dominates all the others. PPO-Clip wins on ease of use and practic
 
 - Sutton, R. S., McAllester, D. A., Singh, S. P., & Mansour, Y. (2000). Policy Gradient Methods for Reinforcement Learning with Function Approximation. _Advances in Neural Information Processing Systems, 12_, 1057–1063.
 
-- Amari, S. (1998). Natural Gradient Works Efficiently in Learning. *Neural Computation, 10*(2), 251–276.
+- Amari, S. (1998). Natural Gradient Works Efficiently in Learning. _Neural Computation, 10_(2), 251–276.
 
-- Ouyang, L., Wu, J., Jiang, X., Almeida, D., Wainwright, C. L., Mishkin, P., Zhang, C., Agarwal, S., Slama, K., Ray, A., Schulman, J., Hilton, J., Kelton, F., Miller, L., Simens, M., Askell, A., Welinder, P., Christiano, P., Leike, J., & Lowe, R. (2022). Training language models to follow instructions with human feedback. *Advances in Neural Information Processing Systems, 35*, 27730–27744.
+- Ouyang, L., Wu, J., Jiang, X., Almeida, D., Wainwright, C. L., Mishkin, P., Zhang, C., Agarwal, S., Slama, K., Ray, A., Schulman, J., Hilton, J., Kelton, F., Miller, L., Simens, M., Askell, A., Welinder, P., Christiano, P., Leike, J., & Lowe, R. (2022). Training language models to follow instructions with human feedback. _Advances in Neural Information Processing Systems, 35_, 27730–27744.
 
-- Engstrom, L., Ilyas, A., Santurkar, S., Tsipras, D., Janoos, F., Rudolph, L., & Madry, A. (2020). Implementation Matters in Deep RL: A Case Study on PPO and TRPO. *International Conference on Learning Representations (ICLR)*.
+- Engstrom, L., Ilyas, A., Santurkar, S., Tsipras, D., Janoos, F., Rudolph, L., & Madry, A. (2020). Implementation Matters in Deep RL: A Case Study on PPO and TRPO. _International Conference on Learning Representations (ICLR)_.
 
 ---
 
