@@ -7,11 +7,13 @@
 
 ## Introduction
 
-Imagine teaching someone to play chess by never telling them the rules — just letting them play millions of games and rewarding them when they win. Sounds crazy, right? That is essentially what Reinforcement Learning (RL) does, and it turns out to work *remarkably* well.
+Adversary is an emotion engraved in the human mind since the discovry of fire, we have always aimed to best our opponets, achieve victory again and again and improve our strategy whether it be in survival, attaining wealth, or fame. In the modern world this form of adversarty is prevelant in games, Chess for example was used to settle wars between kingdoms and was crowned for a time the most prestigous game of intellect denoting how one's mastery of the game equated to his intellegence. As chess evolved so did the methods of find the most optimal stress stragey segmenting to its own study of chess theory, however 1988 would mark a turning point for chess history as it was the first documented case of a computer beating a GrandMaster in the game. Now the flames of Adversity pushed search algorithims and research to its limits for the sole purpose of solving chess by knowing the best move at any point.
 
-Games have been the proving ground for RL since the very beginning. They offer something incredibly rare in research: a **closed, well-defined world** where an agent can act, fail, learn, and improve — all without real-world consequences. But beyond being a safe sandbox, games have pushed RL to its absolute limits. From a simple grid game of Battleship to the mind-bending complexity of StarCraft II with its near-infinite state spaces, each game has forced researchers to develop smarter, more creative algorithms.
+However from a novice's perspective the rules of chess are quite clear and simple, they could roughly be written on 3 pages and yet there are more board states of chess than there is atoms in the observable universe and its been solved. What if pawns could suddenly turn to other pieces, do more than one move at a turn, the board changes mid game, you couldnt see what the opponent plays, suddenly we are dealing with a much more variable and complex problem. Traditional search algorithims can no longer account for such variations and we cant account for all cases, such is the segway of applying Reinforcment Learning (RL) into Video Games.
 
-In this chapter, we will walk through the landscape of RL in games — gradually increasing in complexity — and show you exactly how RL agents are formulated, what challenges arise, and what breakthroughs they have achieved. By the end, you will also see how lessons from games are spilling over into the real world.
+RL works through not knowing a good method of play and minimizing errors done but instead letting it play millions of games with rewards on correct moves, this means regardless of the complexity of the enviornment with enough games it will find a sequence of moves to maximize the amount of rewards gained. Video games offer a closed, well defined world for an RL agent to train in and without physical limitations RL agents have the ability to adversarily train against each other, play thousands of games per day, have multiple sessions running concurrently.    
+
+Through this chapter we will first turn the virtual game environment into a standard formal MDP problem to disect, then we will see its applications in gradually increassing complexity of games and its environments, what challenges arose and how reasearch from video games can be helpful in other real world applications. 
 
 ---
 
@@ -24,7 +26,7 @@ Before we dive into specific games, let us set up the shared vocabulary. In RL, 
 - **Reward (R):** The signal that tells the agent how well it is doing
 - **Transition:** How the world changes after each action
 
-Games map onto this framework naturally. Here's a quick comparison:
+Comparing traditional use of RL agents in optimal control robotics, games also map onto this framework naturally:
 
 <div align="center">
 
@@ -37,13 +39,14 @@ Games map onto this framework naturally. Here's a quick comparison:
 
 </div>
 
-In more complex games, the raw game image (a grid of pixels) is typically fed through a **Convolutional Neural Network (CNN)** to extract a meaningful internal state vector. The agent then reasons on top of that compressed representation rather than raw pixels.
+To be able to build our state vector and get the parameters required, we can aquire the metrics through modifying the source code of the game.
+However it is highly unlikely game studios would allow their code to be inspected and in more complex games the architecture makes it hard to modify, instead the raw game image (a grid of pixels) is typically fed through a Convolutional Neural Network (CNN) to extract a meaningful internal state vector. The agent then reasons on top of that compressed representation rather than raw pixels.
 
-One key thing to note early: **not all video games are equal.** The complexity of the RL problem scales dramatically with the game:
+One key thing to note early: not all video games are equal. The complexity of the RL problem scales dramatically with the game:
 
-- **Simple finite environments** (e.g., Battleship): Small, countable state spaces
-- **Near-infinite environments** (e.g., Clash Royale, RISK): Continuous state spaces with many variables
-- **Complex infinite environments** (e.g., Dota 2, StarCraft II): Astronomically large state spaces requiring multi-agent coordination
+- **Simple finite environments** (Battleship): Small, countable state spaces
+- **Near-infinite environments** (Clash Royale, RISK): Continuous state spaces with many variables
+- **Complex infinite environments** (Dota 2, StarCraft II): Astronomically large state spaces requiring multi-agent coordination
 
 We will explore each tier in order.
 
