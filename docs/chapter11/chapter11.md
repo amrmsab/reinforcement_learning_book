@@ -1,19 +1,19 @@
 # Chapter 11 – Applications in Games
 
-**Authors:** Omar Fouad, Ahmed Alaa Hamdy
+**Authors:** Omar Fouad (.1,.2,.4), Ahmed Alaa Hamdy (.3,.5)
 *German University in Cairo, CSEN 1152 – Spring 2026*
 
 ---
 
 ## Introduction
 
-Adversary is an emotion engraved in the human mind since the discovry of fire, we have always aimed to best our opponets, achieve victory again and again and improve our strategy whether it be in survival, attaining wealth, or fame. In the modern world this form of adversarty is prevelant in games, Chess for example was used to settle wars between kingdoms and was crowned for a time the most prestigous game of intellect denoting how one's mastery of the game equated to his intellegence. As chess evolved so did the methods of find the most optimal stress stragey segmenting to its own study of chess theory, however 1988 would mark a turning point for chess history as it was the first documented case of a computer beating a GrandMaster in the game. Now the flames of Adversity pushed search algorithims and research to its limits for the sole purpose of solving chess by knowing the best move at any point.
+Rivalry is an instinct engraved in the human mind since the discovery of fire - we have always aimed to best our opponents, achieve victory again and again, and improve our strategy, whether it be in survival, attaining wealth, or fame. In the modern world this drive is most prevalent in games. Chess, for example, was once used to settle disputes between kingdoms and was crowned for a time the most prestigious game of intellect, with one's mastery of the game equated to their intelligence. As chess evolved, so did the methods of finding the most optimal strategy, segmenting into its own field of chess theory. 1988 would mark a turning point for chess history as it was the first documented case of a computer (Deep Thought) defeating a Grandmaster in tournament play - a milestone that culminated nine years later in Deep Blue's defeat of reigning world champion Garry Kasparov. From there, the flames of competition pushed search algorithms and research to their limits, all in service of knowing the best move at any point.
 
-However from a novice's perspective the rules of chess are quite clear and simple, they could roughly be written on 3 pages and yet there are more board states of chess than there is atoms in the observable universe and its been solved. What if pawns could suddenly turn to other pieces, do more than one move at a turn, the board changes mid game, you couldnt see what the opponent plays, suddenly we are dealing with a much more variable and complex problem. Traditional search algorithims can no longer account for such variations and we cant account for all cases, such is the segway of applying Reinforcment Learning (RL) into Video Games.
+From a novice's perspective the rules of chess are quite clear and simple, they could roughly be written on three pages, and yet there are more legal board positions in chess than there are atoms in the observable universe. What if pawns could suddenly turn into other pieces, you could make more than one move per turn, the board itself changed mid-game, or you couldn't see what the opponent played? Suddenly we are dealing with a much more variable and complex problem. Traditional search algorithms can no longer compute such variations, and we can't account for every case by hand which leads us to applying **Reinforcement Learning (RL)** to video games.
 
-RL works through not knowing a good method of play and minimizing errors done but instead letting it play millions of games with rewards on correct moves, this means regardless of the complexity of the enviornment with enough games it will find a sequence of moves to maximize the amount of rewards gained. Video games offer a closed, well defined world for an RL agent to train in and without physical limitations RL agents have the ability to adversarily train against each other, play thousands of games per day, have multiple sessions running concurrently.    
+RL does not begin with a known good method of play. Instead, the agent plays millions of games and is rewarded for the moves that lead toward winning. This means that regardless of the complexity of the environment, with enough games the agent will discover sequences of moves that maximize the rewards it collects. Video games offer a closed, well-defined world for an RL agent to train in, and without physical limitations RL agents can train adversarially against each other, play thousands of games per day, and run multiple sessions concurrently providing a large source of data.
 
-Through this chapter we will first turn the virtual game environment into a standard formal MDP problem to disect, then we will see its applications in gradually increassing complexity of games and its environments, what challenges arose and how reasearch from video games can be helpful in other real world applications. 
+Through this chapter we will first turn the virtual game environment into a standard formal MDP problem to dissect, then explore its applications across games of gradually increasing complexity, the challenges that arose at each tier, and how research from video games is helping inform other real-world applications.
 
 ---
 
@@ -26,7 +26,7 @@ Before we dive into specific games, let us set up the shared vocabulary. In RL, 
 - **Reward (R):** The signal that tells the agent how well it is doing
 - **Transition:** How the world changes after each action
 
-Comparing traditional use of RL agents in optimal control robotics, games also map onto this framework naturally:
+Compared to the traditional use of RL agents in optimal control and robotics, games map onto this framework just as naturally:
 
 <div align="center">
 
@@ -39,16 +39,15 @@ Comparing traditional use of RL agents in optimal control robotics, games also m
 
 </div>
 
-To be able to build our state vector and get the parameters required, we can aquire the metrics through modifying the source code of the game.
-However it is highly unlikely game studios would allow their code to be inspected and in more complex games the architecture makes it hard to modify, instead the raw game image (a grid of pixels) is typically fed through a Convolutional Neural Network (CNN) to extract a meaningful internal state vector. The agent then reasons on top of that compressed representation rather than raw pixels.
+To build our state vector we need a way to read the game's internals. The cleanest path is to edit the game's source code directly and extract the metrics we care about. In practice, however, game studios are unlikely to let third parties inspect their code, and in more complex games the engine's architecture makes modification impractical regardless. The standard workaround is to feed the raw game image (a grid of pixels) through a **Convolutional Neural Network (CNN)** to extract a meaningful internal state vector. The agent then reasons on top of that compressed representation rather than on raw pixels.
 
 One key thing to note early: not all video games are equal. The complexity of the RL problem scales dramatically with the game:
 
-- **Simple finite environments** (Battleship): Small, countable state spaces
-- **Near-infinite environments** (Clash Royale, RISK): Continuous state spaces with many variables
-- **Complex infinite environments** (Dota 2, StarCraft II): Astronomically large state spaces requiring multi-agent coordination
+- **Small, tractable environments** (Battleship): Discrete grids and a hand-enumerable action set
+- **Large, near-infinite environments** (Clash Royale, RISK): Many continuous variables and combinatorial moves
+- **Effectively infinite environments** (Dota 2, StarCraft II): Real-time, multi-agent worlds requiring coordination
 
-We will explore each tier in order.
+We will explore each in order.
 
 ---
 
@@ -56,22 +55,22 @@ We will explore each tier in order.
 
 ### 11.2.1 Case Study — Battleship
 
-Battleship is a two-player guessing game where each player secretly arranges ships on a 10×10 grid, then takes turns guessing coordinates to "fire" at the opponent. The first to sink all enemy ships wins.
+Battleship is a two-player game where each player arranges ships on a 10×10 grid hidden from the other, then takes turns guessing coordinates to "fire" at the opponent. The first to sink all enemy ships wins. Standard rules use five ships of sizes 5, 4, 3, 3, 2 — seventeen ship cells in total — and forbid overlap or diagonal placement.
 
-At first glance, this seems simple. But Battleship has some fascinating RL properties:
+The game is deceptively simple — it introduces several unique problems:
 
 **1. Partial Observability**
-The agent never sees the opponent's true board. It only knows the history of its own shots (hits and misses). This makes Battleship a **Partially Observable MDP (PO-MDP)** — the agent must act on *belief* rather than complete information.
+The agent never sees the opponent's actual true board. It only knows the history of its own shots (hits and misses). This makes Battleship a **Partially Observable MDP (PO-MDP)**. The agent must act on belief rather than complete information.
 
 **2. Two Learnable Policies**
-An RL agent in Battleship actually needs to learn *two* things:
+An RL agent in Battleship actually needs to learn two things:
 - **Placement policy:** Where to position its own ships to be hard to find
 - **Shooting policy:** Where to fire to find and sink enemy ships most efficiently
 
-**3. The Exploration vs. Exploitation Dilemma**
-Should the agent keep firing around a known hit (exploit) or venture to an untested area (explore)? This classic RL tension is beautifully illustrated here.
+**3. Exploration vs. Exploitation**
+Should the agent keep firing around a known hit (exploit) or venture to an untested area (explore)?
 
-The state space, despite the finite 10×10 grid, is actually enormous. Because each cell can be unknown, a hit, or a miss, and each combination represents a different belief state, the total possible configurations are on the order of **3¹⁰⁰** — huge, even for a "simple" game.
+Because each cell can be unknown, a hit, or a miss — and each combination represents a distinct belief state — the agent's belief space is on the order of **3¹⁰⁰ ≈ 5 × 10⁴⁷**. Even for a "simple" game, that already rivals the legal-position count of chess.
 
 **Battleship as a PO-MDP:**
 
@@ -86,18 +85,41 @@ The state space, despite the finite 10×10 grid, is actually enormous. Because e
 
 </div>
 
-> 💡 **Try it yourself!** You can implement a simple Battleship RL agent using Q-learning on a belief-state representation. Libraries like `gymnasium` (formerly OpenAI Gym) make it easy to set up custom environments.
+**Project Build — Adversarial PPO Self-Play (Fouad, 2026)**
 
-```python
-# Pseudocode: Belief-state update in Battleship
-def update_belief(belief_grid, shot_coord, result):
-    row, col = shot_coord
-    if result == "hit":
-        belief_grid[row][col] = 1   # confirmed hit
-    elif result == "miss":
-        belief_grid[row][col] = -1  # confirmed miss
-    return belief_grid
-```
+To explore these ideas and self learn it, I built a working Battleship agent (Fouad, 2026) that learns both the placement and shooting policies through adversarial self-play. The implementation uses masked PPO (Proximal Policy Optimization) with two convolutional neural networks (one shooter, one placer)that are trained against each other in alternating rounds.
+
+*State representation.* Instead of feeding the network a raw board, the shooter receives a 4-channel one-hot tensor of shape `(4, 10, 10)`, where each channel marks cells in one of four states: `unknown`, `miss`, `hit`, or `sunk`. The placer sees a 2-channel tensor: occupied cells plus the normalized size of the ship currently being placed.
+
+*Action masking.* At every step, the network outputs logits over all 100 cells, but a boolean mask of legal actions (cells not yet fired at, for the shooter; valid `(row, col, orientation)` triples that don't overlap, for the placer) is applied before the softmax. This is implemented with a masked categorical distribution that sets illegal logits to `−10⁹`, to ensure an agent doesnt consider an illegal move.
+
+*Rewards.* The shooter is rewarded `+1` for a hit, `−0.05` for a miss, `+1` bonus for sinking a ship, and `+5` for winning the game.
+
+*Sonar ability.* 3 charges per game, each revealing whether any ship occupies a 3×3 area centered on the chosen cell. The action space doubles (200 actions: 100 fire targets + 100 sonar centers) and the observation grows to 7 channels (adding `sonar_cleared`, `sonar_yes_overlap`, and `charges_remaining`). The agent must learn when to spend an important action versus committing to a shot.
+
+*Phased adversarial training.* Joint self-play causes the placer and shooter to find nonesensical strategies. Instead, training runs in phases:
+
+1. **Phase 1 — Shooter pretraining.** The shooter trains for a large amoutn of PPO updates against a random placer to acquire a basic seek and destroy strategy.
+2. **Phase 2+ — Alternating self-play.** Each round a snapshot of one network is taken and trains the other against it. The placer is rewarded by the number of shots required by the shooter to win while the shooter is rewarded by how quickly it sinks all ships.
+
+Two designs were made to avoid mode collapse after initial testing:
+
+- **Fictitious self-play with snapshot pools.** The placer is evaluated against a mix of recent shooter snapshots plus a hard coded seek and destroy heuristic, not just the latest shooter. This prevents the placer from overfitting to one opponent.
+- **D4 symmetry augmentation.** Each placement is randomly rotated/flipped before the shooter sees it. Otherwise the shooter assumes all ships are horizontal.
+
+
+
+<div align="center">
+
+![Battleship agent solving a 10×10 board in 43 shots: left shows the agent's view (hits in red, sunk in dark red, misses in blue), right shows the ground truth board](battleship_final_frame.png)
+
+*Figure 11.1: A trained shooter solving a board in 43 shots. The agent's view (left) shows confirmed hits, misses, and sunk ships; the ground truth (right) shows where the placer hid the ships. The orange-bordered cells in the left panel mark the placer's true ship cells revealed at game end. (Fouad, 2026)*
+
+</div>
+
+*Results.* On a 10×10 board with the standard fleet (17 ship cells, so 17 is the theoretical minimum):
+
+The full source is available at the project repo. 
 
 ---
 
@@ -115,7 +137,7 @@ RISK is a classic board game of global domination. The game is played on a world
 
 ![The Hybrid Commander: RL Meta-Controller for Risk](risk_infograohic.png)
 
-*Figure 11.1: Overview of the RL meta-controller for RISK, showing the four expert strategies and the 73.1% win rate achieved. (Hamdy, 2025)*
+*Figure 11.2: Overview of the RL meta-controller for RISK, showing the four expert strategies and the 73.1% win rate achieved. (Hamdy, 2025)*
 
 </div>
 
@@ -189,7 +211,7 @@ This hybrid design dramatically reduces the action space: instead of choosing am
 
 ![RL Policy Selector architecture: Game State feeds into REINFORCE which selects among CLD, RE, OMA, and PB](risk_diagram_multi.png)
 
-*Figure 11.2: The meta-controller architecture. The game state is fed into a REINFORCE-based policy selector, which picks one of four expert strategies each turn. (Hamdy, 2025)*
+*Figure 11.3: The meta-controller architecture. The game state is fed into a REINFORCE-based policy selector, which picks one of four expert strategies each turn. (Hamdy, 2025)*
 
 </div>
 
@@ -222,7 +244,7 @@ Action selection uses **epsilon-greedy exploration**: with probability ε, a ran
 
 ![Full RL system architecture showing Risk Environment, State Observer, Policy Network, Reward Calc, Policy Update, and Strategy modules](Arch.png)
 
-*Figure 11.3: Detailed RL system architecture. The state observer encodes the game state, the policy network selects a strategy via epsilon-greedy sampling, rewards are calculated from game events, and policy updates run every episode via REINFORCE. (Hamdy, 2025)*
+*Figure 11.4: Detailed RL system architecture. The state observer encodes the game state, the policy network selects a strategy via epsilon-greedy sampling, rewards are calculated from game events, and policy updates run every episode via REINFORCE. (Hamdy, 2025)*
 
 </div>
 
@@ -293,7 +315,7 @@ Clash Royale is a real-time strategy (RTS) mobile game where two players simulta
 
 ![Annotated Clash Royale game frame showing Major Tower, Minor Tower, Battle Field, Battle Troops, Hand Cards, and Total Elixir](Clash_Royale_Game_Frame.png)
 
-*Figure 11.4: The Clash Royale arena annotated with key game elements. The RL agent must observe all of these simultaneously to make decisions. (Chen et al., 2019)*
+*Figure 11.5: The Clash Royale arena annotated with key game elements. The RL agent must observe all of these simultaneously to make decisions. (Chen et al., 2019)*
 
 </div>
 
@@ -317,7 +339,7 @@ This divide-and-conquer approach mirrors how human expert players actually think
 
 ![SEAT Selection-Attention Model architecture showing Enemy Units, All Units, Card Features feeding into Selection and Attention parts to output Selected Card and Attention Grid](clashe_royale_Seat_diagram.png)
 
-*Figure 11.5: The SEAT (Selection-Attention) model architecture. Enemy unit maps and card features are processed by two sub-networks: the Selection Part chooses which card to play, and the Attention Part identifies where to deploy it. (Chen et al., IJCAI 2019)*
+*Figure 11.6: The SEAT (Selection-Attention) model architecture. Enemy unit maps and card features are processed by two sub-networks: the Selection Part chooses which card to play, and the Attention Part identifies where to deploy it. (Chen et al., IJCAI 2019)*
 
 </div>
 
@@ -331,9 +353,9 @@ This divide-and-conquer approach mirrors how human expert players actually think
 
 ## 11.4 Complex Infinite States: Multi-Agent RL in MOBAs and RTSs
 
-### 11.4.1 Why Multi-Agent RL (MARL) Changes Everything
+### 11.4.1 Importance of Multi Agent RL (MARL)
 
-Now we enter the hardest tier. Games like Dota 2 (a MOBA — Multiplayer Online Battle Arena) and StarCraft II (a Real-Time Strategy game) are categorically more complex than anything we have seen so far. They require multiple agents working together against multiple opponents — all in real time, with incomplete information.
+Now the most complex area were most research is centered. Games like Dota 2 (Multiplayer Online Battle Arena) and StarCraft II (Real-Time Strategy game) are more complex than anything discussedso far. They require multiple agents working together against multiple opponents, all in real time, with incomplete information with both micro and macro scale decission, some actions are rewarded once every 1/4th of a frame and others after 20 minutes of game time have elapsed.
 
 **The core challenges of MARL in complex games:**
 
@@ -341,90 +363,142 @@ Now we enter the hardest tier. Games like Dota 2 (a MOBA — Multiplayer Online 
 
 | Challenge | Detail |
 |---|---|
-| **Partial Observability** | Large maps with "fog of war" — agents cannot see the whole map |
+| **Partial Observability** | Large maps with "fog of war" where agents cannot see the whole map |
 | **Sparse & Delayed Rewards** | Games last 30–60 minutes at high frame rates; credit assignment is difficult |
-| **Team Coordination** | Agents must collaborate; pure individual reward signals are insufficient |
+| **Team Coordination** | Agents must collaborate, individual reward signals are insufficient |
 | **Scalability** | More agents = exponentially more states and joint actions to reason over |
 
 </div>
 
-To give you a sense of scale: MOBAs like Dota 2 can reach state spaces on the order of **10²⁰⁰⁰⁰** — a number so large it makes the Battleship state space look like a rounding error.
+To give you a sense of scale: MOBAs like Dota 2 can reach state spaces on the order of **10²⁰⁰⁰⁰**
 
 ---
 
 ### 11.4.2 Case Study — League of Legends: A MOBA Agent
 
-League of Legends (LoL) is played on a 16,000 × 16,000 unit map. Each player controls a unique champion with distinct abilities, buys items during the game, fights enemy minions, and coordinates with four teammates to destroy the enemy base.
+League of Legends (LoL) is played on a roughly 16,000 × 16,000 unit map with three lanes, a jungle, towers, inhibitors, a Nexus, and dozens of jungle and special monsters. Each player controls a unique champion with distinct abilities, buys items mid-game, fights enemy minions, and coordinates with four teammates to destroy the enemy base.
 
-**Architecture Highlights:**
+**Architecture Highlights**
 
-The LoL RL agent uses an **Actor-Critic paradigm**:
-- The **actor** selects actions (which ability to use, where to move)
-- The **critic** estimates how good the current game state is, helping the actor improve
+Modern MOBA RL agents (Ye et al. 2020) use an Actor-Critic paradigm with a multi-input neural network rather than one monolithic encoder. The state is decomposed by type, with each branch handled by an architecture suited to its data:
 
-The state representation encodes champion positions, health, abilities, items, and nearby enemy creep positions — all compressed into a neural network input.
+<div align="center">
 
-**Results (2024–2025 Live Tests):**
-- In a 2024 live test, the agent performed **22 attacks in 3.2 seconds**, with each input taking under 0.145 seconds — reaction times that professional human players physically cannot match (pros average about double that response time)
-- The agent demonstrated emergent coordination with human teammates, despite not being able to communicate through natural language
+```
+Spatial Feature  (mini-map, terrain)         → CNN  ┐
+Unit Feature     (heroes, minions, monsters, → MLP  │
+                  turrets, per-entity stats)        │
+In-game Stats    (gold, XP, time, objectives) → MLP ├→ FC → LSTM → Multi-Head Value
+Invisible Opp.   (estimated from observed)   → MLP  │           ↓
+                                                    │      ┌──────────────────┐
+                                                    │      │ Farming Related  │
+                                                    │      │ KDA Related      │
+                                                    │      │ Damage Related   │
+                                                    │      │ Pushing Related  │
+                                                    │      │ Win/Lose Related │
+                                                    │      └──────────────────┘
+                                                    ↓
+                                              Action Mask
+                                                    ↓
+                              What?  (Move / Attack / Skill / Return)
+                              How?   (Move offset, Skill offset Δx, Δy)
+                              Who?   (Target unit)
+```
 
-> 📌 **Key insight:** Speed alone does not make an agent win. Professional players compensate for slower reaction times with *strategic planning* that looks further ahead. RL agents often struggle with long-term planning compared to humans.
+</div>
+
+From the diagram there are 3 important take aways in order to properly train MARL agents in such a complex environment.
+
+- **Long Short Term Memory (LSTM).** A MOBA state cannot be summarized by a single frame — the agent has to remeber enemy actions, recent self actions, recent game information.
+- **Multi-head value.** Rather than estimating one all encompasing value for a state, the critic outputs multiple value heads for each type of acction, to what category it contributes and how impactfull is the value gained overall. With the value heads split, the gradient minimzing in the credit section is now easier to allocate which value is returned from which action and the appropriate reward.
+- **Hierarchical, masked action.** The action is decomposed into what (move/attack/skill/return-to-base), how (where to move, where to aim a skill), and who (which enemy unit to target). An action mask zeroes out illegal combinations before sampling.
+
+What differes from implementation to another in 3D complex games is the way agents are trained and how the data is aquired.
+**Training Pipeline (Three Phases)**
+
+To handle a roster of 100+ champions, training is staged so the agent does not have to learn everything from scratch on every team composition:
+
+1. **Phase 1 — Fixed-lineup teachers.** Several specialist agents are trained, each on a fixed 5-vs-5 lineup. 
+2. **Phase 2 — Multi-teacher policy distillation.** A single student (collection of fized lineups) network learns from the pool of teachers via a distillation loss, using a replay buffer and student-driven exploration so it does not just copy teachers and prevent overfitting.
+3. **Phase 3 — Random-pick training.** Ten heroes are sampled at random each episode, forcing the distilled student to generalize across the full draft space rather than memorizing a few lineups.
 
 ---
 
 ### 11.4.3 Case Study — Dota 2: OpenAI Five
 
-Dota 2 features 5-vs-5 teams of heroes on a massive map with over 100 distinct hero characters, hundreds of items, and games lasting 30–60 minutes. OpenAI built **OpenAI Five** — a system of five coordinated RL agents — to tackle this.
+Dota 2 offers even more depth to the comprehensive systems that are found in MOBAs mentioned before. So instead of an inhouse made RL agent we can look at OpenAI's OpenaAI Five RL model to play Dota 2.
 
-**Scale of training:**
-OpenAI Five ran **180 years of gameplay per day** using 128,000 CPU cores and 256 GPUs. This translates to roughly 50,000 games per day of self-play.
+**The algorithm.** OpenAI Five used a scaled-up version of PPO combined with Generalized Advantage Estimation (GAE) and a separate LSTM per agent. Which is standard with the exception of the GAE.
 
-**Key design choices:**
-- Each of the five agents has its own neural network but shares observations with teammates
-- Agents are rewarded both individually (for kills, last-hits, gold earned) and collectively (for winning the game)
-- A **team spirit** hyperparameter controls the balance between individual and collective rewards
+**Scale of training.**
+OpenAI Five ran 180 years of gameplay per day on 128,000 CPU cores and 256 P100 GPUs. With matches averaging 45 minutes of game time, 2 million games could be generated as data points and used for training per day.
 
-**Results:**
-- OpenAI Five defeated the **reigning Dota 2 world champions** (OG) in a public match in 2019
-- The agents developed coordinated strategies like "smoke ganks" (coordinated ambushes) that are hallmarks of high-level human play
+**Results.**
+The average skill required to play the games was quantified (TrueSkill)and then models were mapped how much computing time was required to reach the targat to beat certain percentile of players. The curve climbs smoothly from random play (TrueSkill ≈ 0) up through hand-scripted bots (100), amateur teams (205), semi-pro teams (210), the casters' benchmark (235). However it took significant computation to after reaching 210 to beat the world champions (255) at 750 PFLOPs/s-days of training compute.
+A subsequent OpenAI Five Rerun redid the training on a different cluster (51,200 CPUs, 1,024 GPUs) and reached TrueSkill of 255 in two months instead of 10.
 
 ---
 
 ### 11.4.4 Case Study — StarCraft II: AlphaStar
 
-If Dota 2 is chess in real time, StarCraft II is chess in real time *while also managing an entire economy and production chain*. Two players build bases, harvest resources, train different unit types, and attempt to destroy each other's infrastructure — all simultaneously, without turns.
+If Dota 2 is chess in real time, StarCraft II is chess in real time while also managing an entire country. Two players build bases, harvest resources, train different unit types, and attempt to destroy each other's bases, all in real time without turns.
 
-Google DeepMind built **AlphaStar** to tackle StarCraft II.
+Google DeepMind built AlphaStar to also reach world class skill level in StarCraft II.
 
-**What makes StarCraft II uniquely hard:**
+**StarCraft II Challenges**
 
-- **Long-horizon planning:** Strategic decisions made early in the game (which tech tree to pursue) affect the outcome 10 minutes later
+- **Long-horizon planning:** Strategic decisions made early in the game affect the outcome 10 minutes later
 - **Simultaneous macro and micro:** Players must manage their overall economy (macro) while also controlling individual units in combat (micro)
-- **Race-specific strategies:** Three very different factions (Terran, Zerg, Protoss) with distinct units and mechanics
+- **Game-specific strategies:** Three very different factions (Terran, Zerg, Protoss) with distinct units and mechanics and different maps
 
-**AlphaStar's Training Pipeline:**
+**The action-rate cap**
+A common criticism of bots in real-time games is that they win by inputing more actions per second than humanly possible. DeepMind explicitly engineered AlphaStar to defuse that issue and to focus purely on strategy. The agents' actions per second was capped and deliberate processing delay to mimic human reaction time.
 
-AlphaStar used a three-stage training approach:
+Each action is structured in to the same acrion heirarchy of What, Who and Where. However a Fourth action is required to account for the long term horizon nature
 
-1. **Supervised pre-training:** Learn from recorded human games to get a reasonable starting policy (rather than starting from random behavior)
-2. **Reinforcement learning against fixed opponents:** Improve the policy using experience
-3. **League training:** A pool of agents ("the League") including current agents and historical "snapshots" of past agents. New agents are trained against a diverse mixture of opponents to prevent overfitting to any single strategy
+**When next?** A learned delay until the next action
 
-The loss function included a term that penalized the agent for diverging *too far* from human playing styles — keeping the agent grounded in strategies that are somewhat interpretable.
+**AlphaStar's Training Pipeline**
+
+AlphaStar used a three-stage approach and a mix of both supervised and reinforcment learning:
+
+1. **Supervised pre-training:** Learn from recorded human games to get a reasonable starting policy.
+2. **Reinforcement learning against fixed opponents:** Improve the policy using experience.
+3. **League training and KL-Divergence:** A pool of agents containing current agents and historical snapshots of past agents. The KL divergence loss function included a term that penalized the agent for diverging too far from human playing styles
+
+The League's key innovation was the 3 types that compose it, each playing a distinct role:
+
+<div align="center">
+
+| Population | Role |
+|---|---|
+| **Main agents** | The protagonists. Trained to be strong against the entire League, including past snapshots of themselves |
+| **Main exploiters** | Adversaries trained specifically to find and exploit weaknesses in the current main agents |
+| **League exploiters** | Adversaries trained to find weaknesses anywhere in the League (current + historical) |
+
+</div>
+
+This three-tier population is the highlight of this study case as it avoids the failure of naive self-play, pure self-play tends to cause mode collapse and fails to produce varied data. Main exploiters force generalization in the present while league exploiters preserve historical breadth.
 
 **Results:**
-- AlphaStar achieved **Grandmaster level** — the top 0.15% of all human players — in all three StarCraft II factions
-- It defeated multiple professional players in closed testing
+- AlphaStar achieved Grandmaster level in all three StarCraft II factions
+- It defeated multiple professional players in closed testing.
+- Its actions per minute matched that of human play which highlighted its strategy thinking more than just raw input.
 
 <div align="center">
 
 ```
 AlphaStar Training Flow:
-Human Replays → Supervised Learning → Base Policy
-                                          ↓
-                              Self-Play + League Training
-                                          ↓
-                            Grandmaster-Level Agent
+Human Replays  →  Supervised Learning  →  Base Policy
+                                                 ↓
+                                         RL vs Fixed Opp.
+                                                 ↓
+                          ┌──────────────────────┼──────────────────────┐
+                          ↓                      ↓                      ↓
+                   Main Agents         Main Exploiters       League Exploiters
+                          └──────────────────────┼──────────────────────┘
+                                                 ↓
+                                       Grandmaster-Level Agent
 ```
 
 </div>
@@ -445,7 +519,7 @@ Gran Turismo is a hyper-realistic racing simulation that models tire friction, a
 
 ![GT Sophy on the cover of Nature: "Driving Force — AI algorithm outcompetes human champions in Gran Turismo racing game"](GtsophyNature.png)
 
-*Figure 11.6: GT Sophy's results were published on the cover of Nature (February 2022), marking the first time an RL agent surpassed world-champion human drivers in a realistic racing simulation. (Wurman et al., 2022)*
+*Figure 11.7: GT Sophy's results were published on the cover of Nature (February 2022), marking the first time an RL agent surpassed world-champion human drivers in a realistic racing simulation. (Wurman et al., 2022)*
 
 </div>
 
@@ -454,7 +528,7 @@ Gran Turismo is a hyper-realistic racing simulation that models tire friction, a
 
 ![Gran Turismo physics simulation (left) and in-game racing (right)](gta_racing_realism.png)
 
-*Figure 11.7: Gran Turismo models real aerodynamics and physics (left), making it an unusually faithful simulation environment for training agents intended for real-world transfer (right).*
+*Figure 11.8: Gran Turismo models real aerodynamics and physics (left), making it an unusually faithful simulation environment for training agents intended for real-world transfer (right).*
 
 </div>
 
@@ -469,7 +543,7 @@ A unique addition was an **etiquette reward**: penalties for unsportsmanlike beh
 
 ![GT Sophy learned three capabilities: Race Car Control (operating at the edge), Racing Tactics (split-second decision-making), and Racing Etiquette (essential for fair play)](gt_sophy_controltacticettiguestte.png)
 
-*Figure 11.8: The three capabilities GT Sophy mastered: precise car control, tactical racing maneuvers, and fair-play etiquette — each enforced through careful reward design. (Sony AI / Gran Turismo Sophy)*
+*Figure 11.9: The three capabilities GT Sophy mastered: precise car control, tactical racing maneuvers, and fair-play etiquette — each enforced through careful reward design. (Sony AI / Gran Turismo Sophy)*
 
 </div>
 
@@ -480,7 +554,7 @@ A unique addition was an **etiquette reward**: penalties for unsportsmanlike beh
 
 ![GT Sophy training RL loop: AI Agent (Sony AI logo) receives State (Speed, Position) and Reward from the GT Environment, outputs Actions (Throttle, Steering, Brake)](gt_sophy_training.png)
 
-*Figure 11.9: The GT Sophy RL training loop. The agent observes speed, position, and other physical state variables from the Gran Turismo environment, and outputs continuous control actions — throttle, steering angle, and braking force. (Sony AI)*
+*Figure 11.10: The GT Sophy RL training loop. The agent observes speed, position, and other physical state variables from the Gran Turismo environment, and outputs continuous control actions — throttle, steering angle, and braking force. (Sony AI)*
 
 </div>
 
@@ -553,6 +627,8 @@ Along the way, we saw how the core RL concepts — MDPs, policy gradients, actor
 
 5. Hamdy, A. A. (2025). Reinforcement Learning for Risk Strategy Optimization. Bachelor thesis, Dept. Media Eng. and Tech., German University in Cairo, New Cairo, Egypt. Supervisor: Dr. Islam A. ElMaddah.
 
+5b. Fouad, O. (2026). Adversarial PPO Self-Play for Battleship: Learning Both Placement and Shooting Policies. Course project, German University in Cairo, CSEN 1152.
+
 6. Wurman, P. R., Barrett, S., Kawamoto, K., et al. (2022). Outracing champion Gran Turismo drivers with deep reinforcement learning. *Nature*, 602, 223–228. Available at: https://www.gran-turismo.com/us/gran-turismo-sophy/technology/
 
 7. Chen, J., Liu, B., & Kong, F. (2019). Reinforcement learning for Clash Royale. *Proceedings of IJCAI 2019*. Available at: https://www.ijcai.org/proceedings/2019/0631.pdf
@@ -560,6 +636,8 @@ Along the way, we saw how the core RL concepts — MDPs, policy gradients, actor
 8. Sutton, R. S., & Barto, A. G. (2018). *Reinforcement Learning: An Introduction* (2nd ed.). MIT Press. Available at: http://incompleteideas.net/book/RLbook2020.pdf
 
 9. Mnih, V., Kavukcuoglu, K., Silver, D., et al. (2015). Human-level control through deep reinforcement learning. *Nature*, 518(7540), 529–533.
+
+10. Ye, D., Liu, Z., Sun, M., Shi, B., Zhao, P., et al. (2020). Mastering Complex Control in MOBA Games with Deep Reinforcement Learning. *Proceedings of the AAAI Conference on Artificial Intelligence*, 34(04), 6672–6679. Available at: https://ojs.aaai.org/index.php/AAAI/article/view/6144
 
 ---
 
