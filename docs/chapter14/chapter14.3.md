@@ -7,6 +7,8 @@
 -  **Sutton & Barto (Reinforcement Learning: An Introduction, 2nd edition)**, particularly **Chapter 9** (function approximation) & **Chapter 11** (off-policy learning with function approximation).
 - Q-Learning Algorithm
 - Bellman Error
+- For a complete list of mathematical symbols and their meanings used 
+throughout this chapter, refer to the [List of Symbols](https://github.com/Reem3333/reinforcement_learning_book/blob/dacc0c7681b9aa9a016deb48f198e483105530bb/docs/chapter14/List%20of%20Symbols.md)
 
 ---
 
@@ -347,7 +349,7 @@ To cite this, please use the following bibtex:
 ```bibtex
 @misc{Mohamed_2026_ReinforcementLearning,
   author       = {Reem Tarek Mohamed},
-  title        = {Open Challenges in Offline Reinforcement Learning: Conservative Q-Learning, Chapter 14.2},
+  title        = {Open Challenges in Offline Reinforcement Learning: Conservative Q-Learning, Chapter 14.3},
   year         = {2026},
   publisher    = {GitHub},
   howpublished = {\url{https://github.com/amrmsab/reinforcement_learning_book}},
