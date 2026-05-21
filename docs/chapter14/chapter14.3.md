@@ -57,9 +57,11 @@ Formally , the Q-function is parameterized as $Q_\varphi(s,a)$, where $\varphi$ 
 
 ## 2.3 Learning Objective in Offline RL
 
-In offline RL, the **objective** is still the same as in the online case: to find 
-a policy that maximizes the expected return — however, since we cannot interact with the environment, minimizing the **Bellman error** becomes our only mechanism for pushing $Q_\varphi$ toward $Q^*$ :
-$$J(\varphi) = \mathbb{E}_{s,a,s' \sim \mathcal{D}}\left[\left(r(s,a) + \gamma\mathbb{E}_{a' \sim \pi_{\text{off}}(\cdot|s')}[Q^\pi_\varphi(s',a')] - Q^\pi_\varphi(s,a)\right)^2\right]$$
+In offline RL, the objective is still the same as in the online case: to find a policy that maximizes the expected return — however, since we cannot interact with the environment, minimizing the Bellman error becomes our only mechanism for pushing $Q_\varphi$ toward $Q^*$ :
+
+```math
+J(\varphi) = \mathbb{E}_{s,a,s' \sim \mathcal{D}}\left[\left(r(s,a) + \gamma\mathbb{E}_{a' \sim \pi_{\text{off}}(\cdot|s')}[Q^\pi_\varphi(s',a')] - Q^\pi_\varphi(s,a)\right)^2\right]
+```
 
 where:  ($\varphi$) are the parameters of the learned Q-function.
 
@@ -149,10 +151,11 @@ However, the two differ in a key way, while *classic overfitting* is fixed by mo
 
 ---
 
-**So, we can describe the *Distributional Shift* problem formulation as follows:**
-$$\underbrace{\pi \text{ picks actions } \pi_\beta \text{ never tried (OOD)}}_{\text{action distribution shift}} 
-\rightarrow \underbrace{Q \text{ overestimates their value}}_{\text{Bellman error}} 
-\rightarrow \underbrace{Q \text{ degrades over training}}_{\text{unlearning effect}}$$
+So, we can describe the *Distributional Shift* problem formulation as follows:
+
+```math
+\underbrace{\pi \text{ picks actions } \pi_\beta \text{ never tried (OOD)}}_{\text{action distribution shift}} \rightarrow \underbrace{Q \text{ overestimates their value}}_{\text{Bellman error}} \rightarrow \underbrace{Q \text{ degrades over training}}_{\text{unlearning effect}}
+```
 
 ---
 
@@ -289,9 +292,11 @@ $$
 
 The moment this happens even once, the *pointwise lower-bound* guarantee is broken, because it requires the inequality to hold **everywhere** without exception.
 
-Instead it guarantees a **lower bound in expectation** (on **average** rather than at every **single point**) under the 
-current policy.
-$$\mathbb{E}_{a \sim \pi_{\text{off}}}[Q_\varphi(s,a)] \leq \mathbb{E}_{a \sim \pi_{\text{off}}}[Q^*(s,a)]$$
+Instead it guarantees a **lower bound in expectation** (on **average** rather than at every **single point**) under the current policy:
+
+```math
+\mathbb{E}_{a \sim \pi_{\text{off}}}[Q_\varphi(s,a)] \leq \mathbb{E}_{a \sim \pi_{\text{off}}}[Q^*(s,a)]
+```
 
 -  "**Best performance in practice** "(Kumar et al., 2020)
 
