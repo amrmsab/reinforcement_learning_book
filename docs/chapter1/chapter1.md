@@ -1,89 +1,20 @@
-<!-- # Introduction to Reinforcement Learning
-
-## What is Reinforcement Learning
- Reinforcement Learning (RL) is a branch of Machine Learning (ML) that focuses on how an agent should take actions in an environment to maximize the reward it receives.
-
- RL refers to a type of problem, a class of solution methods that work well on these problems, and a field of study that focuses on these problems and solution methods.
-
-### Distinguishing features of an RL problem
-1. RL problems are closed-loop systems. A closed-loop system means the agent's actions influence its later inputs.
-2. There is no supervisor that guides the agent on which action to take.
-3. The consequences of actions play out over extended time periods.
-
-<div align="center">
-  <img src="Chapter%201%20Closed%20loop%20figure%20sutton%20and%20barto.webp" alt="Closed Loop" width="60%">
-  <p style="font-size: 0.9em;"><em>Figure 1.1: An agent-environment closed-loop diagram</em></p>
-</div>
-
-## Formulation of an RL problem
-An RL agent requires an explicit goal dependent on its environment's state. Therefore, the agent must sense the state of the environment (to some extent) and possess the ability to affect the state through actions. These three aspects — sensation, action, and a goal — are the simplest form of an RL problem. Any method that is well-suited to solve problems with these aspects can be considered an RL solution method.
-
-## Comparison with other learning paradigms
-
-### Supervised Learning
-
-<div align="center">
-  <img src="supervised-machine-learning.webp" alt="Supervised Learning" width="60%">
-  <p style="font-size: 0.9em;"><em>Figure 1.2: Supervised Learning</em></p>
-</div>
-
-Supervised learning is learning from a training set of labeled examples provided by a knowledgeable external supervisor. Each example is a description of a situation or state of the environment, and its label is the correct action the agent must do in that situation. It is often used to classify the input into the category to which it belongs. The objective of supervised learning is for the agent or system to generalize its responses so that it acts correctly in situations not present in the training set. 
-
-
-
-This type of learning is not adequate for learning from interaction. In interactive problems, it is often impractical to obtain examples of desired behavior that are both correct and representative of all situations in which the agent has to act. In uncharted territory, we would like the agent to learn from its own experience.
-
-### Unsupervised Learning
-
-<div align="center">
-  <img src="Unsupervised-Learning.jpg" alt="Unsupervised Learning" width="60%">
-  <p style="font-size: 0.9em;"><em>Figure 1.3: Unsupervised Learning</em></p>
-</div>
-
-Unsupervised learning is typically about finding structure hidden in collections of unlabeled data. Even though one might be tempted to think of RL as an unsupervised learning method, they differ in their goals; unsupervised learning tries to find hidden structure, while RL does not. We, therefore, consider RL to be a third ML paradigm.
-
-### Unique challenges in RL
-There are challenges that arise in RL and not in other types of learning, such as the trade-off between exploration and exploitation. For the agent to obtain a high reward, it must prefer actions that it has tried in the past and found to be effective in producing reward. However, to discover such actions, it has to try actions that it has not selected before. The agent has to exploit what it already knows in order to obtain reward, but also has to explore in order to make better action selections in the future. The dilemma is that neither exploration nor exploitation can be pursued exclusively without failing the task. The agent must try a variety of actions and progressively favor those that appear to be best.
-
-Another key feature of RL is that it explicitly considers the whole problem of a goal-directed agent interacting with an uncertain environment. This is different from many approaches which consider subproblems without addressing how they might fit into the larger picture, such as classifiers trained with supervised learning.
-
-### Examples of RL problems
-
-<div align="center">
-  <img src="gazelle.avif" alt="Gazelle Calf learning to run" width="60%">
-  <p style="font-size: 0.9em;"><em>Figure 1.4: Gazelle calf learning to run</em></p>
-</div>
-
-RL starts with a complete interactive goal-seeking agent. The agent has an explicit goal, can sense its environment, and can choose actions that affect the state of the environment. It is usually assumed that the agent has to operate despite uncertainty about the environment. For example, when a chess player makes a move, their choice is informed both by planning and by intuitive judgment of the desirability of the new position.
-
-A gazelle calf struggles to its feet minutes after being born, yet half an hour later it is running at two miles per hour. This example show the agent interacting with its environment to achieve a goal, despite uncertainty. Correct choices require taking into account the indirect, delayed consequences of actions and thus may require foresight or planning. Also, the effects of actions cannot be fully predicted; thus, the agent must monitor its environment frequently and react appropriately.
-
-## Main Subelements of an RL system
-There are four main subelements that make up an RL system: a policy, a reward signal, a value function, and optionally a model of the environment. The model is optional because not all RL methods require planning.
-
-### 1. Policy
-A policy defines the agent's way of behaving at a given time. It is a mapping from perceived states to actions to be taken in these states, corresponding to a set of stimulus-response rules. The policy may be a simple function or a lookup table, or it might involve extensive computation such as a search process.
-
-The policy is the core of an RL agent in the sense that it alone is sufficient to determine its behavior.
-
-### 2. Reward Signal
-A reward signal defines the goal in an RL problem. On each time step, the environment sends to the agent a single number, the reward. The agent's sole objective is to maximize the total reward it receives over the long run. The reward signal thus defines what are the good and bad events for the agent. The reward sent to the agent depends on the agent's action and the state of the environment. The agent cannot directly alter this process, so the only way the agent can influence the reward signal is through its actions, which can have a direct effect on the reward or an indirect effect through changing the environment state. The reward signal is the primary basis for altering the policy.
-
-### 3. Value Function
-The value function specifies what is good in the long run. The value of a state is the total amount of reward an agent can expect to accumulate over the future, starting from that state. It indicates the long-term desirability of states after taking into account the rewards available in those states.
-
-Rewards are in a sense primary, whereas values—which are predictions and aggregations of future rewards—are secondary. Without rewards, there could be no value, and the only purpose of values is to accumulate more reward. Nevertheless, it is values that we are most concerned about when making and evaluating decisions. Action choices are made based on value judgments because these metrics obtain the greatest amount of reward over the long run. Unfortunately, it is much harder to determine values than it is to determine rewards. Rewards are given directly by the environment, whereas values must be estimated and re-estimated from the sequences of observations an agent makes over its entire lifetime. In fact, the most important component of all RL algorithms is a method for effectively estimating values.
-
-### 4. Model of the Environment
-The model is something that mimics the behavior of the environment, allowing inferences to be made about how the environment will behave. Models are used for planning. RL problems that use models and planning are called model-based methods, as opposed to simpler model-free methods that are explicitly trial-and-error learners.
-
-
-With these four subelements in place, we can now begin to formalize the RL framework mathematically — which we will do in the next chapter. -->
-
 # Introduction to Reinforcement Learning
 
-Omar Abu Shanab
+Author: [Omar Abu Shanab](https://www.linkedin.com/in/omar-abu-shanab-46b164131/)
 
+
+---
+
+## Chapter Overview & Agenda
+
+Welcome to the introduction to Reinforcement Learning (RL). This chapter establishes the foundational concepts, intuition, and vocabulary necessary before diving into the formal mathematics of RL systems. 
+
+Here is what you can expect to learn:
+* **The Core Concept of RL:** Understanding how an agent learns through interaction, driven by delayed consequences and the absence of an external supervisor.
+* **RL vs. Other Paradigms:** How Reinforcement Learning distinguishes itself from Supervised and Unsupervised Learning as a distinct, third paradigm of Machine Learning.
+* **The Exploration-Exploitation Trade-off:** The fundamental dilemma of balancing the discovery of new actions with the execution of known, rewarding ones.
+* **The n-Armed Bandit Problem:** A simplified, stateless scenario used to isolate and study this core trade-off using action-value methods.
+* **The Four Pillars of an RL System:** A detailed breakdown of the essential components that dictate an RL agent's behavior: the Policy, the Reward Signal, the Value Function, and (optionally) a Model of the environment.
 ---
 
 ## What is Reinforcement Learning?
@@ -101,8 +32,9 @@ Rather than learning from labeled examples or discovering hidden patterns in dat
 | **Delayed consequences** | The effects of actions play out over extended time periods, not just immediately |
 
 <div align="center">
-  <img src="Chapter%201%20Closed%20loop%20figure%20sutton%20and%20barto.webp" alt="Closed Loop" width="60%">
-  <p><em>Figure 1.1 — The agent–environment closed-loop: the agent observes state and reward, selects an action, and the environment transitions accordingly.</em></p>
+  <img src="RL feedback loop.png" alt="Closed Loop" width="60%">
+  <p style="font-size: 0.9em; margin-bottom: 0;"><em>Figure 1.1 — The agent–environment closed-loop: the agent observes state and reward, selects an action, and the environment transitions accordingly.</em></p>
+  <span style="color: gray; font-size: 0.9em;"> (Source: Sutton & Barto, 2018) </span>
 </div>
 
 > **Example — Learning to Drive:** When you first learn to drive, no instructor controls the steering wheel for you. You observe the road (state), decide when to turn or brake (action), and feel the outcome — staying in lane or drifting off (reward signal). Over many attempts, you improve. This is the RL loop in everyday life.
@@ -127,8 +59,10 @@ Any method well-suited to problems with these three aspects can be considered an
 
 <div align="center">
   <img src="supervised-machine-learning.webp" alt="Supervised Learning" width="60%">
-  <p><em>Figure 1.2 — In supervised learning, a labeled dataset guides the learner toward correct outputs.</em></p>
+  <p style="font-size: 0.9em; margin-bottom: 0;"><em>Figure 1.2: Supervised Learning</em></p>
+  <span style="color: gray; font-size: 0.9em;">(Source: GeeksforGeeks)</span>
 </div>
+
 
 Supervised learning uses a training set of labeled examples provided by a knowledgeable external supervisor. Each example pairs a situation with the correct action or label. The goal is for the agent to **generalize** — to act correctly in situations not seen during training.
 
@@ -137,8 +71,10 @@ This approach falls short in interactive settings. In real-world interaction, it
 ### Unsupervised Learning
 
 <div align="center">
-  <img src="Unsupervised-Learning.jpg" alt="Unsupervised Learning" width="60%">
-  <p><em>Figure 1.3 — Unsupervised learning seeks hidden structure in unlabeled data.</em></p>
+  <img src="unsupervised learning.png" alt="Unsupervised Learning" width="60%">
+  <p style="font-size=0.9em; margin-bottom: 0;"><em>Figure 1.3 — Unsupervised learning seeks hidden structure in unlabeled data.
+  </em></p>
+  <span style="color: gray; font-size: 0.9em;"> (Source: Hosseini et al., 2019) </span>
 </div>
 
 Unsupervised learning finds hidden structure in collections of unlabeled data. While RL also receives no labeled examples, it is *not* unsupervised learning — its goal is to maximize a reward signal, not to uncover structure. This distinction makes RL a **third, distinct ML paradigm**.
@@ -156,24 +92,32 @@ Unsupervised learning finds hidden structure in collections of unlabeled data. W
 
 The most distinctive challenge in RL is the **exploration–exploitation trade-off**:
 
-- To earn reward, the agent must *exploit* actions it already knows to be effective
-- To find better actions, it must *explore* unfamiliar options
-- Pursuing either exclusively leads to failure
+- To earn reward, the agent must *exploit* actions it already knows to be effective.
+- To find better actions, it must *explore* unfamiliar options.
 
-Neither exploration nor exploitation can dominate. The agent must try a variety of actions and progressively favor those that appear best.
+Pursuing either strategy exclusively guarantees failure, as the agent will fall into one of two traps:
 
-> **Example — A New Restaurant in Town:** Imagine you have a favorite restaurant (exploitation). A new place opens nearby — it might be better, or worse. Do you try it (exploration) or stick to what you know? The optimal diner balances both: occasionally trying new options while returning to proven favorites.
+* **The Trap of Pure Exploitation (Suboptimal Stagnation):** If an agent only exploits, it acts greedily based solely on its limited initial experience. It will quickly lock onto the first action that yields a positive reward and repeat it forever, getting stuck in a "local optimum." It survives, but it leaves massive potential rewards on the table because it refuses to try anything new.
+* **The Trap of Pure Exploration (Random Thrashing):** If an agent only explores, it effectively acts at random forever. It never capitalizes on the knowledge it has gathered to actually harvest rewards. The agent wastes time, energy, and potential score by continuously testing known bad actions simply because they are available.
+
+Neither exploration nor exploitation can dominate. The agent must try a variety of actions and progressively favor those that appear best, shifting its balance as it learns about its environment.
+
+> **Example — A New Restaurant in Town:**
+> * **Pure Exploitation:** You eat at your usual, decent restaurant every single night. You never risk a bad meal, but you permanently miss out on discovering the incredible 5-star place that just opened next door.
+> * **Pure Exploration:** You force yourself to try a new place every single night, regardless of reviews. You might discover the 5-star place, but you never return to it, and you inevitably eat at places that give you food poisoning. 
+> 
+> The optimal diner balances both: occasionally taking a risk on new options to update their knowledge (exploration) while predominantly returning to proven favorites to actually enjoy their dinner (exploitation).
 
 ---
-
 ## Examples of RL Problems
 
 <div align="center">
-  <img src="gazelle.avif" alt="Gazelle Calf learning to run" width="60%">
-  <p><em>Figure 1.4 — A gazelle calf struggles to its feet minutes after birth; within half an hour it runs at speed. No instructor guided it — only the consequences of each attempt.</em></p>
+  <img src="gazelle calf.jpeg" alt="Gazelle Calf learning to run" width="60%">
+  <p style="font-size:0.9em; margin-bottom: 0;"><em>Figure 1.4 — A gazelle calf struggles to its feet minutes after birth; within half an hour it runs at speed. No instructor guided it — only the consequences of each attempt.</em></p>
+  <span style="color: gray; font-size:0.9em;"> (Source: www.oregonlive.com) </span>
 </div>
 
-RL problems share a common structure: an agent with an explicit goal interacts with an uncertain environment, where correct choices require accounting for indirect, delayed consequences. Consider these examples from Sutton & Barto:
+RL problems share a common structure: an agent with an explicit goal interacts with an uncertain environment, where correct choices require accounting for indirect, delayed consequences. Consider these examples from Sutton & Barto, 2018:
 
 - A **chess player** chooses moves informed by both explicit planning and intuitive judgment about position desirability
 - A **petroleum refinery controller** adjusts parameters in real time to optimize yield, cost, and quality trade-offs
@@ -254,6 +198,18 @@ The **value of a state** is the total amount of reward an agent can expect to ac
 
 $$V^\pi(s) = \mathbb{E}\left[ \sum_{t=0}^{\infty} \gamma^t R_t \;\middle|\; S_0 = s, \pi \right]$$
 
+To understand what this means, let's break down the notation piece by piece:
+
+* **$V^\pi(s)$**: The expected **Value** of being in state **$s$**, assuming the agent strictly follows policy **$\pi$**.
+* **$\mathbb{E}$**: The **Expected Value**. Because environments can be unpredictable, we calculate the mathematical average of all possible future outcomes.
+* **$\sum_{t=0}^{\infty}$**: The sum of all future steps, from right now (**$t=0$**) until the end of time (**$\infty$**).
+* **$\gamma$** (gamma): The **Discount Factor** (a number between 0 and 1). It penalizes delayed rewards, representing the idea that a reward received right now is worth more than a reward received much later.
+* **$R_t$**: The immediate **Reward** received at time step **$t$**.
+* **$\mid$**: "Given that." It establishes the starting conditions for the calculation.
+* **$S_0 = s, \pi$**: The starting conditions: we begin at time zero in our specific state (**$s$**), and all future actions are chosen by our policy (**$\pi$**).
+
+In plain English: *The value of a state is the expected sum of all future discounted rewards, given that we start in that state and follow our current policy.*
+
 > **Example — The Queen's Gambit (Chess):** In the Queen's Gambit opening, White offers a pawn (1.d4 d5 2.c4). Black can capture it, gaining immediate material reward. But White's *value* calculation tells a different story: accepting the gambit hands White rapid development and central control, which translates into a decisive long-term advantage. The captured pawn has high *immediate reward*; the resulting position has low *value*. A strong player sacrifices the immediate reward to pursue states of higher value.
 
 This distinction is critical:
@@ -287,7 +243,7 @@ With these four subelements — **policy, reward signal, value function, and mod
 
 The central insight of this chapter is worth stating plainly:
 
-> *Reinforcement learning is distinguished from other computational approaches by its emphasis on learning by an agent from direct interaction with its environment, without relying on exemplary supervision or complete models of the environment.* — Sutton & Barto
+> *Reinforcement learning is distinguished from other computational approaches by its emphasis on learning by an agent from direct interaction with its environment, without relying on exemplary supervision or complete models of the environment.* — Sutton & Barto, 2018
 
 The exploration–exploitation trade-off, the distinction between reward and value, and the role of policy as the behavioral core of an agent are themes that will recur throughout this seminar.
 
@@ -299,16 +255,15 @@ The exploration–exploitation trade-off, the distinction between reward and val
 * Sutton, R. S., & Barto, A. G. (2018). Reinforcement learning: An introduction (2nd ed.). MIT Press.
 * Hess, Shervin. "Speke's Gazelle Juliet Runs in the Africa Savanna Habitat." The Oregonian/OregonLive, Oregon Zoo, <https://www.oregonlive.com/living/2016/04/baby_gazelle_that_nearly_died.html>
 * GeeksforGeeks. "Supervised Machine Learning" GeeksforGeeks, 14 Apr. 2026, <https://www.geeksforgeeks.org/machine-learning/supervised-machine-learning/>.
-* WisdomPlexus. "Supervised Learning vs Unsupervised Learning: Key Differences To Know." WisdomPlexus, 31 May 2024, <https://www.wisdomplexus.com>.
+* Hosseini, Parsa, et al. "Multimodal Analysis in Biomedicine." 28 Jan. 2019.
 ---
 To cite this, please use the following bibtex:
 
 ```bibtex
 @misc{Abushanab_2026_ReinforcementLearning,
   author       = {Omar Abu Shanab},
-  title        = {Reinforcement Learning: A Gentle Introduction, Chapter #},
+  title        = {Reinforcement Learning: A Gentle Introduction, Chapter 1},
   year         = {2026},
   publisher    = {GitHub},
-  howpublished = {\url{https://github.com/amrmsab/reinforcement_learning_book}},
-  note         = {Accessed: April 30, 2026}
+  howpublished = {\url{https://github.com/amrmsab/reinforcement_learning_book}}
 }
