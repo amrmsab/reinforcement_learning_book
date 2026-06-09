@@ -312,6 +312,8 @@ Two paths exist:
 - A **safe path** that arcs far above the cliff.
 - An **optimal path** that runs directly along the cliff's edge.
 
+![SARSA vs Q-Learning paths on Cliff Walking](images/CliffWalkingPaths.svg)
+
 ### SARSA Takes the Safe Path
 
 Because SARSA learns under the same exploratory policy it uses to act, it _accounts for its own exploration_. Near the cliff edge, an exploratory action could push the agent off, incurring the large penalty. SARSA's values reflect this risk. As a result, the agent learns to stay farther from the cliff and follows the safer, longer route.
