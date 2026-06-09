@@ -2,7 +2,16 @@
 #### Author: Mohammad Tarek Wahby
 
 ---
+## Table of Contents
+ - [Introduction to Dynamic Programming](#31-Dynamic-Programming)
+ - [Policy Evaluation](#32-Policy-Evaluation)
+ - [Policy Iteration](#33-Policy-Improvement)
+ - [Value Iteration](#34-Policy-Iteration)
+ - [Asynchronous Dynamic Programming](#36-Asynchronous-Dynamic-Programming)
+ - [Advantages & Drawbacks of Dynamic Programming](#37-Advantages--Drawbacks-of-Dynamic-Programming)
+ - [References](#References)
 
+---
 ## 3.1 Dynamic Programming
 
 Dynamic Programming (DP) is an algorithmic technique used for solving complex problems by breaking them into smaller overlapping simpler subproblems.
