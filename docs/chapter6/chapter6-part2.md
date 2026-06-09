@@ -252,6 +252,8 @@ Once converged, selecting the best action from any state is straightforward: at 
 
 ## Cliff Walking: The Behavioral Difference
 
+![Cliff Walking Example](images/CliffWalkingExample.png)
+
 The Cliff Walking task makes the practical difference between SARSA and Q-Learning vivid. The agent starts at S and must reach G, but a cliff runs along the bottom of the grid. Falling off the cliff gives a reward of −100.
 
 Two paths exist:
