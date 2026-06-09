@@ -157,14 +157,14 @@ The agent reached the goal and collected the +100 reward. **Q(1,5) is now 50.** 
 
 After Episode 1:
 
-|       | 0   | 1   | 2   | 3   | 4   | **5**  |
-| ----- | --- | --- | --- | --- | --- | ------ |
-| 0     | 0   | 0   | 0   | 0   | 0   | 0      |
-| **1** | 0   | 0   | 0   | 0   | 0   | **50** |
-| 2     | 0   | 0   | 0   | 0   | 0   | 0      |
-| 3     | 0   | 0   | 0   | 0   | 0   | 0      |
-| 4     | 0   | 0   | 0   | 0   | 0   | 0      |
-| 5     | 0   | 0   | 0   | 0   | 0   | 0      |
+|     | 0   | 1   | 2   | 3   | 4   | 5      |
+| --- | --- | --- | --- | --- | --- | ------ |
+| 0   | 0   | 0   | 0   | 0   | 0   | 0      |
+| 1   | 0   | 0   | 0   | 0   | 0   | **50** |
+| 2   | 0   | 0   | 0   | 0   | 0   | 0      |
+| 3   | 0   | 0   | 0   | 0   | 0   | 0      |
+| 4   | 0   | 0   | 0   | 0   | 0   | 0      |
+| 5   | 0   | 0   | 0   | 0   | 0   | 0      |
 
 ### SARSA — Episode 2
 
@@ -190,14 +190,14 @@ $$Q(1,5) \leftarrow 50 + 0.5\left[100 + 0.5(0) - 50\right] = 50 + 0.5(50) = 75$$
 
 After Episode 2:
 
-|       | 0   | 1        | 2   | 3   | 4   | **5**  |
-| ----- | --- | -------- | --- | --- | --- | ------ |
-| 0     | 0   | 0        | 0   | 0   | 0   | 0      |
-| **1** | 0   | 0        | 0   | 0   | 0   | **75** |
-| 2     | 0   | 0        | 0   | 0   | 0   | 0      |
-| **3** | 0   | **12.5** | 0   | 0   | 0   | 0      |
-| 4     | 0   | 0        | 0   | 0   | 0   | 0      |
-| 5     | 0   | 0        | 0   | 0   | 0   | 0      |
+|     | 0   | 1        | 2   | 3   | 4   | 5      |
+| --- | --- | -------- | --- | --- | --- | ------ |
+| 0   | 0   | 0        | 0   | 0   | 0   | 0      |
+| 1   | 0   | 0        | 0   | 0   | 0   | **75** |
+| 2   | 0   | 0        | 0   | 0   | 0   | 0      |
+| 3   | 0   | **12.5** | 0   | 0   | 0   | 0      |
+| 4   | 0   | 0        | 0   | 0   | 0   | 0      |
+| 5   | 0   | 0        | 0   | 0   | 0   | 0      |
 
 The key insight is clear: **reward information propagates backward** through the Q-table, one step per episode. Q(1,5) grows as the agent keeps reaching the goal; Q(3,1) gains value because it leads to state 1, which leads to the goal.
 
@@ -217,6 +217,17 @@ $$Q(1,5) \leftarrow 0 + 0.5\left[100 + 0.5 \cdot \max_a Q(5,a) - 0\right] = 0 + 
 
 Same result as SARSA — Q(1,5) = 50.
 
+After Episode 1:
+
+|     | 0   | 1   | 2   | 3   | 4   | 5      |
+| --- | --- | --- | --- | --- | --- | ------ |
+| 0   | 0   | 0   | 0   | 0   | 0   | 0      |
+| 1   | 0   | 0   | 0   | 0   | 0   | **50** |
+| 2   | 0   | 0   | 0   | 0   | 0   | 0      |
+| 3   | 0   | 0   | 0   | 0   | 0   | 0      |
+| 4   | 0   | 0   | 0   | 0   | 0   | 0      |
+| 5   | 0   | 0   | 0   | 0   | 0   | 0      |
+
 ### Episode 2 — Q-Learning
 
 **Move 4 → 3:** $\max Q(3, \cdot) = 0$, so the update yields zero.
@@ -229,7 +240,47 @@ $$Q(3,1) \leftarrow 0 + 0.5\left[0 + 0.5 \cdot \max(Q(1,3),\ Q(1,5)) - 0\right] 
 
 $$Q(1,5) \leftarrow 50 + 0.5\left[100 + 0.5 \cdot \max_a Q(5,a) - 50\right] = 75$$
 
-The numerical results in these early episodes are identical to SARSA. The difference emerges as the policy becomes more defined. In SARSA, the next action $A'$ depends on exploration — the agent might not always select the greedy action, which can dampen propagation. In Q-Learning, the target is always the maximum, which is the greedy action's value regardless of what the agent actually does. This causes Q-Learning to converge directly toward optimal values.
+After Episode 2:
+
+|     | 0   | 1        | 2   | 3   | 4   | 5      |
+| --- | --- | -------- | --- | --- | --- | ------ |
+| 0   | 0   | 0        | 0   | 0   | 0   | 0      |
+| 1   | 0   | 0        | 0   | 0   | 0   | **75** |
+| 2   | 0   | 0        | 0   | 0   | 0   | 0      |
+| 3   | 0   | **12.5** | 0   | 0   | 0   | 0      |
+| 4   | 0   | 0        | 0   | 0   | 0   | 0      |
+| 5   | 0   | 0        | 0   | 0   | 0   | 0      |
+
+The numerical results in these early episodes are identical to SARSA. The difference emerges as the policy becomes more defined. In SARSA, the next action $A'$ depends on exploration — the agent might not always select the greedy action, which can dampen propagation. In Q-Learning, the target is always the maximum, so value propagation is never interrupted by exploration noise.
+
+### Where They Diverge
+
+The two algorithms produce identical updates only when the ε-greedy policy happens to pick the greedy action as A'. The split appears the moment it picks a suboptimal one.
+
+**Setup**: After episode 1, Q(1,5) = 50 in both algorithms. All other Q-values are 0.
+
+**Episode 2, step: Move 3 → 1.** At state 1, the ε-greedy policy must select A'. Suppose exploration fires and picks **A' = 3** (room 3, Q-value = 0) instead of the greedy **A' = 5** (Q-value = 50).
+
+**SARSA** — uses the actual next action A' = 3:
+
+$$Q(3,1) \leftarrow 0 + 0.5\left[0 + 0.5 \cdot Q(1,3) - 0\right] = 0 + 0.5\left[0 + 0.5 \times 0\right] = \mathbf{0}$$
+
+The exploratory choice zeroed the bootstrap. No value propagates back to Q(3,1). The episode also continues along the exploratory path (agent moves to room 3, not room 5), so Q(1,5) is never updated this episode either.
+
+**Q-Learning** — same step, same transition, same exploratory behavior, but uses max regardless:
+
+$$Q(3,1) \leftarrow 0 + 0.5\left[0 + 0.5 \cdot \max_a Q(1,a) - 0\right] = 0 + 0.5\left[0 + 0.5 \times 50\right] = \mathbf{12.5}$$
+
+Q-Learning ignores which action was chosen and always bootstraps from the highest available Q-value. The actual next action the agent takes is still chosen by ε-greedy — only the _update target_ is fixed to the max.
+
+**Q-tables after episode 2 (exploratory scenario):**
+
+| Algorithm  | Q(3,1)   | Q(1,5) |
+| ---------- | -------- | ------ |
+| SARSA      | **0**    | 50     |
+| Q-Learning | **12.5** | 50     |
+
+Both agents followed the same trajectory and the same exploratory action. Only the Q-update differs. This is the core asymmetry: SARSA's Q-values are shaped by what the agent actually did — exploration included. Q-Learning's values are exploration-agnostic; the update is decoupled from behavior.
 
 ---
 
@@ -237,14 +288,14 @@ The numerical results in these early episodes are identical to SARSA. The differ
 
 After many episodes, repeated exploration gradually fills in the Q-table. Values propagate further and further from the goal, until every reachable state has a stable Q-value estimate. The table converges to something like:
 
-|       | 0   | 1   | 2   | 3   | 4   | **5**   |
-| ----- | --- | --- | --- | --- | --- | ------- |
-| 0     | 0   | 0   | 0   | 0   | 80  | 0       |
-| **1** | 0   | 0   | 0   | 60  | 0   | **100** |
-| 2     | 0   | 0   | 0   | 50  | 0   | 0       |
-| 3     | 0   | 70  | 40  | 0   | 65  | 0       |
-| **4** | 55  | 0   | 0   | 75  | 0   | **90**  |
-| 5     | 0   | 0   | 0   | 0   | 0   | 0       |
+|     | 0   | 1   | 2   | 3   | 4   | 5       |
+| --- | --- | --- | --- | --- | --- | ------- |
+| 0   | 0   | 0   | 0   | 0   | 80  | 0       |
+| 1   | 0   | 0   | 0   | 60  | 0   | **100** |
+| 2   | 0   | 0   | 0   | 50  | 0   | 0       |
+| 3   | 0   | 70  | 40  | 0   | 65  | 0       |
+| 4   | 55  | 0   | 0   | 75  | 0   | **90**  |
+| 5   | 0   | 0   | 0   | 0   | 0   | 0       |
 
 Once converged, selecting the best action from any state is straightforward: at each state, pick the action with the **highest Q-value** in that row. For example, from state 3, the highest value is Q(3,1) = 70, so the agent moves to room 1. From room 1, Q(1,5) = 100, so the agent moves directly to the goal. The learned Q-table encodes a complete navigation policy without any further computation.
 
@@ -275,6 +326,15 @@ This is not a flaw in either algorithm — it is a feature. SARSA learns the bes
 
 ## SARSA vs. Q-Learning: Direct Comparison
 
+The single structural difference between the two algorithms is the bootstrap target:
+
+| Algorithm  | Update target                                             |
+| ---------- | --------------------------------------------------------- |
+| SARSA      | $R + \gamma\, Q(S', A')$ — action actually taken          |
+| Q-Learning | $R + \gamma\, \max_{a'} Q(S', a')$ — best possible action |
+
+Everything that follows — convergence behavior, safety, sample efficiency — flows from this one substitution.
+
 ### What Each Converges To
 
 Both algorithms converge, but to different targets:
@@ -284,10 +344,10 @@ Both algorithms converge, but to different targets:
 
 ### Online Performance vs. Final Policy Quality
 
-| | SARSA | Q-Learning |
-|---|---|---|
-| **During training** | Safer — avoids high-risk states | May incur penalties from exploratory slips |
-| **Deployed policy** | Near-optimal (epsilon-dependent) | Optimal (deploy with $\varepsilon = 0$) |
+|                     | SARSA                            | Q-Learning                                 |
+| ------------------- | -------------------------------- | ------------------------------------------ |
+| **During training** | Safer — avoids high-risk states  | May incur penalties from exploratory slips |
+| **Deployed policy** | Near-optimal (epsilon-dependent) | Optimal (deploy with $\varepsilon = 0$)    |
 
 The cliff walking example illustrates this exactly. SARSA prices in the risk of falling off the cliff because it knows it explores. Q-Learning ignores that risk in its values — it learns the cliff-edge path because that is what a greedy agent would take.
 
