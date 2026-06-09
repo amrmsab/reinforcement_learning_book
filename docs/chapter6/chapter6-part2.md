@@ -273,6 +273,41 @@ This is not a flaw in either algorithm — it is a feature. SARSA learns the bes
 
 ---
 
+## SARSA vs. Q-Learning: Direct Comparison
+
+### What Each Converges To
+
+Both algorithms converge, but to different targets:
+
+- **SARSA** converges to the optimal policy **for the exploring agent**. Its Q-values reflect that exploratory actions will occasionally be taken — so near-risky states, those risks are priced in. As $\varepsilon \to 0$, SARSA's solution gradually approaches Q-Learning's.
+- **Q-Learning** converges to **Q\***, the true optimal action-value function, independent of exploration. The policy it learns assumes the agent will act greedily at deployment.
+
+### Online Performance vs. Final Policy Quality
+
+| | SARSA | Q-Learning |
+|---|---|---|
+| **During training** | Safer — avoids high-risk states | May incur penalties from exploratory slips |
+| **Deployed policy** | Near-optimal (epsilon-dependent) | Optimal (deploy with $\varepsilon = 0$) |
+
+The cliff walking example illustrates this exactly. SARSA prices in the risk of falling off the cliff because it knows it explores. Q-Learning ignores that risk in its values — it learns the cliff-edge path because that is what a greedy agent would take.
+
+### Exploration Sensitivity
+
+SARSA's Q-values are tied to the exploration strategy. Changing $\varepsilon$ changes the policy, which changes the Q-values. Q-Learning's Q-values are **decoupled from behavior** — you can explore aggressively to cover the state space and still converge to the optimal greedy policy.
+
+This decoupling is what enables Q-Learning to support **experience replay**: old transitions can be stored and reused, since the update does not depend on the current policy. SARSA cannot use experience replay in the same way — its update must reflect the policy that was active when the data was collected.
+
+### Computation
+
+Both algorithms require a single lookup and one update per step — O(1) per transition. Q-Learning adds a `max` over the action space in the next state, which is negligible for small discrete action spaces but grows linearly with the number of actions.
+
+### When to Use Which
+
+- **SARSA** — when mistakes during training are costly: physical robots, safety-critical systems, or any setting where the agent cannot afford to explore recklessly. The learned policy is well-calibrated to an agent that still explores.
+- **Q-Learning** — when training safety is not a concern and you want the best possible final policy. Also the natural choice when learning from stored or offline data, since it is off-policy by design.
+
+---
+
 ## Final Takeaways
 
 - **TD control** applies TD updates to action-value functions to learn decision-making policies directly from experience.
