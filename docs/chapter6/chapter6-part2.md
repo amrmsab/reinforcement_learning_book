@@ -253,6 +253,12 @@ After Episode 2:
 
 The numerical results in these early episodes are identical to SARSA. The difference emerges as the policy becomes more defined. In SARSA, the next action $A'$ depends on exploration — the agent might not always select the greedy action, which can dampen propagation. In Q-Learning, the target is always the maximum, so value propagation is never interrupted by exploration noise.
 
+As training continues, this distinction shows up in how quickly each algorithm's Q-values stabilize:
+
+![TD Error convergence: Q-Learning vs SARSA](images/TDErrorConvergence.svg)
+
+Q-Learning's TD error drops to near zero — its Q-values converge to the true optimal Q\*. SARSA's error plateaus slightly higher because it keeps bootstrapping off exploratory actions; its Q-values stabilize at the best policy _for an epsilon-greedy agent_, not the globally optimal one. The gap (Δ) represents this residual exploration bias.
+
 ### Where They Diverge
 
 The two algorithms produce identical updates only when the ε-greedy policy happens to pick the greedy action as A'. The split appears the moment it picks a suboptimal one.
@@ -380,3 +386,9 @@ Both algorithms require a single lookup and one update per step — O(1) per tra
 - Once **convergence** is reached, the Q-table provides a complete policy: at each state, choose the action with the highest Q-value.
 
 > **SARSA** = on-policy control. **Q-Learning** = off-policy control. The difference is a single letter in the update rule — but it defines how, and how safely, the agent learns.
+
+### References
+
+**References:**
+
+- [Sutton, R. S., & Barto, A. G. (2018). _Reinforcement Learning: An Introduction_ (2nd ed.). MIT Press. (Specifically Chapter 6: Temporal-Difference Learning, pp. 143-154)](https://web.stanford.edu/class/psych209/Readings/SuttonBartoIPRLBook2ndEd.pdf).
