@@ -2,10 +2,10 @@ site_name: Reinforcement Learning
 
 nav:
   - Home: index.md
-  # - Chapter 1 - Introduction: chapter1/chapter1.md
-  # - Chapter 2 - Markov Decision Processes:
-  #     - Part 1 – Fundamentals: chapter2/chapter2-part1.md
-  #     - Part 2 – Advanced Topics: chapter2/chapter2-part2.md
+  - Chapter 1 - Introduction to RL: chapter1/chapter1.md
+  - Chapter 2 - Markov Decision Processes:
+      - Part 1 – Markov Decision Processes: chapter2/chapter2-part1.md
+      - Part 2 – Policy Iteration on MDPs: chapter2/chapter2-part2.md
   # - Chapter 3 - Dynamic Programming: chapter3/chapter3.md
   # - Chapter 4 - Monte Carlo Methods: chapter4/chapter4.md
   # - Chapter 5 - Function Approximation: chapter5/chapter5.md
@@ -14,7 +14,7 @@ nav:
       - Part 2 – SARSA and Q-learning (On- and Off-Policy learning): chapter6/chapter6-part2.md
   - Chapter 7 - Policy Gradient Methods: chapter7/chapter7.md
   # - Chapter 8 - Deep Reinforcement Learning: chapter8/chapter8.md
-  # - Chapter 9 - Applications in Robotics: chapter9/chapter9.md
+  - Chapter 9 - Applications in Robotics and Control: chapter9/chapter9.md
   # - Chapter 10 - Applications in Control: chapter10/chapter10.md
   # - Chapter 11 - Applications in Games: chapter11/chapter11.md
   # - Chapter 12 - Applications in [Select Domain]: chapter12/chapter12.md
@@ -25,5 +25,15 @@ theme:
   name: material
 
 markdown_extensions:
+  - admonition
+  - codehilite
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - pymdownx.details
+  - pymdownx.tabbed
+  - pymdownx.tasklist
   - pymdownx.arithmatex:
       generic: true
+
+extra_javascript:
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
