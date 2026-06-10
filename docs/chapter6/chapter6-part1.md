@@ -1,11 +1,8 @@
 # Chapter 6: Temporal-Difference Learning (TD)
 
-In previous chapters, we have explored two fundamental approaches to Reinforcement Learning. Dynamic Programming (DP) gave us a powerful way to solve problems, but it required a perfect map of the environment's rules. Conversely, Monte Carlo (MC) methods allowed an agent to learn from direct experience, but forced it to wait until the end of an entire episode before any learning could occur. This leaves us at a crucial crossroads: Is there a way to combine the strengths of both? This chapter introduces Temporal-Difference (TD) learning, a novel and central idea in RL that elegantly merges these two worlds. 
+Author: [Radwa Ibrahim](https://github.com/Radwa-Ibrahim0)
 
-
-## Section 1: Prediction
-**Author:** Radwa Ibrahim
-**GitHub:** [https://github.com/Radwa-Ibrahim0](https://github.com/Radwa-Ibrahim0)
+In previous chapters, we have explored two fundamental approaches to Reinforcement Learning. Dynamic Programming (DP) gave us a powerful way to solve problems, but it required a perfect map of the environment's rules. Conversely, Monte Carlo (MC) methods allowed an agent to learn from direct experience, but forced it to wait until the end of an entire episode before any learning could occur. This leaves us at a crucial crossroads: Is there a way to combine the strengths of both? This chapter introduces Temporal-Difference (TD) learning, a novel and central idea in RL that elegantly merges these two worlds.
 
 ### Table of Contents
 - [Introduction: The Best of Both Worlds](#1-introduction-the-best-of-both-worlds)
@@ -15,6 +12,8 @@ In previous chapters, we have explored two fundamental approaches to Reinforceme
 - [Deep Dive: The Optimality of TD(0)](#5-deep-dive-the-optimality-of-td0)
 - [Conclusion](#6-conclusion)
 - [References](#7-references)
+
+## Section 1: Prediction
 
 ### 1. Introduction: The Best of Both Worlds
 
