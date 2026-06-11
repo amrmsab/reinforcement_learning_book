@@ -1,4 +1,4 @@
-site_name: Reinforcement Learning: A gentle introduction
+site_name: "Reinforcement Learning: A gentle introduction"
 
 nav:
   - Home: index.md
@@ -6,9 +6,7 @@ nav:
   - Chapter 2 - Markov Decision Processes:
       - Part 1 – Markov Decision Processes: chapter2/chapter2a.md
       - Part 2 – Policy Iteration on MDPs: chapter2b/chapter2b.md
-  # - Chapter 3 - Dynamic Programming: chapter3/chapter3.md
   - Chapter 4 - Monte Carlo Methods: chapter4/chapter4.md
-  # - Chapter 5 - Function Approximation: chapter5/chapter5.md
   - Chapter 6 - Temporal Difference Learning:
       - Part 1 – Temporal Difference Learning: chapter6/chapter6-part1.md
       - Part 2 – SARSA and Q-learning (On- and Off-Policy learning): chapter6/chapter6-part2.md
@@ -17,22 +15,15 @@ nav:
       - Part 1 – DQN, DDQN, and Duelling Networks : chapter8/chapter8.md
       - Part 2 – TRPO and PPO: chapter8/chapter8b.md
   - Chapter 9 - Applications in Robotics and Control: chapter9/chapter9.md
-  # - Chapter 10 - Applications in Control: chapter10/chapter10.md
-  # - Chapter 11 - Applications in Games: chapter11/chapter11.md
-  # - Chapter 12 - Applications in [Select Domain]: chapter12/chapter12.md
-  # - Chapter 13 - Applications in [Select Domain]: chapter13/chapter13.md
-  # - Chapter 14 - Open Challenges: chapter14/chapter14.md
 
 theme:
   name: material
 
-markdown_extensions:
-  - pymdownx.arithmatex:
-      generic: true
-
 extra_javascript:
   - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js
   - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+
+markdown_extensions:
   - admonition
   - codehilite
   - pymdownx.highlight
@@ -42,8 +33,6 @@ extra_javascript:
   - pymdownx.tasklist
   - pymdownx.arithmatex:
       generic: true
-
-markdown_extensions:
   - pymdownx.superfences:
       custom_fences:
         - name: mermaid
