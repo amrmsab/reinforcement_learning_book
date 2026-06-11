@@ -6,14 +6,16 @@ nav:
   - Chapter 2 - Markov Decision Processes:
       - Part 1 – Markov Decision Processes: chapter2/chapter2a.md
       - Part 2 – Policy Iteration on MDPs: chapter2b/chapter2b.md
+  - Chapter 3 - Dynamic Programming: "chapter 3/chapter3.md"
   - Chapter 4 - Monte Carlo Methods: chapter4/chapter4.md
-  - Chapter 6 - Temporal Difference Learning:
+  - Chapter 5 - Temporal Difference Learning:
       - Part 1 – Temporal Difference Learning: chapter6/chapter6-part1.md
       - Part 2 – SARSA and Q-learning (On- and Off-Policy learning): chapter6/chapter6-part2.md
-  - Chapter 7 - Policy Gradient Methods: chapter7/chapter7.md
-  - Chapter 8 - Deep Reinforcement Learning:
+  - Chapter 6 - Policy Gradient Methods: chapter7/chapter7.md
+  - Chapter 7 - Deep Reinforcement Learning:
       - Part 1 – DQN, DDQN, and Duelling Networks : chapter8/chapter8.md
       - Part 2 – TRPO and PPO: chapter8/chapter8b.md
+  - Chapter 8 - Offline Reinforcement Learning: chapter14/chapter14.3.md
   - Chapter 9 - Applications in Robotics and Control: chapter9/chapter9.md
   - Chapter 10 - Reinforcement Learning from Human Feedback: chapter_rlhf/chapter_rlhf.md
   - Chapter 11 - Applications in Gaming: chapter11/chapter11.md
