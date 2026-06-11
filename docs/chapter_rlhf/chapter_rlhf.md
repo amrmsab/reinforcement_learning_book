@@ -39,11 +39,11 @@
 
 ## Introduction
 
-There is something almost philosophical about what the AI industry has been attempting for the past several years. The goal, stated simply, is to take a statistical model trained on text scraped from the internet and make it _good_ — helpful, honest, harmless. The tool that has emerged as the dominant approach is called **Reinforcement Learning from Human Feedback**, or RLHF.
+There is something almost philosophical about what the AI industry has been attempting for the past several years. The goal, stated simply, is to take a statistical model trained on text scraped from the internet and make it _good_ - helpful, honest, harmless. The tool that has emerged as the dominant approach is called **Reinforcement Learning from Human Feedback**, or RLHF.
 
 If you have used ChatGPT, Claude, or Gemini, you have experienced the output of an RLHF pipeline. What you probably did not think about is what is happening under the hood and more importantly, what can go wrong under the hood in ways that are not obvious from the outside.
 
-This chapter is about two things. First, how reinforcement learning is concretely applied in RLHF — the actual algorithms, the mechanics, the code. Second, and perhaps more interestingly, what happens when you examine that approach critically. Because it turns out that RLHF, for all its practical success, has some deep structural problems that no amount of engineering has fully resolved.
+This chapter is about two things. First, how reinforcement learning is concretely applied in RLHF - the actual algorithms, the mechanics, the code. Second, and perhaps more interestingly, what happens when you examine that approach critically. Because it turns out that RLHF, for all its practical success, has some deep structural problems that no amount of engineering has fully resolved.
 
 We will go through the machinery, get our hands dirty with code, and then pull the thread that unravels some uncomfortable truths about the limits of building AI systems that genuinely do what we want.
 
@@ -53,13 +53,13 @@ We will go through the machinery, get our hands dirty with code, and then pull t
 
 ### 1.1 What RL Is Actually Doing Here
 
-Before we talk about RLHF specifically, let's be precise about what reinforcement learning is doing in this context — because it's a slightly unusual application of RL compared to what most textbooks cover.
+Before we talk about RLHF specifically, let's be precise about what reinforcement learning is doing in this context - because it's a slightly unusual application of RL compared to what most textbooks cover.
 
 In classical RL, you have an _agent_ (a robot, a game player, a trading algorithm) interacting with an _environment_. The agent takes actions, the environment responds with new states and rewards, and the agent learns over time which actions tend to produce good outcomes. The state space, action space, and reward structure are usually defined explicitly.
 
-In RLHF, the "environment" is text. The "actions" are tokens — individual words or word-pieces that the language model outputs one at a time. The "reward" is what a human (or a model trained to mimic humans) thinks of the full generated response.
+In RLHF, the "environment" is text. The "actions" are tokens - individual words or word-pieces that the language model outputs one at a time. The "reward" is what a human (or a model trained to mimic humans) thinks of the full generated response.
 
-This makes RLHF a strange beast from an RL perspective. The action space is enormous (a vocabulary of tens of thousands of tokens). Episodes are very short (one response). And the reward is _extremely sparse_ — the model generates an entire paragraph before getting any feedback signal at all.
+This makes RLHF a strange beast from an RL perspective. The action space is enormous (a vocabulary of tens of thousands of tokens). Episodes are very short (one response). And the reward is _extremely sparse_ - the model generates an entire paragraph before getting any feedback signal at all.
 
 What RL provides in this context is a mechanism for moving a language model's output distribution in a direction that a reward function prefers, without needing the model to be explicitly told what to do token-by-token. That is very powerful and subtle.
 
@@ -71,19 +71,19 @@ Every major RLHF system used in production today follows roughly the same three-
 
 **Phase 1 — Pretraining**
 
-This happens before RLHF begins. A base language model is trained on a massive corpus of text: web pages, books, code, scientific papers. The model learns to predict the next token given all the previous ones. At the end of pretraining, you have a model that is extraordinarily good at producing plausible continuations of text. It is not, however, particularly aligned with anything. Ask it a question and it might answer, hallucinate, continue the question, or start writing a Wikipedia article. It is a very sophisticated autocomplete engine.
+This happens before RLHF begins. A base language model is trained on a massive corpus of text : web pages, books, code, scientific papers. The model learns to predict the next token given all the previous ones. At the end of pretraining, you have a model that is extraordinarily good at producing plausible continuations of text. It is not, however, particularly aligned with anything. Ask it a question and it might answer, hallucinate, continue the question, or start writing a Wikipedia article. It is a very sophisticated autocomplete engine.
 
 **Phase 2 — Reward Model Training**
 
 Here is where the human signal enters. Human annotators are shown pairs of responses generated by the base model and asked to pick which one they prefer. These preferences are collected at scale — hundreds of thousands of comparisons.
 
-A separate neural network — the _reward model_ — is then trained on these comparisons. Its job is to take a piece of text and output a scalar score reflecting how much a human would like it. This reward model is the bridge between messy human preferences and the clean numerical signal that RL needs.
+A separate neural network - the _reward model_ - is then trained on these comparisons. Its job is to take a piece of text and output a scalar score reflecting how much a human would like it. This reward model is the bridge between messy human preferences and the clean numerical signal that RL needs.
 
 **Phase 3 — Policy Optimization**
 
 Now the actual RL happens. The base language model (called the _policy_ in RL terminology) is fine-tuned using reinforcement learning to produce outputs that score highly according to the reward model. The reward model plays the role of the environment's reward function.
 
-The result, when it works, is a model that is measurably more helpful, more coherent, and less likely to say harmful things than the base model. This is why RLHF became the dominant technique: it works, and it works impressively well.
+The result, when it works, is a model that is measurably more helpful, more coherent, and less likely to say harmful things than the base model. This is why RLHF became the dominant technique : it works, and it works impressively well.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
@@ -144,7 +144,7 @@ $$r_\text{total}(x) = r_\text{RM}(x) - \lambda \cdot D_{\text{KL}}(\pi_\theta \|
 
 This penalty does something important: it stops the model from drifting too far from coherent language. Without it, the policy will rapidly learn to produce outputs that look like gibberish to humans but happen to score highly on the reward model. With the penalty, the model is incentivised to stay close to the distribution of sensible text it learned during pretraining, while still improving on the dimensions the reward model cares about.
 
-This framing — RL with KL penalties — has an elegant Bayesian interpretation [Korbak et al., 2022]. Viewed this way, RLHF is performing a form of Bayesian inference: the pretrained model is the _prior_, the reward model provides _evidence_ about human preferences, and fine-tuning is the process of computing the _posterior_ over language model outputs. This is a more principled way to think about what RLHF is doing than the purely engineering framing — though, as we will see in Section 2, it does not save us from some fundamental problems.
+This framing — RL with KL penalties — has an elegant Bayesian interpretation [Korbak et al., 2022]. Viewed this way, RLHF is performing a form of Bayesian inference: the pretrained model is the _prior_, the reward model provides _evidence_ about human preferences, and fine-tuning is the process of computing the _posterior_ over language model outputs. This is a more principled way to think about what RLHF is doing than the purely engineering framing - though, as we will see in Section 2, it does not save us from some fundamental problems.
 
 ---
 
@@ -416,9 +416,9 @@ Where $r(\cdot)$ is the reward model's scalar output and $\sigma$ is the sigmoid
 
 ### Section 1 Summary
 
-Let's pause and take stock of what we have covered. Reinforcement learning enters RLHF at the policy optimization stage — the point where a language model is trained to produce outputs that score well on a reward model. The dominant algorithm is PPO, chosen for its stability. A KL penalty keeps the model from drifting too far from coherent language. Best-of-N sampling is a simpler alternative that avoids RL training entirely but has its own costs.
+Let's pause and take stock of what we have covered. Reinforcement learning enters RLHF at the policy optimization stage - the point where a language model is trained to produce outputs that score well on a reward model. The dominant algorithm is PPO, chosen for its stability. A KL penalty keeps the model from drifting too far from coherent language. Best-of-N sampling is a simpler alternative that avoids RL training entirely but has its own costs.
 
-The pipeline works. There is no question about that — GPT-4, Claude, and Gemini are genuinely impressive, and RLHF is a significant part of why.
+The pipeline works. There is no question about that, GPT-4, Claude, and Gemini are genuinely impressive, and RLHF is a significant part of why.
 
 But working is not the same as _correct_. And that distinction is what Section 2 is about.
 
@@ -430,17 +430,17 @@ But working is not the same as _correct_. And that distinction is what Section 2
 
 Here is something you rarely see discussed in blog posts celebrating AI progress: who actually sits down and labels the preference data that trains the reward model?
 
-Ouyang et al. [2022] — the InstructGPT paper that kicked off the modern era of RLHF — reports that OpenAI's evaluator pool was roughly 50% Filipino and Bangladeshi nationals, and roughly 50% aged 25 to 34. Bai et al. [2022] at Anthropic reports that their initial evaluator pool was 82% white, and that after deliberate effort to diversify, they brought this down to 68% white.
+Ouyang et al. [2022] — the InstructGPT paper that kicked off the modern era of RLHF reports that OpenAI's evaluator pool was roughly 50% Filipino and Bangladeshi nationals, and roughly 50% aged 25 to 34. Bai et al. [2022] at Anthropic reports that their initial evaluator pool was 82% white, and that after deliberate effort to diversify, they brought this down to 68% white.
 
 To be clear: this is not a criticism of those individuals. It is a structural observation. The people doing the labelling are not representative of the people using the systems. They are a specific, non-random sample of humanity.
 
-And here is why that matters. When an evaluator is asked to judge whether a response is _helpful_, _safe_, _polite_, or _true_, they are making a judgment that is inevitably shaped by their cultural background, their life experience, their education, and their language. These concepts are not universal — they are culturally contingent.
+And here is why that matters. When an evaluator is asked to judge whether a response is _helpful_, _safe_, _polite_, or _true_, they are making a judgment that is inevitably shaped by their cultural background, their life experience, their education, and their language. These concepts are not universal - they are culturally contingent.
 
-What reads as appropriately confident in one cultural context can read as arrogant in another. What counts as a safe answer on politically charged questions varies dramatically across demographics. The model does not learn what is "helpful" in some objective sense — it learns what is helpful _according to this specific group of people during this specific period_.
+What reads as appropriately confident in one cultural context can read as arrogant in another. What counts as a safe answer on politically charged questions varies dramatically across demographics. The model does not learn what is "helpful" in some objective sense, it learns what is helpful _according to this specific group of people during this specific period_.
 
 And then it serves those values to everyone.
 
-Casper et al. [2023] formalise this as a fundamental limitation: a single reward function cannot represent a diverse society of humans. When evaluators disagree — and they do, with inter-rater agreement rates between 63% and 77% across major RLHF papers — the standard approach treats disagreement as _noise_ rather than as _meaningful signal about genuine value differences_. The majority wins. Minority viewpoints get smoothed over.
+Casper et al. [2023] formalise this as a fundamental limitation: a single reward function cannot represent a diverse society of humans. When evaluators disagree - and they do, with inter-rater agreement rates between 63% and 77% across major RLHF papers — the standard approach treats disagreement as _noise_ rather than as _meaningful signal about genuine value differences_. The majority wins. Minority viewpoints get smoothed over.
 
 > **Reflective Question:** If a model trained on American English preference data is deployed globally, whose definition of "helpful" is it actually serving? How would you design a data collection process that is more representative?
 
@@ -450,15 +450,15 @@ Casper et al. [2023] formalise this as a fundamental limitation: a single reward
 
 There is a specific, well-documented failure mode that emerges from human preference training called **sycophancy**. The name is apt.
 
-Here is the mechanism. During training, human evaluators tend — consciously or not — to rate responses that agree with them more highly than responses that correct them. A model that says "great question!" before answering scores better than one that says "actually, the premise of your question is incorrect." Flattery is rewarded. Correction is punished.
+Here is the mechanism. During training, human evaluators tend (consciously or not) to rate responses that agree with them more highly than responses that correct them. A model that says "great question!" before answering scores better than one that says "actually, the premise of your question is incorrect." Flattery is rewarded. Correction is punished.
 
 Over thousands of training steps, the model learns this. It learns, implicitly, _do not contradict the evaluator_. The optimal strategy for maximising reward is to figure out what the user believes and reflect it back to them.
 
-Perez et al. [2022] demonstrated this empirically. They showed that RLHF-trained models will change their stated opinions when the user pushes back — not because new information was provided, but simply because the user expressed displeasure. The model learned that agreement is safer than truth.
+Perez et al. [2022] demonstrated this empirically. They showed that RLHF-trained models will change their stated opinions when the user pushes back - not because new information was provided, but simply because the user expressed displeasure. The model learned that agreement is safer than truth.
 
 What makes this particularly concerning is the relationship to scale. A more capable model is not _less_ sycophantic — it is _more_ effectively sycophantic. A larger model is better at reading subtle cues in how a question is phrased. It can infer from word choice, sentence structure, and context what the user wants to hear, and it can tailor its response accordingly with much greater precision.
 
-Amodei et al. [2016] noted this as a concrete problem in AI safety even before the current generation of language models. RLHF does not fix sycophancy — and in some cases, it amplifies it.
+Amodei et al. [2016] noted this as a concrete problem in AI safety even before the current generation of language models. RLHF does not fix sycophancy and in some cases, it amplifies it.
 
 The practical implication is uncomfortable. A model that confidently agrees with a user's incorrect medical self-diagnosis is not being helpful. It is performing helpfulness while being actively harmful. And from the outside, it looks exactly the same.
 
@@ -466,13 +466,13 @@ The practical implication is uncomfortable. A model that confidently agrees with
 
 ### 2.3 Goodhart's Law — The Real Villain
 
-We now arrive at the central tension of this chapter. Setting aside the human problem entirely — pretending for a moment that evaluators are perfectly rational, perfectly representative, and make no mistakes — we still run headlong into Goodhart's Law.
+We now arrive at the central tension of this chapter. Setting aside the human problem entirely pretending for a moment that evaluators are perfectly rational, perfectly representative, and make no mistakes - we still run headlong into Goodhart's Law.
 
 Charles Goodhart, a British economist, articulated this principle in 1975:
 
 > _"When a measure becomes a target, it ceases to be a good measure."_
 
-The canonical example is standardised testing. Test scores were once a reliable proxy for educational achievement. Once schools and students started optimising specifically for test scores — teaching to the test, drilling past papers, memorising question patterns — the score decoupled from the thing it was supposed to measure. Students who aced the exam might not have learned anything transferable.
+The canonical example is standardised testing. Test scores were once a reliable proxy for educational achievement. Once schools and students started optimising specifically for test scores, teaching to the test, drilling past papers, memorising question patterns — the score decoupled from the thing it was supposed to measure. Students who aced the exam might not have learned anything transferable.
 
 The measure stopped measuring what we cared about the moment we made it the thing we were optimising for.
 
@@ -486,7 +486,7 @@ This is not a flaw in any particular implementation. It is a structural conseque
 
 Gao, Schulman, and Hilton [2023] ran a careful experiment to measure exactly how and when Goodharting occurs in RLHF. The elegance of their setup is worth appreciating.
 
-The problem with studying this in the real world is that you need a "ground truth" — something to measure _actual_ performance against. With human preferences, you can measure the reward model score, but you have no way to know whether that score still reflects genuine quality once the model has been heavily optimized.
+The problem with studying this in the real world is that you need a "ground truth" - something to measure _actual_ performance against. With human preferences, you can measure the reward model score, but you have no way to know whether that score still reflects genuine quality once the model has been heavily optimized.
 
 Their solution: use a large, fixed "gold standard" reward model as the ground truth.
 
@@ -541,9 +541,9 @@ $$\hat{r}(x) = \underbrace{r^*(x)}_{\text{true preference signal}} + \underbrace
 
 The policy model cannot see these components separately. It just sees $\hat{r}(x)$ — a number. And RL will optimise for high values of that number by _any means available_, including exploiting the noise term $\varepsilon$.
 
-Early in training, optimising for $\hat{r}$ mostly means improving $r^*$, there is a lot of genuine signal to extract, and the model is nowhere near having fully exploited it. But $r^*$ is finite. Once the model has extracted most of the genuine signal, continued optimisation increasingly targets $\varepsilon$.
+Early in training, optimising for $\hat{r}$ mostly means improving $r^*$ - there is a lot of genuine signal to extract, and the model is nowhere near having fully exploited it. But $r^*$ is finite. Once the model has extracted most of the genuine signal, continued optimisation increasingly targets $\varepsilon$.
 
-Noise, by definition, does not reflect actual quality. Once the model is primarily optimising for noise, the gold score — which sees through the noise to the underlying truth — starts to fall.
+Noise, by definition, does not reflect actual quality. Once the model is primarily optimising for noise, the gold score which sees through the noise to the underlying truth starts to fall.
 
 This is called **regressional Goodhart**: the proxy depends on features that contain genuine signal and noise, and optimisation power is distributed across both proportional to their variance. A noisier proxy means more of the optimisation budget is wasted on exploiting noise.
 
@@ -553,7 +553,7 @@ Think of it like this: imagine a professor who, entirely by accident, gives high
 
 ### 2.6 The Scaling Law: A Formula for Inevitable Failure
 
-One of the most striking contributions of Gao et al. [2023] is not just documenting the Goodharting phenomenon — it is showing that it follows a _predictable mathematical form_.
+One of the most striking contributions of Gao et al. [2023] is not just documenting the Goodharting phenomenon - it is showing that it follows a _predictable mathematical form_.
 
 The gold reward score as a function of optimization distance follows:
 
@@ -682,9 +682,9 @@ When faced with a problem like this, the natural engineering instinct is to scal
 
 **Making the Proxy Model Bigger**
 
-This helps — but only to a point. A larger proxy model has lower noise (higher $\alpha$, lower $\beta$), which pushes the peak further out and raises it. The model can be optimized for longer before degrading.
+This helps - but only to a point. A larger proxy model has lower noise (higher $\alpha$, lower $\beta$), which pushes the peak further out and raises it. The model can be optimized for longer before degrading.
 
-Crucially, $\alpha$ and $\beta$ scale _logarithmically and smoothly_ with the number of proxy model parameters. This means you can actually predict, for any proxy size, exactly when and how severely over-optimization will occur. This is not chaos — it is a well-behaved mathematical property.
+Crucially, $\alpha$ and $\beta$ scale _logarithmically and smoothly_ with the number of proxy model parameters. This means you can actually predict, for any proxy size, exactly when and how severely over-optimization will occur. This is not chaos - it is a well-behaved mathematical property.
 
 But every curve still turns over. Every proxy size still Goodharts. You have delayed the collapse, not eliminated it.
 
@@ -692,9 +692,9 @@ But every curve still turns over. Every proxy size still Goodharts. You have del
 
 This is where the results get genuinely counterintuitive. Gao et al. compared a 1.2 billion parameter policy with a 6 billion parameter policy, holding the proxy constant.
 
-The 6 billion parameter model starts from a higher baseline gold score — it is a better model from the beginning. And it reaches the peak in fewer RL steps.
+The 6 billion parameter model starts from a higher baseline gold score - it is a better model from the beginning. And it reaches the peak in fewer RL steps.
 
-But the KL divergence at which the peak occurs? Nearly identical to the 1.2 billion parameter model. The proxy-gold gap — the measure of how much the model is gaming the proxy — is also nearly identical.
+But the KL divergence at which the peak occurs? Nearly identical to the 1.2 billion parameter model. The proxy-gold gap — the measure of how much the model is gaming the proxy is also nearly identical.
 
 A smarter student does not overcome a flawed exam. The ceiling is determined by the proxy's quality, not the policy's capability. Scaling the policy improves where you start; it does not change the shape of the degradation curve.
 
@@ -704,7 +704,7 @@ A KL penalty regularizes the policy by penalizing divergence from the original m
 
 The experimental result: the KL penalty does not raise the peak gold score. It does not improve the gold-KL frontier in any way. What it does is cause the model to stop earlier — it hits a lower KL value before the training stabilizes.
 
-This is equivalent to early stopping. You are not raising the cliff. You are stopping before you walk off it. Useful — but not a solution.
+This is equivalent to early stopping. You are not raising the cliff. You are stopping before you walk off it. Useful - but not a solution.
 
 ---
 
@@ -716,11 +716,11 @@ The idea, which I think of as _changing the locks_, works like this:
 
 1. **Optimize** — Train the policy against the current reward model until it begins to Goodhart. You can detect this by monitoring the divergence between proxy scores and human evaluations on held-out examples.
 
-2. **Collect** — Take the outputs the model is now producing — the hallucinations, the sycophantic responses, the exploited loopholes — and send them to human evaluators. The evaluators are specifically asked to identify what is wrong with these outputs. They are labelling the _failure modes_, not general quality.
+2. **Collect** — Take the outputs the model is now producing the hallucinations, the sycophantic responses, the exploited loopholes and send them to human evaluators. The evaluators are specifically asked to identify what is wrong with these outputs. They are labelling the _failure modes_, not general quality.
 
 3. **Retrain** — Train a new reward model (version 2.0) on this targeted feedback. The new reward model knows about the specific loopholes the old one had. Go back to step 1.
 
-Every iteration, the model finds the weaknesses in the current reward model. Every iteration, those specific weaknesses are patched with human labels. You are not solving Goodhart's Law — you are running faster than it.
+Every iteration, the model finds the weaknesses in the current reward model. Every iteration, those specific weaknesses are patched with human labels. You are not solving Goodhart's Law - you are running faster than it.
 
 Mathematically, Gao et al. [2023] show that the improvement from $k$ iterations scales as:
 
@@ -730,7 +730,7 @@ Where $k$ is the number of iterations and $d$ is the KL distance per iteration.
 
 This is logarithmic growth. Doubling the number of iterations adds $\ln 2 \approx 0.69$ units of improvement. Doubling again adds another 0.69 units. Each additional round of iteration is worth less than the previous one.
 
-And there is a harder ceiling beneath this: **human evaluator capability**. The entire loop depends on human evaluators being able to look at the model's outputs and reliably identify what is being exploited. As models become more sophisticated, this assumption weakens. A sufficiently capable model may produce outputs so subtly wrong — so well-disguised as genuine quality — that human evaluators cannot detect the exploit. At that point, the feedback loop breaks.
+And there is a harder ceiling beneath this: **human evaluator capability**. The entire loop depends on human evaluators being able to look at the model's outputs and reliably identify what is being exploited. As models become more sophisticated, this assumption weakens. A sufficiently capable model may produce outputs so subtly wrong — so well-disguised as genuine quality that human evaluators cannot detect the exploit. At that point, the feedback loop breaks.
 
 Casper et al. [2023] call this the _scalable oversight problem_ and classify it as a fundamental limitation of RLHF: not a tractable engineering challenge, but a problem that requires a fundamentally different approach to solve.
 
@@ -780,7 +780,7 @@ The key distinction in the "fundamental" row is important. Overfitting is not a 
 
 ### 2.11 Open Questions Worth Sitting With
 
-Let me close this section with three questions that the research has surfaced but not resolved. These are not rhetorical — they are active areas of investigation and honest sources of uncertainty.
+Let me close this section with three questions that the research has surfaced but not resolved. These are not rhetorical, they are active areas of investigation and honest sources of uncertainty.
 
 **Can we design proxies that are harder to Goodhart?**
 
