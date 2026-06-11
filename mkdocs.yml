@@ -15,6 +15,8 @@ nav:
       - Part 1 – DQN, DDQN, and Duelling Networks : chapter8/chapter8.md
       - Part 2 – TRPO and PPO: chapter8/chapter8b.md
   - Chapter 9 - Applications in Robotics and Control: chapter9/chapter9.md
+  - Chapter 10 - Reinforcement Learning from Human Feedback: chapter_rlhf/chapter_rlhf.md
+  - Chapter 11 - Applications in Gaming: chapter11/chapter11.md
 
 theme:
   name: material
