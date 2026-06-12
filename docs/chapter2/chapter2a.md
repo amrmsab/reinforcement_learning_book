@@ -53,7 +53,7 @@ And then the cycle repeats. Over time, this produces a long sequence — called 
 
 $$S_0, A_0, R_1, S_1, A_1, R_2, S_2, A_2, R_3, \ldots$$
 
-<p align="center"> <img src="assets/mdp-cycle.png" width="500" alt="Agent-environment interaction cycle diagram"> </p> <p align="center"><em><strong>Figure 2.1</strong> — The agent–environment interaction cycle.</em></p>
+<p align="center"> <img src="assets/mdp-cycle.png" width="500" alt="Agent-environment interaction cycle diagram"> </p> <p align="center"><em><strong>Figure 2.1</strong> — The agent–environment interaction cycle (Sutton &amp; Barto 2018, Chapter 3) .</em></p>
 
 It's worth pausing on the subscripts. Notice that the reward at time step $t+1$ (written $R_{t+1}$) arrives _after_ the action $A_t$. This notation emphasizes that the reward is a consequence of the action, not something that existed before it.
 
@@ -65,7 +65,7 @@ It's worth pausing on the subscripts. Notice that the reward at time step $t+1$ 
 
 Now, how exactly does the environment produce the next state and reward from the current state and action? The answer is captured by a single mathematical object called the **dynamics function**, written as:
 
-$$p(s', r \mid s, a) \doteq \Pr{S_t = s',\ R_t = r \mid S_{t-1} = s,\ A_{t-1} = a}$$
+$$p(s', r \mid s, a) \doteq \Pr(S_t = s',\ R_t = r \mid S_{t-1} = s,\ A_{t-1} = a)$$
 
 Let's unpack this. The function $p$ takes four arguments:
 
@@ -165,7 +165,7 @@ At this point we have two separate formulas: one for episodic tasks (finite sum 
 
 We can. The trick is to think of episodic task termination as entering a special **absorbing state** — a fictional state that transitions only to itself and always produces a reward of zero. Once you're in it, you're stuck there forever, collecting nothing.
 
-<p align="center"> <img src="assets/terminal-state.png" width="560" alt="State-transition chain ending in an absorbing terminal state with a self-loop labelled R=0"> </p> <p align="center"><em><strong>Figure 2.4</strong> — The absorbing state S<sup>+</sup> unifies episodic and continuing tasks. By treating the end of an episode as an entry into a state that loops silently on itself with zero reward, we can apply a single return formula to both task types without special-casing either.</em></p>
+<p align="center"> <img src="assets/terminal-state.png" width="560" alt="State-transition chain ending in an absorbing terminal state with a self-loop labelled R=0"> </p> <p align="center"><em><strong>Figure 2.4</strong> — The absorbing state S<sup>+</sup> unifies episodic and continuing tasks. By treating the end of an episode as an entry into a state that loops silently on itself with zero reward, we can apply a single return formula to both task types without special-casing either (Sutton &amp; Barto 2018, Chapter 3).</em></p>
 
 Mathematically, this means we can always write the return as:
 
